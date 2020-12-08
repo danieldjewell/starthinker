@@ -19,9 +19,9 @@
 
 class StringExtensions:
 
-  @staticmethod
-  def convertDateStrToDateTimeStr(date, time='00:00:00'):
-    """Convert Date string (YYYY-MM-DD) to a datetime string by adding the desired time (YYYY-MM-DDTHH:mm:SSZ)
+    @staticmethod
+    def convertDateStrToDateTimeStr(date, time='00:00:00'):
+        """Convert Date string (YYYY-MM-DD) to a datetime string by adding the desired time (YYYY-MM-DDTHH:mm:SSZ)
 
                 Args:
                         date: the date as a string to be converted
@@ -31,14 +31,14 @@ class StringExtensions:
                         A string representation of a datetime in the following
                         format YYYY-MM-DDTHH:mm:SSZ
                 """
-    if not date == None:
-      date = '%sT%sZ' % (date, time)
+        if not date == None:
+            date = '%sT%sZ' % (date, time)
 
-    return date
+        return date
 
-  @staticmethod
-  def convertDateTimeStrToDateStr(datetime):
-    """  Convert a DateTime string (YYYY-MM-DDTHH:mm:SSZ) to just a Date string by removing the time (YYYY-MM-DD)
+    @staticmethod
+    def convertDateTimeStrToDateStr(datetime):
+        """  Convert a DateTime string (YYYY-MM-DDTHH:mm:SSZ) to just a Date string by removing the time (YYYY-MM-DD)
 
                 Args:
                         datetime: the datetime as a string
@@ -47,7 +47,7 @@ class StringExtensions:
                         A string representation of the date in the following
                         format YYYY-MM-DD
                 """
-    if not datetime == None and 'T' in datetime:
-      datetime = datetime.split('T')[0]
+        if not datetime == None and 'T' in datetime:
+            datetime = datetime.split('T')[0]
 
-    return datetime
+        return datetime

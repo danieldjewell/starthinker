@@ -33,20 +33,20 @@ from starthinker.task.dv_editor.patch import patch_preview
 
 
 def integration_detail_clear():
-  sheets_clear(project.task["auth_sheets"], project.task["sheet"],
-               "Integration Details", "A2:Z")
+    sheets_clear(project.task["auth_sheets"], project.task["sheet"],
+                 "Integration Details", "A2:Z")
 
 
 def integration_detail_load():
 
-  # write integration_details to sheet
-  rows = get_rows(
-      project.task["auth_bigquery"], {
-          "bigquery": {
-              "dataset":
-                  project.task["dataset"],
-              "query":
-                  """SELECT
+    # write integration_details to sheet
+    rows = get_rows(
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset":
+                    project.task["dataset"],
+                "query":
+                    """SELECT
          CONCAT(P.displayName, ' - ', P.partnerId),
          CONCAT(A.displayName, ' - ', A.advertiserId),
          NULL,
@@ -98,57 +98,83 @@ def integration_detail_load():
        LEFT JOIN `{dataset}.DV_Partners` AS P
        ON A.partnerId=P.partnerId
        """.format(**project.task),
-              "legacy":
-                  False
-          }
-      })
+                "legacy":
+                    False
+            }
+        })
 
-  put_rows(
-      project.task["auth_sheets"], {
-          "sheets": {
-              "sheet": project.task["sheet"],
-              "tab": "Integration Details",
-              "range": "A2"
-          }
-      }, rows)
+    put_rows(
+        project.task["auth_sheets"], {
+            "sheets": {
+                "sheet": project.task["sheet"],
+                "tab": "Integration Details",
+                "range": "A2"
+            }
+        }, rows)
 
 
 def integration_detail_audit():
-  rows = get_rows(
-      project.task["auth_sheets"], {
-          "sheets": {
-              "sheet": project.task["sheet"],
-              "tab": "Integration Details",
-              "range": "A2:Z"
-          }
-      })
+    rows = get_rows(
+        project.task["auth_sheets"], {
+            "sheets": {
+                "sheet": project.task["sheet"],
+                "tab": "Integration Details",
+                "range": "A2:Z"
+            }
+        })
 
-  put_rows(
-      project.task["auth_bigquery"], {
-          "bigquery": {
-              "dataset": project.task["dataset"],
-              "table": "SHEET_IntegrationDetails",
-              "schema": [
-                  { "name": "Partner", "type": "STRING" },
-                  { "name": "Advertiser", "type": "STRING" },
-                  { "name": "Campaign", "type": "STRING" },
-                  { "name": "Insertion_Order", "type": "STRING" },
-                  { "name": "Line_Item", "type": "STRING" },
-                  { "name": "Integration_Code", "type": "STRING" },
-                  { "name": "Integration_Code_Edit", "type": "STRING" },
-                  { "name": "Details", "type": "STRING" },
-                  { "name": "Details_Edit", "type": "STRING" },
-              ],
-              "format": "CSV"
-          }
-      }, rows)
+    put_rows(
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset": project.task["dataset"],
+                "table": "SHEET_IntegrationDetails",
+                "schema": [
+                    {
+                        "name": "Partner",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Advertiser",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Campaign",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Insertion_Order",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Line_Item",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Integration_Code",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Integration_Code_Edit",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Details",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Details_Edit",
+                        "type": "STRING"
+                    },
+                ],
+                "format": "CSV"
+            }
+        }, rows)
 
-  query_to_view(
-    project.task["auth_bigquery"],
-    project.id,
-    project.task["dataset"],
-    "AUDIT_IntegrationDetails",
-    """WITH
+    query_to_view(project.task["auth_bigquery"],
+                  project.id,
+                  project.task["dataset"],
+                  "AUDIT_IntegrationDetails",
+                  """WITH
       /* Check if advertiser values are set */
       INPUT_ERRORS AS (
         SELECT
@@ -163,77 +189,77 @@ def integration_detail_audit():
 
       SELECT * FROM INPUT_ERRORS
     """.format(**project.task),
-    legacy=False
-  )
+                  legacy=False)
 
-  query_to_view(
-    project.task["auth_bigquery"],
-    project.id,
-    project.task["dataset"],
-    "PATCH_IntegrationDetails",
-    """SELECT *
+    query_to_view(project.task["auth_bigquery"],
+                  project.id,
+                  project.task["dataset"],
+                  "PATCH_IntegrationDetails",
+                  """SELECT *
       FROM `{dataset}.SHEET_IntegrationDetails`
       WHERE Line_Item NOT IN (SELECT Id FROM `{dataset}.AUDIT_IntegrationDetails` WHERE Severity='ERROR')
       AND Insertion_Order NOT IN (SELECT Id FROM `{dataset}.AUDIT_IntegrationDetails` WHERE Severity='ERROR')
       AND Campaign NOT IN (SELECT Id FROM `{dataset}.AUDIT_IntegrationDetails` WHERE Severity='ERROR')
     """.format(**project.task),
-    legacy=False
-  )
+                  legacy=False)
 
 
 def integration_detail_patch(commit=False):
-  patches = []
+    patches = []
 
-  rows = get_rows(
-    project.task["auth_bigquery"],
-    { "bigquery": {
-      "dataset": project.task["dataset"],
-      "table":"PATCH_IntegrationDetails",
-    }},
-    as_object=True
-  )
+    rows = get_rows(project.task["auth_bigquery"], {
+        "bigquery": {
+            "dataset": project.task["dataset"],
+            "table": "PATCH_IntegrationDetails",
+        }
+    },
+                    as_object=True)
 
-  for row in rows:
+    for row in rows:
 
-    integration_details = {}
+        integration_details = {}
 
-    if row['Integration_Code'] != row['Integration_Code_Edit']:
-      integration_details.setdefault("integrationDetails", {})
-      integration_details["integrationDetails"]["integrationCode"] = row['Integration_Code_Edit']
-    if row['Details'] != row['Details_Edit']:
-      integration_details.setdefault("integrationDetails", {})
-      integration_details["integrationDetails"]["details"] = row['Details_Edit']
+        if row['Integration_Code'] != row['Integration_Code_Edit']:
+            integration_details.setdefault("integrationDetails", {})
+            integration_details["integrationDetails"]["integrationCode"] = row[
+                'Integration_Code_Edit']
+        if row['Details'] != row['Details_Edit']:
+            integration_details.setdefault("integrationDetails", {})
+            integration_details["integrationDetails"]["details"] = row[
+                'Details_Edit']
 
-    if integration_details:
-      patch = {
-          "operation": "Pacing",
-          "action": "PATCH",
-          "partner": row['Partner'],
-          "parameters": {
-              "advertiserId": lookup_id(row['Advertiser']),
-              "body": integration_details
-          }
-      }
+        if integration_details:
+            patch = {
+                "operation": "Pacing",
+                "action": "PATCH",
+                "partner": row['Partner'],
+                "parameters": {
+                    "advertiserId": lookup_id(row['Advertiser']),
+                    "body": integration_details
+                }
+            }
 
-      if row['Line_Item']:
-        patch["line_item"] = row['Line_Item']
-        patch["parameters"]["lineItemId"] = lookup_id(row['Line_Item'])
+            if row['Line_Item']:
+                patch["line_item"] = row['Line_Item']
+                patch["parameters"]["lineItemId"] = lookup_id(row['Line_Item'])
 
-      elif row['Insertion_Order']:
-        patch["insertion_order"] = row['Insertion_Order']
-        patch["parameters"]["insertionOrderId"] = lookup_id(row['Insertion_Order'])
+            elif row['Insertion_Order']:
+                patch["insertion_order"] = row['Insertion_Order']
+                patch["parameters"]["insertionOrderId"] = lookup_id(
+                    row['Insertion_Order'])
 
-      else:
-        patch["advertiser"] = row['Advertiser']
-        patch["parameters"]["advertiserId"] = lookup_id(row['Advertiser'])
+            else:
+                patch["advertiser"] = row['Advertiser']
+                patch["parameters"]["advertiserId"] = lookup_id(
+                    row['Advertiser'])
 
-      patches.append(patch)
+            patches.append(patch)
 
-  patch_masks(patches)
+    patch_masks(patches)
 
-  if commit:
-    insertion_order_commit(patches)
-    line_item_commit(patches)
-    advertiser_commit(patches)
-  else:
-    patch_preview(patches)
+    if commit:
+        insertion_order_commit(patches)
+        line_item_commit(patches)
+        advertiser_commit(patches)
+    else:
+        patch_preview(patches)

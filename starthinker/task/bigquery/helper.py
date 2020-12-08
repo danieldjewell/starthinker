@@ -29,10 +29,10 @@ from starthinker.util.csv import excel_to_rows
 
 
 def main():
-  # get parameters
-  parser = argparse.ArgumentParser(
-    formatter_class=argparse.RawDescriptionHelpFormatter,
-    description=textwrap.dedent("""\
+    # get parameters
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent("""\
     Command line to get table schema from BigQuery.
 
     Helps developers upload data to BigQuery and pull schemas.  These are the
@@ -45,97 +45,59 @@ def main():
 
   """))
 
-  parser.add_argument(
-    '--dataset',
-    help='name of BigQuery dataset',
-    default=None
-  )
-  parser.add_argument(
-    '--table',
-    help='name of BigQuery table',
-    default=None
-  )
-  parser.add_argument(
-    '--csv',
-    help='CSV file path',
-    default=None
-  )
-  parser.add_argument(
-    '--schema',
-    help='SCHEMA file path',
-    default=None
-  )
-  parser.add_argument(
-    '--excel_workbook',
-    help='Excel file path',
-    default=None
-  )
-  parser.add_argument(
-    '--excel_sheet',
-    help='Excel sheet name',
-    default=None
-  )
+    parser.add_argument('--dataset',
+                        help='name of BigQuery dataset',
+                        default=None)
+    parser.add_argument('--table', help='name of BigQuery table', default=None)
+    parser.add_argument('--csv', help='CSV file path', default=None)
+    parser.add_argument('--schema', help='SCHEMA file path', default=None)
+    parser.add_argument('--excel_workbook',
+                        help='Excel file path',
+                        default=None)
+    parser.add_argument('--excel_sheet', help='Excel sheet name', default=None)
 
-  # initialize project
-  project.from_commandline(
-    parser=parser,
-    arguments=('-u', '-c', '-s', '-v', '-p')
-  )
+    # initialize project
+    project.from_commandline(parser=parser,
+                             arguments=('-u', '-c', '-s', '-v', '-p'))
 
-  auth = 'service' if project.args.service else 'user'
+    auth = 'service' if project.args.service else 'user'
 
-  schema = json.loads(project.args.schema) if project.args.schema else None
+    schema = json.loads(project.args.schema) if project.args.schema else None
 
-  if project.args.csv:
+    if project.args.csv:
 
-    with open(project.args.csv, 'r') as csv_file:
-      rows = csv_to_rows(csv_file.read())
+        with open(project.args.csv, 'r') as csv_file:
+            rows = csv_to_rows(csv_file.read())
 
-      if not schema:
-        rows, schema = get_schema(rows)
-        print('DETECETED SCHEMA', json.dumps(schema))
-        print('Please run again with the above schema provided.')
-        exit()
+            if not schema:
+                rows, schema = get_schema(rows)
+                print('DETECETED SCHEMA', json.dumps(schema))
+                print('Please run again with the above schema provided.')
+                exit()
 
-      rows_to_table(
-        auth,
-        project.id,
-        project.args.dataset,
-        project.args.table,
-        rows,
-        schema
-      )
+            rows_to_table(auth, project.id, project.args.dataset,
+                          project.args.table, rows, schema)
 
-  elif project.args.excel_workbook and project.args.excel_sheet:
-    with open(project.args.excel_workbook, 'r') as excel_file:
-      rows = excel_to_rows(excel_file, project.args.excel_sheet)
+    elif project.args.excel_workbook and project.args.excel_sheet:
+        with open(project.args.excel_workbook, 'r') as excel_file:
+            rows = excel_to_rows(excel_file, project.args.excel_sheet)
 
-      if not schema:
-        rows, schema = get_schema(rows)
-        print('DETECETED SCHEMA', json.dumps(schema))
-        print('Please run again with the above schema provided.')
-        exit()
+            if not schema:
+                rows, schema = get_schema(rows)
+                print('DETECETED SCHEMA', json.dumps(schema))
+                print('Please run again with the above schema provided.')
+                exit()
 
-      rows_to_table(
-        auth,
-        project.id,
-        project.args.dataset,
-        project.args.table,
-        rows,
-        schema
-      )
+            rows_to_table(auth, project.id, project.args.dataset,
+                          project.args.table, rows, schema)
 
-  else:
-    # print schema
-    print(json.dumps(
-      table_to_schema(
-        auth,
-        project.id,
-        project.args.dataset,
-        project.args.table
-      ),
-      indent=2
-    ))
+    else:
+        # print schema
+        print(
+            json.dumps(table_to_schema(auth, project.id, project.args.dataset,
+                                       project.args.table),
+                       indent=2))
+
 
 if __name__ == '__main__':
-  main()
+    main()

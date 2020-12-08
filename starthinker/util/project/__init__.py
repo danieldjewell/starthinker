@@ -80,14 +80,13 @@ from importlib import import_module
 
 from starthinker.util.debug import starthinker_trace_start
 
-
 EXIT_ERROR = 1
 EXIT_SUCCESS = 0
 RE_UUID = re.compile(r'(\s*)("setup"\s*:\s*{)')
 
 
 def get_project(filepath):
-  """Loads json for Project Class.  Intended for this module only.
+    """Loads json for Project Class.  Intended for this module only.
 
   Available as helper.
 
@@ -100,38 +99,39 @@ def get_project(filepath):
       Json of recipe file.
   """
 
-  with open(filepath) as data_file:
-    data = data_file.read().replace('\n', ' ')
+    with open(filepath) as data_file:
+        data = data_file.read().replace('\n', ' ')
 
-    try:
-      return json.loads(data)
+        try:
+            return json.loads(data)
 
-    except ValueError as e:
-      with open(filepath) as data_file:
-        pos = 0
-        for count, line in enumerate(data_file.readlines(), 1):
-          pos += len(
-              line
-          )  # do not add newlines, e.pos was run on a version wher enewlines were removed
-          if pos >= e.pos:
-            e.lineno = count
-            e.pos = pos
-            e.args = (
-                'JSON ERROR: %s LINE: %s CHARACTER: %s ERROR: %s LINE: %s' %
-                (filepath, count, pos - e.pos, str(e.msg), line.strip()),)
-            raise
+        except ValueError as e:
+            with open(filepath) as data_file:
+                pos = 0
+                for count, line in enumerate(data_file.readlines(), 1):
+                    pos += len(
+                        line
+                    )  # do not add newlines, e.pos was run on a version wher enewlines were removed
+                    if pos >= e.pos:
+                        e.lineno = count
+                        e.pos = pos
+                        e.args = (
+                            'JSON ERROR: %s LINE: %s CHARACTER: %s ERROR: %s LINE: %s'
+                            % (filepath, count, pos - e.pos, str(
+                                e.msg), line.strip()),)
+                        raise
 
 
 def utc_to_timezone(timestamp, timezone):
-  if timestamp:
-    return timestamp.replace(tzinfo=pytz.utc).astimezone(
-        pytz.timezone(timezone))
-  else:
-    return None
+    if timestamp:
+        return timestamp.replace(tzinfo=pytz.utc).astimezone(
+            pytz.timezone(timezone))
+    else:
+        return None
 
 
 def is_scheduled(recipe, task={}):
-  """Wrapper for day_hour_scheduled that returns True if current time zone safe hour is in recipe schedule.
+    """Wrapper for day_hour_scheduled that returns True if current time zone safe hour is in recipe schedule.
 
      Used as a helper for any cron job running projects.  Keeping this logic in
      project
@@ -147,29 +147,27 @@ def is_scheduled(recipe, task={}):
       - True if task is scheduled to run current hour, else False.
   """
 
-  tz = pytz.timezone(
-    recipe.get('setup', {}).get('timezone', 'America/Los_Angeles')
-  )
-  now_tz = datetime.now(tz)
-  day_tz = now_tz.strftime('%a')
-  hour_tz = now_tz.hour
+    tz = pytz.timezone(
+        recipe.get('setup', {}).get('timezone', 'America/Los_Angeles'))
+    now_tz = datetime.now(tz)
+    day_tz = now_tz.strftime('%a')
+    hour_tz = now_tz.hour
 
-  days = recipe.get('setup', {}).get('day', [])
-  hours = [
-    int(h) for h in task.get(
-      'hour', recipe.get('setup', {}).get('hour', [])
-    )
-  ]
+    days = recipe.get('setup', {}).get('day', [])
+    hours = [
+        int(h) for h in task.get('hour',
+                                 recipe.get('setup', {}).get('hour', []))
+    ]
 
-  if days == [] or day_tz in days:
-    if hours == [] or hour_tz in hours:
-      return True
+    if days == [] or day_tz in days:
+        if hours == [] or hour_tz in hours:
+            return True
 
-  return False
+    return False
 
 
 class project:
-  """A singleton that represents the loaded recipe within python scripts.
+    """A singleton that represents the loaded recipe within python scripts.
 
   All access to json scripts within StarThinker must pass through the project
   class.  It handles parameters, time zones, permissions management, and
@@ -243,22 +241,22 @@ class project:
       to run regardless of hour specified.
   """
 
-  args = None
-  recipe = None
-  task = None
-  instance = None
-  filepath = None
-  verbose = False
-  force = False
-  function = None
-  timezone = None
-  now = None
-  date = None
-  hour = None
+    args = None
+    recipe = None
+    task = None
+    instance = None
+    filepath = None
+    verbose = False
+    force = False
+    function = None
+    timezone = None
+    now = None
+    date = None
+    hour = None
 
-  @classmethod
-  def from_commandline(cls, _task=None, parser=None, arguments=None):
-    """Used in StarThinker scripts as entry point for command line calls.
+    @classmethod
+    def from_commandline(cls, _task=None, parser=None, arguments=None):
+        """Used in StarThinker scripts as entry point for command line calls.
 
     Loads json for execution.
 
@@ -295,10 +293,10 @@ class project:
 
     """
 
-    if parser is None:
-      parser = argparse.ArgumentParser(
-          formatter_class=argparse.RawDescriptionHelpFormatter,
-          description=textwrap.dedent("""\
+        if parser is None:
+            parser = argparse.ArgumentParser(
+                formatter_class=argparse.RawDescriptionHelpFormatter,
+                description=textwrap.dedent("""\
           Command line to execute all tasks in a recipe once. ( Common Entry Point )
 
           This script dispatches all the tasks in a JSON recipe to handlers in sequence.
@@ -322,135 +320,126 @@ class project:
               python task/hello/run.py project/sample/say_hello.json -i 2
 
       """))
-      if arguments is None or '-j' in arguments:
-        parser.add_argument('json', help='Path to recipe json file to load.')
-    else:
-      if arguments is None or '-j' in arguments:
-        parser.add_argument(
-            '--json', '-j', help='Path to recipe json file to load.')
+            if arguments is None or '-j' in arguments:
+                parser.add_argument('json',
+                                    help='Path to recipe json file to load.')
+        else:
+            if arguments is None or '-j' in arguments:
+                parser.add_argument('--json',
+                                    '-j',
+                                    help='Path to recipe json file to load.')
 
-    if arguments is None or '-p' in arguments:
-      parser.add_argument(
-          '--project',
-          '-p',
-          help='Cloud ID of Google Cloud Project.',
-          default=None)
-    if arguments is None or '-k' in arguments:
-      parser.add_argument(
-          '--key',
-          '-k',
-          help='API Key of Google Cloud Project.',
-          default=None)
-    if arguments is None or '-u' in arguments:
-      parser.add_argument(
-          '--user',
-          '-u',
-          help='Path to USER credentials json file.',
-          default=None)
-    if arguments is None or '-s' in arguments:
-      parser.add_argument(
-          '--service',
-          '-s',
-          help='Path to SERVICE credentials json file.',
-          default=None)
-    if arguments is None or '-c' in arguments:
-      parser.add_argument(
-          '--client',
-          '-c',
-          help='Path to CLIENT credentials json file.',
-          default=None)
+        if arguments is None or '-p' in arguments:
+            parser.add_argument('--project',
+                                '-p',
+                                help='Cloud ID of Google Cloud Project.',
+                                default=None)
+        if arguments is None or '-k' in arguments:
+            parser.add_argument('--key',
+                                '-k',
+                                help='API Key of Google Cloud Project.',
+                                default=None)
+        if arguments is None or '-u' in arguments:
+            parser.add_argument('--user',
+                                '-u',
+                                help='Path to USER credentials json file.',
+                                default=None)
+        if arguments is None or '-s' in arguments:
+            parser.add_argument('--service',
+                                '-s',
+                                help='Path to SERVICE credentials json file.',
+                                default=None)
+        if arguments is None or '-c' in arguments:
+            parser.add_argument('--client',
+                                '-c',
+                                help='Path to CLIENT credentials json file.',
+                                default=None)
 
-    if arguments is None or '-i' in arguments:
-      parser.add_argument(
-          '--instance',
-          '-i',
-          help='Instance number of the task to run ( for tasks with same name ) starting at 1.',
-          default=1,
-          type=int)
+        if arguments is None or '-i' in arguments:
+            parser.add_argument(
+                '--instance',
+                '-i',
+                help=
+                'Instance number of the task to run ( for tasks with same name ) starting at 1.',
+                default=1,
+                type=int)
 
-    if arguments is None or '-v' in arguments:
-      parser.add_argument(
-          '--verbose',
-          '-v',
-          help='Print all the steps as they happen.',
-          action='store_true')
-    if arguments is None or '-f' in arguments:
-      parser.add_argument(
-          '--force',
-          '-force',
-          help='Not used but included for compatiblity with another script.',
-          action='store_true')
+        if arguments is None or '-v' in arguments:
+            parser.add_argument('--verbose',
+                                '-v',
+                                help='Print all the steps as they happen.',
+                                action='store_true')
+        if arguments is None or '-f' in arguments:
+            parser.add_argument(
+                '--force',
+                '-force',
+                help=
+                'Not used but included for compatiblity with another script.',
+                action='store_true')
 
-    if arguments is None or '-tp' in arguments:
-      parser.add_argument(
-          '--trace_print',
-          '-tp',
-          help='Execution trace written to stdout.',
-          action='store_true')
-    if arguments is None or '-tf' in arguments:
-      parser.add_argument(
-          '--trace_file',
-          '-tf',
-          help='Execution trace written to file.',
-          action='store_true')
+        if arguments is None or '-tp' in arguments:
+            parser.add_argument('--trace_print',
+                                '-tp',
+                                help='Execution trace written to stdout.',
+                                action='store_true')
+        if arguments is None or '-tf' in arguments:
+            parser.add_argument('--trace_file',
+                                '-tf',
+                                help='Execution trace written to file.',
+                                action='store_true')
 
-    cls.args = parser.parse_args()
+        cls.args = parser.parse_args()
 
-    # initialize the project singleton with passed in parameters
-    cls.initialize(
-        get_project(cls.args.json) if hasattr(cls.args, 'json') else {},
-        _task,
-        getattr(cls.args, 'instance', None),
-        getattr(cls.args, 'project', None),
-        getattr(cls.args, 'user', None),
-        getattr(cls.args, 'service', None),
-        getattr(cls.args, 'client', None),
-        getattr(cls.args, 'json', None),
-        getattr(cls.args, 'key', None),
-        getattr(cls.args, 'verbose', None),
-        getattr(cls.args, 'force', None),
-        getattr(cls.args, 'trace_print', None),
-        getattr(cls.args, 'trace_file', None)
-    )
+        # initialize the project singleton with passed in parameters
+        cls.initialize(
+            get_project(cls.args.json) if hasattr(cls.args, 'json') else {},
+            _task, getattr(cls.args, 'instance',
+                           None), getattr(cls.args, 'project', None),
+            getattr(cls.args, 'user', None), getattr(cls.args, 'service', None),
+            getattr(cls.args, 'client', None), getattr(cls.args, 'json', None),
+            getattr(cls.args, 'key', None), getattr(cls.args, 'verbose', None),
+            getattr(cls.args, 'force', None),
+            getattr(cls.args, 'trace_print', None),
+            getattr(cls.args, 'trace_file', None))
 
-  @classmethod
-  def get_task_index(cls):
-    i = 0
-    for c, t in enumerate(cls.recipe.get('tasks', [])):
-      if next(iter(t.keys())) == cls.function:
-        i += 1
-        if i == cls.instance:
-          return c
-    return None
+    @classmethod
+    def get_task_index(cls):
+        i = 0
+        for c, t in enumerate(cls.recipe.get('tasks', [])):
+            if next(iter(t.keys())) == cls.function:
+                i += 1
+                if i == cls.instance:
+                    return c
+        return None
 
-  @classmethod
-  def get_task(cls):
-    #if cls.task is None:
-    i = cls.get_task_index()
-    cls.task = None if i is None else next(
-        iter(cls.recipe['tasks'][i].values()))
-    return cls.task
+    @classmethod
+    def get_task(cls):
+        #if cls.task is None:
+        i = cls.get_task_index()
+        cls.task = None if i is None else next(
+            iter(cls.recipe['tasks'][i].values()))
+        return cls.task
 
-  @classmethod
-  def set_task(cls, function, parameters):
-    if cls.task is None:
-      cls.recipe['tasks'].append({function: parameters})
-      cls.function = function
-      cls.task = parameters
-      cls.instance = 1
-    else:
-      i = cls.get_task_index()
-      cls.recipe['tasks'][i] = {function: parameters}
-      cls.function = function
-      cls.task = parameters
-      cls.instance = sum([
-          1 for c, t in enumerate(cls.recipe['tasks'])
-          if t == function and c <= i
-      ])
+    @classmethod
+    def set_task(cls, function, parameters):
+        if cls.task is None:
+            cls.recipe['tasks'].append({function: parameters})
+            cls.function = function
+            cls.task = parameters
+            cls.instance = 1
+        else:
+            i = cls.get_task_index()
+            cls.recipe['tasks'][i] = {function: parameters}
+            cls.function = function
+            cls.task = parameters
+            cls.instance = sum([
+                1 for c, t in enumerate(cls.recipe['tasks'])
+                if t == function and c <= i
+            ])
 
-  @staticmethod
-  def from_parameters(func):
-    """Initializes a project singleton for execution by a task.
+    @staticmethod
+    def from_parameters(func):
+        """Initializes a project singleton for execution by a task.
 
     Either loads parameters (recipe, instance) passed to task programatically,
     or if no parameters passed attmepts to load them from the command line.
@@ -463,32 +452,33 @@ class project:
         thsi task exist
     """
 
-    def from_parameters_wrapper(recipe=None, instance=1):
-      if recipe:
-        project.initialize(
-            _recipe=recipe, _task=func.__name__, _instance=instance)
-      else:
-        project.from_commandline(func.__name__)
-      func()
+        def from_parameters_wrapper(recipe=None, instance=1):
+            if recipe:
+                project.initialize(_recipe=recipe,
+                                   _task=func.__name__,
+                                   _instance=instance)
+            else:
+                project.from_commandline(func.__name__)
+            func()
 
-    return from_parameters_wrapper
+        return from_parameters_wrapper
 
-  @classmethod
-  def initialize(cls,
-                 _recipe={},
-                 _task=None,
-                 _instance=1,
-                 _project=None,
-                 _user=None,
-                 _service=None,
-                 _client=None,
-                 _filepath=None,
-                 _key=None,
-                 _verbose=False,
-                 _force=False,
-                 _trace_print=False,
-                 _trace_file=False):
-    """Used in StarThinker scripts as programmatic entry point.
+    @classmethod
+    def initialize(cls,
+                   _recipe={},
+                   _task=None,
+                   _instance=1,
+                   _project=None,
+                   _user=None,
+                   _service=None,
+                   _client=None,
+                   _filepath=None,
+                   _key=None,
+                   _verbose=False,
+                   _force=False,
+                   _trace_print=False,
+                   _trace_file=False):
+        """Used in StarThinker scripts as programmatic entry point.
 
     Set up the project singleton for execution of a task, be sure to mimic
     defaults in helper
@@ -534,69 +524,65 @@ class project:
       result in the same object.
     """
 
-    starthinker_trace_start(_trace_print, _trace_file)
+        starthinker_trace_start(_trace_print, _trace_file)
 
-    cls.recipe = _recipe
-    cls.function = _task
-    cls.instance = _instance
-    cls.force = _force
+        cls.recipe = _recipe
+        cls.function = _task
+        cls.instance = _instance
+        cls.force = _force
 
-    # populates the task variable based on function and instance
-    cls.get_task()
+        # populates the task variable based on function and instance
+        cls.get_task()
 
-    cls.verbose = _verbose
-    cls.filepath = _filepath
+        cls.verbose = _verbose
+        cls.filepath = _filepath
 
-    # add setup to json if not provided and loads command line credentials if given
-    if 'setup' not in cls.recipe:
-      cls.recipe['setup'] = {}
-    if 'auth' not in cls.recipe['setup']:
-      cls.recipe['setup']['auth'] = {}
-    if _service:
-      cls.recipe['setup']['auth']['service'] = _service
-    if _client:
-      cls.recipe['setup']['auth']['client'] = _client
-    # if user explicity specified by command line
-    if _user:
-      cls.recipe['setup']['auth']['user'] = _user
-    # or if user not given, then try default credentials ( disabled security risk to assume on behalf of recipe )
-    #elif not cls.recipe['setup']['auth'].get('user'):
-    #  cls.recipe['setup']['auth']['user'] = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', None)
+        # add setup to json if not provided and loads command line credentials if given
+        if 'setup' not in cls.recipe:
+            cls.recipe['setup'] = {}
+        if 'auth' not in cls.recipe['setup']:
+            cls.recipe['setup']['auth'] = {}
+        if _service:
+            cls.recipe['setup']['auth']['service'] = _service
+        if _client:
+            cls.recipe['setup']['auth']['client'] = _client
+        # if user explicity specified by command line
+        if _user:
+            cls.recipe['setup']['auth']['user'] = _user
+        # or if user not given, then try default credentials ( disabled security risk to assume on behalf of recipe )
+        #elif not cls.recipe['setup']['auth'].get('user'):
+        #  cls.recipe['setup']['auth']['user'] = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', None)
 
-    # if project id given, use it
-    if _project:
-      cls.recipe['setup']['id'] = _project
+        # if project id given, use it
+        if _project:
+            cls.recipe['setup']['id'] = _project
 
-    if _key:
-      cls.recipe['setup']['key'] = _key
+        if _key:
+            cls.recipe['setup']['key'] = _key
 
-    # TBD: if project id not given, use service credentials
-    #elif not cls.recipe['setup'].get('id') and cls.recipe['setup']['auth'].get('service'):
-    # TBD: if project id not given, use client credentials
-    #elif not cls.recipe['setup'].get('id') and cls.recipe['setup']['auth'].get('client'):
+        # TBD: if project id not given, use service credentials
+        #elif not cls.recipe['setup'].get('id') and cls.recipe['setup']['auth'].get('service'):
+        # TBD: if project id not given, use client credentials
+        #elif not cls.recipe['setup'].get('id') and cls.recipe['setup']['auth'].get('client'):
 
-    cls.id = cls.recipe['setup'].get('id')
-    cls.key = cls.recipe['setup'].get('key')
+        cls.id = cls.recipe['setup'].get('id')
+        cls.key = cls.recipe['setup'].get('key')
 
-    # find date based on timezone
-    cls.timezone = pytz.timezone(
-      cls.recipe['setup'].get(
-        'timezone',
-        'America/Los_Angeles'
-      )
-    )
-    cls.now = datetime.now(cls.timezone)
-    cls.date = cls.now.date()
-    cls.hour = cls.now.hour
+        # find date based on timezone
+        cls.timezone = pytz.timezone(cls.recipe['setup'].get(
+            'timezone', 'America/Los_Angeles'))
+        cls.now = datetime.now(cls.timezone)
+        cls.date = cls.now.date()
+        cls.hour = cls.now.hour
 
-    if cls.verbose:
-      print('TASK:', _task or 'all')
-      print('DATE:', cls.now.date())
-      print('HOUR:', cls.now.hour)
+        if cls.verbose:
+            print('TASK:', _task or 'all')
+            print('DATE:', cls.now.date())
+            print('HOUR:', cls.now.hour)
 
-  @classmethod
-  def execute(cls, _force=False):
-    """Run all the tasks in a project in one sequence.
+    @classmethod
+    def execute(cls, _force=False):
+        """Run all the tasks in a project in one sequence.
 
     ```
     from starthinker.util.project import project
@@ -626,30 +612,29 @@ class project:
 
     """
 
-    returncode = EXIT_SUCCESS
-    instances = {}
-    for task in cls.recipe['tasks']:
-      script, task = next(iter(task.items()))
+        returncode = EXIT_SUCCESS
+        instances = {}
+        for task in cls.recipe['tasks']:
+            script, task = next(iter(task.items()))
 
-      # count instance per task
-      instances.setdefault(script, 0)
-      instances[script] += 1
+            # count instance per task
+            instances.setdefault(script, 0)
+            instances[script] += 1
 
-      print('RUNNING TASK:', '%s %d' % (script, instances[script]))
+            print('RUNNING TASK:', '%s %d' % (script, instances[script]))
 
-      if _force or cls.force or is_scheduled(cls.recipe, task):
-        try:
-          python_callable = getattr(
-            import_module('starthinker.task.%s.run' % script),
-            script
-          )
-          python_callable(cls.recipe, instances[script])
-        except Exception as e:
-          print(str(e))
-          returncode = EXIT_ERROR
-      else:
-        print(
-          'Schedule Skipping: add --force to ignore schedule or run specific task handler'
-        )
+            if _force or cls.force or is_scheduled(cls.recipe, task):
+                try:
+                    python_callable = getattr(
+                        import_module('starthinker.task.%s.run' % script),
+                        script)
+                    python_callable(cls.recipe, instances[script])
+                except Exception as e:
+                    print(str(e))
+                    returncode = EXIT_ERROR
+            else:
+                print(
+                    'Schedule Skipping: add --force to ignore schedule or run specific task handler'
+                )
 
-    return returncode
+        return returncode

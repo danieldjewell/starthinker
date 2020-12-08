@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -81,66 +80,63 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
-  'ids': [],
-  'destination_dataset': '',
-  'destination_table': '',
+    'auth_read': 'user',  # Credentials used for reading data.
+    'ids': [],
+    'destination_dataset': '',
+    'destination_table': '',
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'lineitem': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'read': {
-          'line_items': {
-            'single_cell': True,
-            'values': {
-              'field': {
-                'name': 'ids',
-                'kind': 'integer_list',
-                'order': 1,
-                'default': [
-                ]
-              }
-            }
-          },
-          'out': {
-            'bigquery': {
-              'dataset': {
+    'tasks': [{
+        'lineitem': {
+            'auth': {
                 'field': {
-                  'name': 'destination_dataset',
-                  'kind': 'string',
-                  'order': 2,
-                  'default': ''
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
                 }
-              },
-              'table': {
-                'field': {
-                  'name': 'destination_table',
-                  'kind': 'string',
-                  'order': 3,
-                  'default': ''
+            },
+            'read': {
+                'line_items': {
+                    'single_cell': True,
+                    'values': {
+                        'field': {
+                            'name': 'ids',
+                            'kind': 'integer_list',
+                            'order': 1,
+                            'default': []
+                        }
+                    }
+                },
+                'out': {
+                    'bigquery': {
+                        'dataset': {
+                            'field': {
+                                'name': 'destination_dataset',
+                                'kind': 'string',
+                                'order': 2,
+                                'default': ''
+                            }
+                        },
+                        'table': {
+                            'field': {
+                                'name': 'destination_table',
+                                'kind': 'string',
+                                'order': 3,
+                                'default': ''
+                            }
+                        }
+                    }
                 }
-              }
             }
-          }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('lineitem_read_to_bigquery_via_value', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

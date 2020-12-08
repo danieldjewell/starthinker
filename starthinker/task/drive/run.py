@@ -26,21 +26,21 @@ from starthinker.util.drive import file_copy, file_create, file_delete
 
 @project.from_parameters
 def drive():
-  if project.verbose:
-    print('Drive')
-
-  if 'delete' in project.task:
     if project.verbose:
-      print('Drive Delete', project.task['delete'])
-    file_delete(project.task['auth'], project.task['delete'])
+        print('Drive')
 
-  if 'copy' in project.task:
-    if project.verbose:
-      print('Drive Copy', project.task['copy']['source'],
-            project.task['copy']['destination'])
-    file_copy(project.task['auth'], project.task['copy']['source'],
-              project.task['copy']['destination'])
+    if 'delete' in project.task:
+        if project.verbose:
+            print('Drive Delete', project.task['delete'])
+        file_delete(project.task['auth'], project.task['delete'])
+
+    if 'copy' in project.task:
+        if project.verbose:
+            print('Drive Copy', project.task['copy']['source'],
+                  project.task['copy']['destination'])
+        file_copy(project.task['auth'], project.task['copy']['source'],
+                  project.task['copy']['destination'])
 
 
 if __name__ == '__main__':
-  drive()
+    drive()

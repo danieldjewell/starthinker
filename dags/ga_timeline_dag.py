@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -81,67 +80,52 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
-  'account_ids': [],
-  'dataset': '',  # Dataset to be written to in BigQuery.
+    'auth_read': 'user',  # Credentials used for reading data.
+    'account_ids': [],
+    'dataset': '',  # Dataset to be written to in BigQuery.
 }
 
 RECIPE = {
-  'setup': {
-    'day': [
-      'Mon',
-      'Tue',
-      'Wed',
-      'Thu',
-      'Fri',
-      'Sat',
-      'Sun'
-    ],
-    'hour': [
-      0,
-      7,
-      14,
-      23
-    ]
-  },
-  'tasks': [
-    {
-      'ga_settings_download': {
-        'description': 'Will create tables with format ga_* to hold each endpoint via a call to the API list function.',
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'accounts': {
-          'field': {
-            'name': 'account_ids',
-            'kind': 'integer_list',
-            'order': 1,
-            'default': [
-            ]
-          }
-        },
-        'dataset': {
-          'field': {
-            'name': 'dataset',
-            'kind': 'string',
-            'order': 2,
-            'default': '',
-            'description': 'Dataset to be written to in BigQuery.'
-          }
+    'setup': {
+        'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        'hour': [0, 7, 14, 23]
+    },
+    'tasks': [{
+        'ga_settings_download': {
+            'description':
+                'Will create tables with format ga_* to hold each endpoint via a call to the API list function.',
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'accounts': {
+                'field': {
+                    'name': 'account_ids',
+                    'kind': 'integer_list',
+                    'order': 1,
+                    'default': []
+                }
+            },
+            'dataset': {
+                'field': {
+                    'name': 'dataset',
+                    'kind': 'string',
+                    'order': 2,
+                    'default': '',
+                    'description': 'Dataset to be written to in BigQuery.'
+                }
+            }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('ga_timeline', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

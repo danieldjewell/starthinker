@@ -27,55 +27,58 @@ from starthinker.util.sheets import sheets_clear
 
 
 def partner_clear():
-  table_create(
-      project.task['auth_bigquery'],
-      project.id,
-      project.task['dataset'],
-      'DV_Partners',
-      Discovery_To_BigQuery('displayvideo',
-                            'v1').method_schema('partners.list'),
-  )
+    table_create(
+        project.task['auth_bigquery'],
+        project.id,
+        project.task['dataset'],
+        'DV_Partners',
+        Discovery_To_BigQuery('displayvideo',
+                              'v1').method_schema('partners.list'),
+    )
 
-  sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Partners', 'B2:Z')
+    sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Partners',
+                 'B2:Z')
 
 
 def partner_load():
-  # write partners to BQ
-  rows = API_DV360(project.task['auth_dv'], iterate=True).partners().list().execute()
+    # write partners to BQ
+    rows = API_DV360(project.task['auth_dv'],
+                     iterate=True).partners().list().execute()
 
-  put_rows(
-      project.task['auth_bigquery'], {
-          'bigquery': {
-              'dataset':
-                  project.task['dataset'],
-              'table':
-                  'DV_Partners',
-              'schema':
-                  Discovery_To_BigQuery('displayvideo',
-                                        'v1').method_schema('partners.list'),
-              'format':
-                  'JSON'
-          }
-      }, rows)
+    put_rows(
+        project.task['auth_bigquery'], {
+            'bigquery': {
+                'dataset':
+                    project.task['dataset'],
+                'table':
+                    'DV_Partners',
+                'schema':
+                    Discovery_To_BigQuery('displayvideo',
+                                          'v1').method_schema('partners.list'),
+                'format':
+                    'JSON'
+            }
+        }, rows)
 
-  # write partners to sheet
-  rows = get_rows(
-      project.task['auth_bigquery'], {
-          'bigquery': {
-              'dataset':
-                  project.task['dataset'],
-              'query':
-                  "SELECT CONCAT(displayName, ' - ', partnerId), entityStatus  FROM `%s.DV_Partners`"
-                  % project.task['dataset'],
-              'legacy':
-                  False
-          }
-      })
+    # write partners to sheet
+    rows = get_rows(
+        project.task['auth_bigquery'], {
+            'bigquery': {
+                'dataset':
+                    project.task['dataset'],
+                'query':
+                    "SELECT CONCAT(displayName, ' - ', partnerId), entityStatus  FROM `%s.DV_Partners`"
+                    % project.task['dataset'],
+                'legacy':
+                    False
+            }
+        })
 
-  put_rows(project.task['auth_sheets'], {
-      'sheets': {
-          'sheet': project.task['sheet'],
-          'tab': 'Partners',
-          'range': 'B2'
-      }
-  }, rows)
+    put_rows(
+        project.task['auth_sheets'], {
+            'sheets': {
+                'sheet': project.task['sheet'],
+                'tab': 'Partners',
+                'range': 'B2'
+            }
+        }, rows)

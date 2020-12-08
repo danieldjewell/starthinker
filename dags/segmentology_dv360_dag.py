@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -83,386 +82,405 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
-  'recipe_timezone': 'America/Los_Angeles',  # Timezone for report dates.
-  'recipe_project': '',  # Project ID hosting dataset.
-  'auth_write': 'service',  # Authorization used for writing data.
-  'recipe_name': '',  # Name of report, not needed if ID used.
-  'recipe_slug': '',  # Name of Google BigQuery dataset to create.
-  'partners': [],  # DV360 partner id.
-  'advertisers': [],  # Comma delimited list of DV360 advertiser ids.
+    'auth_read': 'user',  # Credentials used for reading data.
+    'recipe_timezone': 'America/Los_Angeles',  # Timezone for report dates.
+    'recipe_project': '',  # Project ID hosting dataset.
+    'auth_write': 'service',  # Authorization used for writing data.
+    'recipe_name': '',  # Name of report, not needed if ID used.
+    'recipe_slug': '',  # Name of Google BigQuery dataset to create.
+    'partners': [],  # DV360 partner id.
+    'advertisers': [],  # Comma delimited list of DV360 advertiser ids.
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'dataset': {
-        'description': 'Create a dataset for bigquery tables.',
-        'hour': [
-          4
-        ],
-        'auth': {
-          'field': {
-            'name': 'auth_write',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Credentials used for writing data.'
-          }
-        },
+    'tasks': [{
         'dataset': {
-          'field': {
-            'name': 'recipe_slug',
-            'kind': 'string',
-            'description': 'Place where tables will be created in BigQuery.'
-          }
-        }
-      }
-    },
-    {
-      'bigquery': {
-        'auth': {
-          'field': {
-            'name': 'auth_write',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Credentials used for writing function.'
-          }
-        },
-        'function': 'pearson_significance_test',
-        'to': {
-          'dataset': {
-            'field': {
-              'name': 'recipe_slug',
-              'kind': 'string',
-              'order': 4,
-              'default': '',
-              'description': 'Name of Google BigQuery dataset to create.'
-            }
-          }
-        }
-      }
-    },
-    {
-      'dbm': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 0,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'report': {
-          'filters': {
-            'FILTER_PARTNER': {
-              'values': {
-                'field': {
-                  'name': 'partners',
-                  'kind': 'integer_list',
-                  'order': 5,
-                  'default': [
-                  ],
-                  'description': 'DV360 partner id.'
-                }
-              }
-            },
-            'FILTER_ADVERTISER': {
-              'values': {
-                'field': {
-                  'name': 'advertisers',
-                  'kind': 'integer_list',
-                  'order': 6,
-                  'default': [
-                  ],
-                  'description': 'Comma delimited list of DV360 advertiser ids.'
-                }
-              }
-            }
-          },
-          'body': {
-            'timezoneCode': {
-              'field': {
-                'name': 'recipe_timezone',
-                'kind': 'timezone',
-                'description': 'Timezone for report dates.',
-                'default': 'America/Los_Angeles'
-              }
-            },
-            'metadata': {
-              'title': {
-                'field': {
-                  'name': 'recipe_name',
-                  'kind': 'string',
-                  'order': 3,
-                  'prefix': 'Segmentology ',
-                  'default': '',
-                  'description': 'Name of report, not needed if ID used.'
-                }
-              },
-              'dataRange': 'LAST_30_DAYS',
-              'format': 'CSV'
-            },
-            'params': {
-              'type': 'TYPE_CROSS_PARTNER',
-              'groupBys': [
-                'FILTER_PARTNER',
-                'FILTER_PARTNER_NAME',
-                'FILTER_ADVERTISER',
-                'FILTER_ADVERTISER_NAME',
-                'FILTER_MEDIA_PLAN',
-                'FILTER_MEDIA_PLAN_NAME',
-                'FILTER_ZIP_POSTAL_CODE'
-              ],
-              'metrics': [
-                'METRIC_BILLABLE_IMPRESSIONS',
-                'METRIC_CLICKS',
-                'METRIC_TOTAL_CONVERSIONS'
-              ]
-            },
-            'schedule': {
-              'frequency': 'WEEKLY'
-            }
-          }
-        }
-      }
-    },
-    {
-      'dbm': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 0,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'report': {
-          'name': {
-            'field': {
-              'name': 'recipe_name',
-              'kind': 'string',
-              'order': 3,
-              'prefix': 'Segmentology ',
-              'default': '',
-              'description': 'Name of report, not needed if ID used.'
-            }
-          }
-        },
-        'out': {
-          'bigquery': {
+            'description': 'Create a dataset for bigquery tables.',
+            'hour': [4],
             'auth': {
-              'field': {
-                'name': 'auth_write',
-                'kind': 'authentication',
-                'order': 1,
-                'default': 'service',
-                'description': 'Authorization used for writing data.'
-              }
+                'field': {
+                    'name': 'auth_write',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Credentials used for writing data.'
+                }
             },
             'dataset': {
-              'field': {
-                'name': 'recipe_slug',
-                'kind': 'string',
-                'order': 4,
-                'default': '',
-                'description': 'Name of Google BigQuery dataset to create.'
-              }
+                'field': {
+                    'name':
+                        'recipe_slug',
+                    'kind':
+                        'string',
+                    'description':
+                        'Place where tables will be created in BigQuery.'
+                }
+            }
+        }
+    }, {
+        'bigquery': {
+            'auth': {
+                'field': {
+                    'name': 'auth_write',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Credentials used for writing function.'
+                }
             },
-            'table': 'DV360_KPI',
-            'header': True,
-            'schema': [
-              {
-                'name': 'Partner_Id',
-                'type': 'INTEGER',
-                'mode': 'REQUIRED'
-              },
-              {
-                'name': 'Partner',
-                'type': 'STRING',
-                'mode': 'REQUIRED'
-              },
-              {
-                'name': 'Advertiser_Id',
-                'type': 'INTEGER',
-                'mode': 'REQUIRED'
-              },
-              {
-                'name': 'Advertiser',
-                'type': 'STRING',
-                'mode': 'REQUIRED'
-              },
-              {
-                'name': 'Campaign_Id',
-                'type': 'INTEGER',
-                'mode': 'REQUIRED'
-              },
-              {
-                'name': 'Campaign',
-                'type': 'STRING',
-                'mode': 'REQUIRED'
-              },
-              {
-                'name': 'Zip',
-                'type': 'STRING',
-                'mode': 'NULLABLE'
-              },
-              {
-                'name': 'Impressions',
-                'type': 'FLOAT',
-                'mode': 'NULLABLE'
-              },
-              {
-                'name': 'Clicks',
-                'type': 'INTEGER',
-                'mode': 'NULLABLE'
-              },
-              {
-                'name': 'Conversions',
-                'type': 'FLOAT',
-                'mode': 'NULLABLE'
-              }
-            ]
-          }
+            'function': 'pearson_significance_test',
+            'to': {
+                'dataset': {
+                    'field': {
+                        'name':
+                            'recipe_slug',
+                        'kind':
+                            'string',
+                        'order':
+                            4,
+                        'default':
+                            '',
+                        'description':
+                            'Name of Google BigQuery dataset to create.'
+                    }
+                }
+            }
         }
-      }
-    },
-    {
-      'bigquery': {
-        'auth': {
-          'field': {
-            'name': 'auth_write',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Authorization used for writing data.'
-          }
-        },
-        'from': {
-          'query': 'SELECT            Partner_Id,            Partner,            Advertiser_Id,            Advertiser,            Campaign_Id,            Campaign,            Zip,            SAFE_DIVIDE(Impressions, SUM(Impressions) OVER(PARTITION BY Advertiser_Id)) AS Impression_Percent,            SAFE_DIVIDE(Clicks, Impressions) AS Click_Percent,            SAFE_DIVIDE(Conversions, Impressions) AS Conversion_Percent,            Impressions AS Impressions          FROM            `{project}.{dataset}.DV360_KPI`;        ',
-          'parameters': {
-            'project': {
-              'field': {
-                'name': 'recipe_project',
-                'kind': 'string',
-                'description': 'Project ID hosting dataset.'
-              }
+    }, {
+        'dbm': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 0,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
             },
-            'dataset': {
-              'field': {
-                'name': 'recipe_slug',
-                'kind': 'string',
-                'description': 'Place where tables will be created in BigQuery.'
-              }
+            'report': {
+                'filters': {
+                    'FILTER_PARTNER': {
+                        'values': {
+                            'field': {
+                                'name': 'partners',
+                                'kind': 'integer_list',
+                                'order': 5,
+                                'default': [],
+                                'description': 'DV360 partner id.'
+                            }
+                        }
+                    },
+                    'FILTER_ADVERTISER': {
+                        'values': {
+                            'field': {
+                                'name':
+                                    'advertisers',
+                                'kind':
+                                    'integer_list',
+                                'order':
+                                    6,
+                                'default': [],
+                                'description':
+                                    'Comma delimited list of DV360 advertiser ids.'
+                            }
+                        }
+                    }
+                },
+                'body': {
+                    'timezoneCode': {
+                        'field': {
+                            'name': 'recipe_timezone',
+                            'kind': 'timezone',
+                            'description': 'Timezone for report dates.',
+                            'default': 'America/Los_Angeles'
+                        }
+                    },
+                    'metadata': {
+                        'title': {
+                            'field': {
+                                'name':
+                                    'recipe_name',
+                                'kind':
+                                    'string',
+                                'order':
+                                    3,
+                                'prefix':
+                                    'Segmentology ',
+                                'default':
+                                    '',
+                                'description':
+                                    'Name of report, not needed if ID used.'
+                            }
+                        },
+                        'dataRange': 'LAST_30_DAYS',
+                        'format': 'CSV'
+                    },
+                    'params': {
+                        'type':
+                            'TYPE_CROSS_PARTNER',
+                        'groupBys': [
+                            'FILTER_PARTNER', 'FILTER_PARTNER_NAME',
+                            'FILTER_ADVERTISER', 'FILTER_ADVERTISER_NAME',
+                            'FILTER_MEDIA_PLAN', 'FILTER_MEDIA_PLAN_NAME',
+                            'FILTER_ZIP_POSTAL_CODE'
+                        ],
+                        'metrics': [
+                            'METRIC_BILLABLE_IMPRESSIONS', 'METRIC_CLICKS',
+                            'METRIC_TOTAL_CONVERSIONS'
+                        ]
+                    },
+                    'schedule': {
+                        'frequency': 'WEEKLY'
+                    }
+                }
             }
-          },
-          'legacy': False
-        },
-        'to': {
-          'dataset': {
-            'field': {
-              'name': 'recipe_slug',
-              'kind': 'string',
-              'description': 'Place where tables will be written in BigQuery.'
-            }
-          },
-          'view': 'DV360_KPI_Normalized'
         }
-      }
-    },
-    {
-      'census': {
-        'auth': {
-          'field': {
-            'name': 'auth_write',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Authorization used for writing data.'
-          }
-        },
-        'normalize': {
-          'census_geography': 'zip_codes',
-          'census_year': '2018',
-          'census_span': '5yr'
-        },
-        'to': {
-          'dataset': {
-            'field': {
-              'name': 'recipe_slug',
-              'kind': 'string',
-              'order': 4,
-              'default': '',
-              'description': 'Name of Google BigQuery dataset to create.'
+    }, {
+        'dbm': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 0,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'report': {
+                'name': {
+                    'field': {
+                        'name': 'recipe_name',
+                        'kind': 'string',
+                        'order': 3,
+                        'prefix': 'Segmentology ',
+                        'default': '',
+                        'description': 'Name of report, not needed if ID used.'
+                    }
+                }
+            },
+            'out': {
+                'bigquery': {
+                    'auth': {
+                        'field': {
+                            'name':
+                                'auth_write',
+                            'kind':
+                                'authentication',
+                            'order':
+                                1,
+                            'default':
+                                'service',
+                            'description':
+                                'Authorization used for writing data.'
+                        }
+                    },
+                    'dataset': {
+                        'field': {
+                            'name':
+                                'recipe_slug',
+                            'kind':
+                                'string',
+                            'order':
+                                4,
+                            'default':
+                                '',
+                            'description':
+                                'Name of Google BigQuery dataset to create.'
+                        }
+                    },
+                    'table':
+                        'DV360_KPI',
+                    'header':
+                        True,
+                    'schema': [{
+                        'name': 'Partner_Id',
+                        'type': 'INTEGER',
+                        'mode': 'REQUIRED'
+                    }, {
+                        'name': 'Partner',
+                        'type': 'STRING',
+                        'mode': 'REQUIRED'
+                    }, {
+                        'name': 'Advertiser_Id',
+                        'type': 'INTEGER',
+                        'mode': 'REQUIRED'
+                    }, {
+                        'name': 'Advertiser',
+                        'type': 'STRING',
+                        'mode': 'REQUIRED'
+                    }, {
+                        'name': 'Campaign_Id',
+                        'type': 'INTEGER',
+                        'mode': 'REQUIRED'
+                    }, {
+                        'name': 'Campaign',
+                        'type': 'STRING',
+                        'mode': 'REQUIRED'
+                    }, {
+                        'name': 'Zip',
+                        'type': 'STRING',
+                        'mode': 'NULLABLE'
+                    }, {
+                        'name': 'Impressions',
+                        'type': 'FLOAT',
+                        'mode': 'NULLABLE'
+                    }, {
+                        'name': 'Clicks',
+                        'type': 'INTEGER',
+                        'mode': 'NULLABLE'
+                    }, {
+                        'name': 'Conversions',
+                        'type': 'FLOAT',
+                        'mode': 'NULLABLE'
+                    }]
+                }
             }
-          },
-          'type': 'view'
         }
-      }
-    },
-    {
-      'census': {
-        'auth': {
-          'field': {
-            'name': 'auth_write',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Authorization used for writing data.'
-          }
-        },
-        'correlate': {
-          'join': 'Zip',
-          'pass': [
-            'Partner_Id',
-            'Partner',
-            'Advertiser_Id',
-            'Advertiser',
-            'Campaign_Id',
-            'Campaign'
-          ],
-          'sum': [
-            'Impressions'
-          ],
-          'correlate': [
-            'Impression_Percent',
-            'Click_Percent',
-            'Conversion_Percent'
-          ],
-          'dataset': {
-            'field': {
-              'name': 'recipe_slug',
-              'kind': 'string',
-              'order': 4,
-              'default': '',
-              'description': 'Name of Google BigQuery dataset to create.'
+    }, {
+        'bigquery': {
+            'auth': {
+                'field': {
+                    'name': 'auth_write',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Authorization used for writing data.'
+                }
+            },
+            'from': {
+                'query':
+                    'SELECT            Partner_Id,            Partner,            Advertiser_Id,            Advertiser,            Campaign_Id,            Campaign,            Zip,            SAFE_DIVIDE(Impressions, SUM(Impressions) OVER(PARTITION BY Advertiser_Id)) AS Impression_Percent,            SAFE_DIVIDE(Clicks, Impressions) AS Click_Percent,            SAFE_DIVIDE(Conversions, Impressions) AS Conversion_Percent,            Impressions AS Impressions          FROM            `{project}.{dataset}.DV360_KPI`;        ',
+                'parameters': {
+                    'project': {
+                        'field': {
+                            'name': 'recipe_project',
+                            'kind': 'string',
+                            'description': 'Project ID hosting dataset.'
+                        }
+                    },
+                    'dataset': {
+                        'field': {
+                            'name':
+                                'recipe_slug',
+                            'kind':
+                                'string',
+                            'description':
+                                'Place where tables will be created in BigQuery.'
+                        }
+                    }
+                },
+                'legacy':
+                    False
+            },
+            'to': {
+                'dataset': {
+                    'field': {
+                        'name':
+                            'recipe_slug',
+                        'kind':
+                            'string',
+                        'description':
+                            'Place where tables will be written in BigQuery.'
+                    }
+                },
+                'view': 'DV360_KPI_Normalized'
             }
-          },
-          'table': 'DV360_KPI_Normalized',
-          'significance': 80
-        },
-        'to': {
-          'dataset': {
-            'field': {
-              'name': 'recipe_slug',
-              'kind': 'string',
-              'order': 4,
-              'default': '',
-              'description': 'Name of Google BigQuery dataset to create.'
-            }
-          },
-          'type': 'view'
         }
-      }
-    }
-  ]
+    }, {
+        'census': {
+            'auth': {
+                'field': {
+                    'name': 'auth_write',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Authorization used for writing data.'
+                }
+            },
+            'normalize': {
+                'census_geography': 'zip_codes',
+                'census_year': '2018',
+                'census_span': '5yr'
+            },
+            'to': {
+                'dataset': {
+                    'field': {
+                        'name':
+                            'recipe_slug',
+                        'kind':
+                            'string',
+                        'order':
+                            4,
+                        'default':
+                            '',
+                        'description':
+                            'Name of Google BigQuery dataset to create.'
+                    }
+                },
+                'type': 'view'
+            }
+        }
+    }, {
+        'census': {
+            'auth': {
+                'field': {
+                    'name': 'auth_write',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Authorization used for writing data.'
+                }
+            },
+            'correlate': {
+                'join': 'Zip',
+                'pass': [
+                    'Partner_Id', 'Partner', 'Advertiser_Id', 'Advertiser',
+                    'Campaign_Id', 'Campaign'
+                ],
+                'sum': ['Impressions'],
+                'correlate': [
+                    'Impression_Percent', 'Click_Percent', 'Conversion_Percent'
+                ],
+                'dataset': {
+                    'field': {
+                        'name':
+                            'recipe_slug',
+                        'kind':
+                            'string',
+                        'order':
+                            4,
+                        'default':
+                            '',
+                        'description':
+                            'Name of Google BigQuery dataset to create.'
+                    }
+                },
+                'table': 'DV360_KPI_Normalized',
+                'significance': 80
+            },
+            'to': {
+                'dataset': {
+                    'field': {
+                        'name':
+                            'recipe_slug',
+                        'kind':
+                            'string',
+                        'order':
+                            4,
+                        'default':
+                            '',
+                        'description':
+                            'Name of Google BigQuery dataset to create.'
+                    }
+                },
+                'type': 'view'
+            }
+        }
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('segmentology_dv360', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

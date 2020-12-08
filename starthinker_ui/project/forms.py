@@ -25,54 +25,54 @@ from starthinker_ui.project.models import Project
 
 
 class ProjectForm(forms.ModelForm):
-  share = forms.ChoiceField()
+    share = forms.ChoiceField()
 
-  class Meta:
-    model = Project
-    fields = ['service', 'key', 'share']
+    class Meta:
+        model = Project
+        fields = ['service', 'key', 'share']
 
-  def __init__(self, account, *args, **kwargs):
-    super(ProjectForm, self).__init__(*args, **kwargs)
-    self.instance.account = account
-    self.fields['service'].label = 'Service JSON'
-    self.fields['service'].help_text = mark_safe(
-      'Optional, paste service JSON here.'
-    )
+    def __init__(self, account, *args, **kwargs):
+        super(ProjectForm, self).__init__(*args, **kwargs)
+        self.instance.account = account
+        self.fields['service'].label = 'Service JSON'
+        self.fields['service'].help_text = mark_safe(
+            'Optional, paste service JSON here.')
 
-    self.fields['key'].label = 'API Key'
-    self.fields['key'].help_text = mark_safe(
-      'Optional, ensures billing and may be required for some API calls.'
-    )
+        self.fields['key'].label = 'API Key'
+        self.fields['key'].help_text = mark_safe(
+            'Optional, ensures billing and may be required for some API calls.')
 
-    self.fields['share'].label = 'Share'
-    self.fields['share'].help_text = mark_safe(
-      'WARNING: Sharing with DOMAIN or GLOBAL will allow other users to use, but not view, your service credentials and project permissions.'
-    )
+        self.fields['share'].label = 'Share'
+        self.fields['share'].help_text = mark_safe(
+            'WARNING: Sharing with DOMAIN or GLOBAL will allow other users to use, but not view, your service credentials and project permissions.'
+        )
 
-    domain = account.get_domain()
-    self.fields['share'].choices = ((
-        'user', 'USER | SAFE: Only you can use it.'
-    ), ('domain',
-        'DOMAIN ( %s ) | CAUTION: Only people in your verified domain can use it.'
-        % domain), ('global', 'GLOBAL | CAUTION: Anyone logging in can use it.'
-                   )) if domain else (('user', 'User'), ('global', 'Global'))
+        domain = account.get_domain()
+        self.fields['share'].choices = ((
+            'user', 'USER | SAFE: Only you can use it.'
+        ), ('domain',
+            'DOMAIN ( %s ) | CAUTION: Only people in your verified domain can use it.'
+            % domain), ('global',
+                        'GLOBAL | CAUTION: Anyone logging in can use it.')
+                                       ) if domain else (('user', 'User'),
+                                                         ('global', 'Global'))
 
-  def clean_service(self):
-    try:
-      service = self.cleaned_data['service']
-      self.instance.identifier = json.loads(service)['client_email']
-    except:
-      raise forms.ValidationError('Service credentials must be proper JSON.')
+    def clean_service(self):
+        try:
+            service = self.cleaned_data['service']
+            self.instance.identifier = json.loads(service)['client_email']
+        except:
+            raise forms.ValidationError(
+                'Service credentials must be proper JSON.')
 
-    if Project.objects.filter(
-        account=self.instance.account,
-        identifier=self.instance.identifier).exclude(
-            pk=self.instance.pk).exists():
-      raise forms.ValidationError(
-          'You already have service credentails for %s, this is a duplicate.' %
-          self.instance.identifier)
+        if Project.objects.filter(account=self.instance.account,
+                                  identifier=self.instance.identifier).exclude(
+                                      pk=self.instance.pk).exists():
+            raise forms.ValidationError(
+                'You already have service credentails for %s, this is a duplicate.'
+                % self.instance.identifier)
 
-    return service
+        return service
 
-  def get_errors(self):
-    return self.errors
+    def get_errors(self):
+        return self.errors

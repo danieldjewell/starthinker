@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -79,42 +78,40 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth': 'service',  # Credentials used for writing function.
-  'dataset': '',  # Existing BigQuery dataset.
+    'auth': 'service',  # Credentials used for writing function.
+    'dataset': '',  # Existing BigQuery dataset.
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'bigquery': {
-        'auth': {
-          'field': {
-            'name': 'auth',
-            'kind': 'authentication',
-            'order': 0,
-            'default': 'service',
-            'description': 'Credentials used for writing function.'
-          }
-        },
-        'function': 'pearson_significance_test',
-        'to': {
-          'dataset': {
-            'field': {
-              'name': 'dataset',
-              'kind': 'string',
-              'order': 1,
-              'default': '',
-              'description': 'Existing BigQuery dataset.'
+    'tasks': [{
+        'bigquery': {
+            'auth': {
+                'field': {
+                    'name': 'auth',
+                    'kind': 'authentication',
+                    'order': 0,
+                    'default': 'service',
+                    'description': 'Credentials used for writing function.'
+                }
+            },
+            'function': 'pearson_significance_test',
+            'to': {
+                'dataset': {
+                    'field': {
+                        'name': 'dataset',
+                        'kind': 'string',
+                        'order': 1,
+                        'default': '',
+                        'description': 'Existing BigQuery dataset.'
+                    }
+                }
             }
-          }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('bigquery_pearson_significance_test', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

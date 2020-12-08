@@ -46,7 +46,7 @@ STATIC_URL = 'https://storage.googleapis.com/starthinker-ui/'
 
 
 def domain_to_host(domain):
-  return domain.split('://', 1)[-1].split(':', 1)[0].split('/', 1)[0]
+    return domain.split('://', 1)[-1].split(':', 1)[0].split('/', 1)[0]
 
 
 CONST_URL = os.environ.get('STARTHINKER_UI_DOMAIN') or 'http://localhost:8000'

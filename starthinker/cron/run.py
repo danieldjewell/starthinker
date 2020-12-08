@@ -83,49 +83,48 @@ from starthinker.config import UI_ROOT
 
 if __name__ == '__main__':
 
-  parser = argparse.ArgumentParser()
-  parser.add_argument(
-      'path', help='run all json files in the specified path', action='store')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('path',
+                        help='run all json files in the specified path',
+                        action='store')
 
-  parser.add_argument(
-      '--project',
-      '-p',
-      help='cloud id of project, defaults to None',
-      default=None)
-  parser.add_argument(
-      '--user',
-      '-u',
-      help='path to user credentials json file, defaults to GOOGLE_APPLICATION_CREDENTIALS',
-      default=None)
-  parser.add_argument(
-      '--service',
-      '-s',
-      help='path to service credentials json file, defaults None',
-      default=None)
-  parser.add_argument(
-      '--client',
-      '-c',
-      help='path to client credentials json file, defaults None',
-      default=None)
+    parser.add_argument('--project',
+                        '-p',
+                        help='cloud id of project, defaults to None',
+                        default=None)
+    parser.add_argument(
+        '--user',
+        '-u',
+        help=
+        'path to user credentials json file, defaults to GOOGLE_APPLICATION_CREDENTIALS',
+        default=None)
+    parser.add_argument(
+        '--service',
+        '-s',
+        help='path to service credentials json file, defaults None',
+        default=None)
+    parser.add_argument(
+        '--client',
+        '-c',
+        help='path to client credentials json file, defaults None',
+        default=None)
 
-  parser.add_argument(
-      '--verbose',
-      '-v',
-      help='print all the steps as they happen.',
-      action='store_true')
-  parser.add_argument(
-      '--force',
-      '-f',
-      help='execute all scripts once then exit.',
-      action='store_true')
+    parser.add_argument('--verbose',
+                        '-v',
+                        help='print all the steps as they happen.',
+                        action='store_true')
+    parser.add_argument('--force',
+                        '-f',
+                        help='execute all scripts once then exit.',
+                        action='store_true')
 
-  args = parser.parse_args()
+    args = parser.parse_args()
 
-  for filepath in glob('%s/*.json' % args.path):
-    if args.verbose:
-      print('RECIPE:', filepath)
-    command = 'python -W ignore %s/starthinker/all/run.py %s %s' % (
-        UI_ROOT, filepath, ' '.join(sys.argv[2:]))
-    if args.verbose:
-      print('COMMAND:', command)
-    subprocess.Popen(command, shell=True)
+    for filepath in glob('%s/*.json' % args.path):
+        if args.verbose:
+            print('RECIPE:', filepath)
+        command = 'python -W ignore %s/starthinker/all/run.py %s %s' % (
+            UI_ROOT, filepath, ' '.join(sys.argv[2:]))
+        if args.verbose:
+            print('COMMAND:', command)
+        subprocess.Popen(command, shell=True)

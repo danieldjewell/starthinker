@@ -42,43 +42,43 @@ JOB_TIMEOUT = 'JOB_TIMEOUT'
 
 
 class LogSeverity():
-  DEFAULT = 0  # The log entry has no assigned severity level.
-  DEBUG = 100  # Debug or trace information.
-  INFO = 200  # Routine information, such as ongoing status or performance.
-  NOTICE = 300  # Normal but significant events, such as start up, shut down, or a configuration change.
-  WARNING = 400  # Warning events might cause problems.
-  ERROR = 500  # Error events are likely to cause problems.
-  CRITICAL = 600  # Critical events cause more severe problems or outages.
-  ALERT = 700  # A person must take an action immediately.
-  EMERGENCY = 800  # One or more systems are unusable.
+    DEFAULT = 0  # The log entry has no assigned severity level.
+    DEBUG = 100  # Debug or trace information.
+    INFO = 200  # Routine information, such as ongoing status or performance.
+    NOTICE = 300  # Normal but significant events, such as start up, shut down, or a configuration change.
+    WARNING = 400  # Warning events might cause problems.
+    ERROR = 500  # Error events are likely to cause problems.
+    CRITICAL = 600  # Critical events cause more severe problems or outages.
+    ALERT = 700  # A person must take an action immediately.
+    EMERGENCY = 800  # One or more systems are unusable.
 
 
 VERBOSE = False
 
 
 def log_verbose(verbose=True):
-  global VERBOSE
-  VERBOSE = verbose
+    global VERBOSE
+    VERBOSE = verbose
 
 
 INSTANCE_NAME = None
 
 
 def get_instance_name(default='UNKNOWN'):
-  global INSTANCE_NAME
-  if INSTANCE_NAME is None:
-    try:
-      return urllib.request.urlopen(
-          urllib.request.Request(
-              'http://metadata.google.internal/computeMetadata/v1/instance/name',
-              headers={'Metadata-Flavor': 'Google'})).read().decode()
-    except:
-      INSTANCE_NAME = default
-  return INSTANCE_NAME
+    global INSTANCE_NAME
+    if INSTANCE_NAME is None:
+        try:
+            return urllib.request.urlopen(
+                urllib.request.Request(
+                    'http://metadata.google.internal/computeMetadata/v1/instance/name',
+                    headers={'Metadata-Flavor': 'Google'})).read().decode()
+        except:
+            INSTANCE_NAME = default
+    return INSTANCE_NAME
 
 
 def log_put(event, severity, job=None, text=None, payload=None):
-  """Generic log writer used by helper functions.
+    """Generic log writer used by helper functions.
 
   Writes to StackDriver.
 
@@ -111,65 +111,65 @@ def log_put(event, severity, job=None, text=None, payload=None):
     - payload ( json ): Output from the scaler or any generic json payload.
   """
 
-  if VERBOSE:
-    print('LOGGING:', event, severity, text or '')
+    if VERBOSE:
+        print('LOGGING:', event, severity, text or '')
 
-  body = {
-      'entries': [{
-          'logName': 'projects/%s/logs/StarThinker' % UI_PROJECT,
-          'severity': severity,
-          'resource': {
-              'type': 'project',
-              'labels': {
-                  'key': UI_PROJECT
-              },
-          },
-          'labels': {
-              'version': LOG_VERSION,
-              'layer': event.split('_')[0],
-              'event': event,
-              'instance': get_instance_name(),
-          },
-          #"operation": {
-          #  "id": string
-          #  "producer": string
-          #  "first": False,
-          #  "last": False,
-          #},
-          # already in recipe worker logging task and instance, does this have additional value?
-          #"sourceLocation": {
-          #  "file": string,
-          #  "line": string,
-          #  "function": string
-          #},
-      }],
-      'partialSuccess': False,
-      'dryRun': False
-  }
+    body = {
+        'entries': [{
+            'logName': 'projects/%s/logs/StarThinker' % UI_PROJECT,
+            'severity': severity,
+            'resource': {
+                'type': 'project',
+                'labels': {
+                    'key': UI_PROJECT
+                },
+            },
+            'labels': {
+                'version': LOG_VERSION,
+                'layer': event.split('_')[0],
+                'event': event,
+                'instance': get_instance_name(),
+            },
+            #"operation": {
+            #  "id": string
+            #  "producer": string
+            #  "first": False,
+            #  "last": False,
+            #},
+            # already in recipe worker logging task and instance, does this have additional value?
+            #"sourceLocation": {
+            #  "file": string,
+            #  "line": string,
+            #  "function": string
+            #},
+        }],
+        'partialSuccess': False,
+        'dryRun': False
+    }
 
-  if text is not None:
-    body['entries'][0]['textPayload'] = text
-  elif payload is not None:
-    body['entries'][0]['jsonPayload'] = payload
-  else:
-    # Removing tasks from job REMOVES ALL POTENTIAL CREDENTIALS IN CODE
-    job_buffer = json.loads(
-        json.dumps(job, indent=2, sort_keys=True, default=str))
-    if 'tasks' in job_buffer['recipe']:
-      del job_buffer['recipe']['tasks']
-    if 'auth' in job_buffer['recipe']['setup']:
-      del job_buffer['recipe']['setup']['auth']
-    body['entries'][0]['jsonPayload'] = job_buffer
+    if text is not None:
+        body['entries'][0]['textPayload'] = text
+    elif payload is not None:
+        body['entries'][0]['jsonPayload'] = payload
+    else:
+        # Removing tasks from job REMOVES ALL POTENTIAL CREDENTIALS IN CODE
+        job_buffer = json.loads(
+            json.dumps(job, indent=2, sort_keys=True, default=str))
+        if 'tasks' in job_buffer['recipe']:
+            del job_buffer['recipe']['tasks']
+        if 'auth' in job_buffer['recipe']['setup']:
+            del job_buffer['recipe']['setup']['auth']
+        body['entries'][0]['jsonPayload'] = job_buffer
 
-  project.initialize(_service=UI_SERVICE, _project=UI_PROJECT)
-  try:
-    API_StackDriver('service').entries().write(body=body).execute()
-  except:
-    print('LOG EVENT ERROR')
+    project.initialize(_service=UI_SERVICE, _project=UI_PROJECT)
+    try:
+        API_StackDriver('service').entries().write(body=body).execute()
+    except:
+        print('LOG EVENT ERROR')
 
 
 def log_get(recipe_id=[], timezone='America/Los_Angeles', days=1):
-  """Returns last actionable job run for a specific recipe or all recipes.
+    """Returns last actionable job run for a specific recipe or all recipes.
 
   Pulls status entries from StackDriver in reverse order.  A single recipe may
   be run multiple times for multiple tasks at different hours, do not
@@ -187,71 +187,71 @@ def log_get(recipe_id=[], timezone='America/Los_Angeles', days=1):
 
   """
 
-  body = {
-      'resourceNames': ['projects/%s' % UI_PROJECT,],
-      'filter':
-          '\
+    body = {
+        'resourceNames': ['projects/%s' % UI_PROJECT,],
+        'filter':
+            '\
        logName="projects/%s/logs/StarThinker" \
        AND labels.version="%s" \
        AND labels.layer="JOB" \
     ' % (UI_PROJECT, LOG_VERSION),
-      'orderBy':
-          'timestamp desc',
-      'pageSize':
-          1000
-  }
+        'orderBy':
+            'timestamp desc',
+        'pageSize':
+            1000
+    }
 
-  if recipe_id:
-    if isinstance(recipe_id, str):
-      recipe_id = [recipe_id]
-    body['filter'] += ' AND ( %s )' % ' OR '.join(
-        'operation.id="%s"' % r for r in recipe_id)
+    if recipe_id:
+        if isinstance(recipe_id, str):
+            recipe_id = [recipe_id]
+        body['filter'] += ' AND ( %s )' % ' OR '.join(
+            'operation.id="%s"' % r for r in recipe_id)
 
-  project.initialize(_service=UI_SERVICE, _project=UI_PROJECT)
-  for entry in API_StackDriver(
-      'service', iterate=True).entries().list(body=body).execute():
-    yield entry
+    project.initialize(_service=UI_SERVICE, _project=UI_PROJECT)
+    for entry in API_StackDriver(
+            'service', iterate=True).entries().list(body=body).execute():
+        yield entry
 
 
 def log_manager_start():
-  log_put(MANAGER_START, LogSeverity.NOTICE, text='')
+    log_put(MANAGER_START, LogSeverity.NOTICE, text='')
 
 
 def log_manager_end():
-  log_put(MANAGER_END, LogSeverity.NOTICE, text='')
+    log_put(MANAGER_END, LogSeverity.NOTICE, text='')
 
 
 def log_manager_timeout():
-  log_put(MANAGER_TIMEOUT, LogSeverity.NOTICE, text='')
+    log_put(MANAGER_TIMEOUT, LogSeverity.NOTICE, text='')
 
 
 def log_manager_error(error):
-  log_put(MANAGER_ERROR, LogSeverity.ALERT, text=error)
+    log_put(MANAGER_ERROR, LogSeverity.ALERT, text=error)
 
 
 def log_manager_scale(record):
-  log_put(MANAGER_SCALE, LogSeverity.NOTICE, payload=record)
+    log_put(MANAGER_SCALE, LogSeverity.NOTICE, payload=record)
 
 
 def log_job_update(job):
-  log_put(JOB_UPDATE, LogSeverity.NOTICE, job)
+    log_put(JOB_UPDATE, LogSeverity.NOTICE, job)
 
 
 def log_job_start(job):
-  log_put(JOB_START, LogSeverity.NOTICE, job)
+    log_put(JOB_START, LogSeverity.NOTICE, job)
 
 
 def log_job_end(job):
-  log_put(JOB_END, LogSeverity.NOTICE, job)
+    log_put(JOB_END, LogSeverity.NOTICE, job)
 
 
 def log_job_error(job):
-  log_put(JOB_ERROR, LogSeverity.ERROR, job)
+    log_put(JOB_ERROR, LogSeverity.ERROR, job)
 
 
 def log_job_cancel(job):
-  log_put(JOB_CANCEL, LogSeverity.WARNING, job)
+    log_put(JOB_CANCEL, LogSeverity.WARNING, job)
 
 
 def log_job_timeout(job):
-  log_put(JOB_TIMEOUT, LogSeverity.ERROR, job)
+    log_put(JOB_TIMEOUT, LogSeverity.ERROR, job)

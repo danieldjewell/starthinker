@@ -22,12 +22,12 @@ from starthinker.util.project import project
 
 def main():
 
-  # initialize project
-  project.from_commandline()
+    # initialize project
+    project.from_commandline()
 
-  # run tasks and return exit code
-  sys.exit(project.execute())
+    # run tasks and return exit code
+    sys.exit(project.execute())
 
 
 if __name__ == '__main__':
-  main()
+    main()

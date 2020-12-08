@@ -24,29 +24,19 @@ from setuptools import find_packages
 from setuptools import setup
 
 REQUIREMENTS = [
-    'google-api-python-client',
-    'google-auth',
-    'google-auth-oauthlib',
-    'google-auth-httplib2',
-    'google-cloud-bigquery',
-    'pysftp',
-    'pytz',
-    'tzlocal',
-    'TwitterAPI',
-    'python-dateutil',
-    'pandas',
-    'psutil',
-    'moviepy==1.0.0',
-    'py-xlsx',
-    'simple-salesforce',
-    'smartsheet-python-sdk'
+    'google-api-python-client', 'google-auth', 'google-auth-oauthlib',
+    'google-auth-httplib2', 'google-cloud-bigquery', 'pysftp', 'pytz',
+    'tzlocal', 'TwitterAPI', 'python-dateutil', 'pandas', 'psutil',
+    'moviepy==1.0.0', 'py-xlsx', 'simple-salesforce', 'smartsheet-python-sdk'
 ]
 
 setup(
     name='starthinker',
     version='1.0.7',
-    description='StarThinker is a Google gTech built python framework for creating and sharing re-usable workflow components.',
-    long_description='StarThinker is a Google gTech built python framework for creating and sharing re-usable workflow components. To make it easier for partners and clients to work with some of our advertsing solutions, the gTech team has open sourced this framework as a reference implementation.  Our goal is to make managing data workflows using Google Cloud as fast and re-usable as possible, allowing teams to focus on building advertising solutions.',
+    description=
+    'StarThinker is a Google gTech built python framework for creating and sharing re-usable workflow components.',
+    long_description=
+    'StarThinker is a Google gTech built python framework for creating and sharing re-usable workflow components. To make it easier for partners and clients to work with some of our advertsing solutions, the gTech team has open sourced this framework as a reference implementation.  Our goal is to make managing data workflows using Google Cloud as fast and re-usable as possible, allowing teams to focus on building advertising solutions.',
     author='Paul Kenjora',
     author_email='kenjora@google.com',
     url='https://github.com/google/starthinker',
@@ -78,5 +68,4 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-    ]
-)
+    ])

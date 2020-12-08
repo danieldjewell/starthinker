@@ -110,23 +110,19 @@ if __name__ == "__main__":
   DAG_FACTORY.print_commandline()
 """
 
+
 def script_to_dag(dag_name,
                   title,
                   description,
                   instructions,
                   script,
                   parameters={}):
-  return AIRFLOW_TEMPLATE.format(**{
-    'title':title,
-    'description':description,
-    'instructions':'  - ' + '\n  - '.join(instructions),
-    'inputs':fields_to_string(
-      json_get_fields(script),
-      parameters
-    ),
-    'recipe':dict_to_string(
-      script,
-      skip=('fields',)
-    ),
-    'dag':dag_name
-  })
+    return AIRFLOW_TEMPLATE.format(
+        **{
+            'title': title,
+            'description': description,
+            'instructions': '  - ' + '\n  - '.join(instructions),
+            'inputs': fields_to_string(json_get_fields(script), parameters),
+            'recipe': dict_to_string(script, skip=('fields',)),
+            'dag': dag_name
+        })

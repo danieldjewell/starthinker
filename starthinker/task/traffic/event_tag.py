@@ -23,54 +23,54 @@ from starthinker.task.traffic.feed import FieldMap
 
 
 class EventTagDAO(BaseDAO):
-  """Event Tag data access object.
+    """Event Tag data access object.
 
   Inherits from BaseDAO and implements Event Tag specific logic for creating and
   updating Event Tags.
   """
 
-  def __init__(self, auth, profile_id, is_admin):
-    """Initializes EventTagDAO with profile id and authentication scheme."""
-    super(EventTagDAO, self).__init__(auth, profile_id, is_admin)
+    def __init__(self, auth, profile_id, is_admin):
+        """Initializes EventTagDAO with profile id and authentication scheme."""
+        super(EventTagDAO, self).__init__(auth, profile_id, is_admin)
 
-    self._id_field = FieldMap.EVENT_TAG_ID
+        self._id_field = FieldMap.EVENT_TAG_ID
 
-    # This causes the dao to search event tag by name, but
-    # to do so it is required to pass campaign or advertiser id
-    # self._search_field = FieldMap.EVENT_TAG_NAME
-    #self._search_field = FieldMap.EVENT_TAG_NAME
-    self._search_field = None
+        # This causes the dao to search event tag by name, but
+        # to do so it is required to pass campaign or advertiser id
+        # self._search_field = FieldMap.EVENT_TAG_NAME
+        #self._search_field = FieldMap.EVENT_TAG_NAME
+        self._search_field = None
 
-    self._list_name = 'eventTags'
-    self._entity = 'EVENT_TAGS'
-    self._parent_filter_name = 'advertiserId'
-    self._parent_dao = None
-    self._parent_filter_field_name = FieldMap.ADVERTISER_ID
-    self._campaign_dao = CampaignDAO(auth, profile_id, is_admin)
+        self._list_name = 'eventTags'
+        self._entity = 'EVENT_TAGS'
+        self._parent_filter_name = 'advertiserId'
+        self._parent_dao = None
+        self._parent_filter_field_name = FieldMap.ADVERTISER_ID
+        self._campaign_dao = CampaignDAO(auth, profile_id, is_admin)
 
-  def _api(self, iterate=False):
-    """Returns an DCM API instance for this DAO."""
-    return super(EventTagDAO, self)._api(iterate).eventTags()
+    def _api(self, iterate=False):
+        """Returns an DCM API instance for this DAO."""
+        return super(EventTagDAO, self)._api(iterate).eventTags()
 
-  def pre_fetch(self, feed):
-    """Pre-fetches all required items to be update into the cache.
+    def pre_fetch(self, feed):
+        """Pre-fetches all required items to be update into the cache.
 
     This increases performance for update operations.
 
     Args:
       feed: List of feed items to retrieve
     """
-    pass
+        pass
 
-  def _get_base_search_args(self, search_string):
-    return {
-        'profileId': self.profile_id,
-        'searchString': search_string,
-        'sortField': 'NAME'
-    }
+    def _get_base_search_args(self, search_string):
+        return {
+            'profileId': self.profile_id,
+            'searchString': search_string,
+            'sortField': 'NAME'
+        }
 
-  def _process_update(self, item, feed_item):
-    """Processes the update of an Event Tag
+    def _process_update(self, item, feed_item):
+        """Processes the update of an Event Tag
 
     Args:
       item: Object representing the event tag to be updated, this object is
@@ -78,13 +78,13 @@ class EventTagDAO(BaseDAO):
       feed_item: Feed item representing event tag values from the Bulkdozer
         feed.
     """
-    item['name'] = feed_item.get(FieldMap.EVENT_TAG_NAME, None)
-    item['status'] = feed_item.get(FieldMap.EVENT_TAG_STATUS, None)
-    item['type'] = feed_item.get(FieldMap.EVENT_TAG_TYPE, None)
-    item['url'] = feed_item.get(FieldMap.EVENT_TAG_URL, None)
+        item['name'] = feed_item.get(FieldMap.EVENT_TAG_NAME, None)
+        item['status'] = feed_item.get(FieldMap.EVENT_TAG_STATUS, None)
+        item['type'] = feed_item.get(FieldMap.EVENT_TAG_TYPE, None)
+        item['url'] = feed_item.get(FieldMap.EVENT_TAG_URL, None)
 
-  def _process_new(self, feed_item):
-    """Creates a new event tag DCM object from a feed item representing a event tag from the Bulkdozer feed.
+    def _process_new(self, feed_item):
+        """Creates a new event tag DCM object from a feed item representing a event tag from the Bulkdozer feed.
 
     This function simply creates the object to be inserted later by the BaseDAO
     object.
@@ -96,34 +96,34 @@ class EventTagDAO(BaseDAO):
       A event tag object ready to be inserted in DCM through the API.
 
     """
-    campaign = self._campaign_dao.get(feed_item, required=True)
+        campaign = self._campaign_dao.get(feed_item, required=True)
 
-    return {
-        'advertiserId':
-            feed_item.get(FieldMap.ADVERTISER_ID, None),
-        'campaignId':
-            campaign.get('id', None) if campaign else None,
-        'enabledByDefault':
-            feed_item.get(FieldMap.EVENT_TAG_ENABLED_BY_DEFAULT, False),
-        'name':
-            feed_item.get(FieldMap.EVENT_TAG_NAME, None),
-        'status':
-            feed_item.get(FieldMap.EVENT_TAG_STATUS, None),
-        'type':
-            feed_item.get(FieldMap.EVENT_TAG_TYPE, None),
-        'url':
-            feed_item.get(FieldMap.EVENT_TAG_URL, None)
-    }
+        return {
+            'advertiserId':
+                feed_item.get(FieldMap.ADVERTISER_ID, None),
+            'campaignId':
+                campaign.get('id', None) if campaign else None,
+            'enabledByDefault':
+                feed_item.get(FieldMap.EVENT_TAG_ENABLED_BY_DEFAULT, False),
+            'name':
+                feed_item.get(FieldMap.EVENT_TAG_NAME, None),
+            'status':
+                feed_item.get(FieldMap.EVENT_TAG_STATUS, None),
+            'type':
+                feed_item.get(FieldMap.EVENT_TAG_TYPE, None),
+            'url':
+                feed_item.get(FieldMap.EVENT_TAG_URL, None)
+        }
 
-  def _post_process(self, feed_item, item):
-    """Updates the feed item with ids and names of related object so those can be updated in the Bulkdozer feed.
+    def _post_process(self, feed_item, item):
+        """Updates the feed item with ids and names of related object so those can be updated in the Bulkdozer feed.
 
     Args:
       feed_item: The Bulkdozer feed item.
       item: The CM newly created or updated object.
     """
-    campaign = self._campaign_dao.get(feed_item, required=True)
+        campaign = self._campaign_dao.get(feed_item, required=True)
 
-    if campaign:
-      feed_item[FieldMap.CAMPAIGN_NAME] = campaign['name']
-      feed_item[FieldMap.CAMPAIGN_ID] = campaign['id']
+        if campaign:
+            feed_item[FieldMap.CAMPAIGN_NAME] = campaign['name']
+            feed_item[FieldMap.CAMPAIGN_ID] = campaign['id']

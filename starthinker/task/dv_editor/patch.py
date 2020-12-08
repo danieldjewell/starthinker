@@ -128,120 +128,126 @@ BUFFER_LENGTH = 10
 
 def patch_clear():
 
-  table_create(project.task['auth_bigquery'], project.id,
-               project.task['dataset'], 'PATCH_Preview', SCHEMA_PREVIEW)
+    table_create(project.task['auth_bigquery'], project.id,
+                 project.task['dataset'], 'PATCH_Preview', SCHEMA_PREVIEW)
 
-  table_create(project.task['auth_bigquery'], project.id,
-               project.task['dataset'], 'PATCH_Log', SCHEMA_LOG)
+    table_create(project.task['auth_bigquery'], project.id,
+                 project.task['dataset'], 'PATCH_Log', SCHEMA_LOG)
 
-  sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Preview', 'A2:Z')
+    sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Preview',
+                 'A2:Z')
 
-  sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Error', 'A2:Z')
+    sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Error',
+                 'A2:Z')
 
-  sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Success', 'A2:Z')
+    sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Success',
+                 'A2:Z')
 
 
 def patch_mask(patch):
 
-  def _patch_mask(body):
-    mask = set()
-    if isinstance(body, dict):
-      for parent, value in body.items():
-        children = _patch_mask(value)
-        if children:
-          for child in children:
-            mask.add(parent + '.' + child)
-        else:
-          mask.add(parent)
-    elif isinstance(body, (list, tuple)):
-      for value in body:
-        mask.update(_patch_mask(value))
-    return list(mask)
+    def _patch_mask(body):
+        mask = set()
+        if isinstance(body, dict):
+            for parent, value in body.items():
+                children = _patch_mask(value)
+                if children:
+                    for child in children:
+                        mask.add(parent + '.' + child)
+                else:
+                    mask.add(parent)
+        elif isinstance(body, (list, tuple)):
+            for value in body:
+                mask.update(_patch_mask(value))
+        return list(mask)
 
-  mask = ','.join(_patch_mask(patch['parameters'].get('body')))
-  if mask:
-    patch['parameters']['updateMask'] = mask
+    mask = ','.join(_patch_mask(patch['parameters'].get('body')))
+    if mask:
+        patch['parameters']['updateMask'] = mask
 
-  return patch
+    return patch
 
 
 def patch_masks(patches):
-  for patch in patches:
-    patch_mask(patch)
+    for patch in patches:
+        patch_mask(patch)
 
 
 def patch_log(patch=None):
-  global BUFFER_SUCCESS
-  global BUFFER_ERROR
+    global BUFFER_SUCCESS
+    global BUFFER_ERROR
 
-  def _patch_write(rows, kind):
-    if not rows:
-      return
+    def _patch_write(rows, kind):
+        if not rows:
+            return
 
-    rows = [(p['operation'], p['action'], p.get('partner'), p.get('advertiser'),
-             p.get('campaign'), p.get('insertion_order'), p.get('line_item'),
-             json.dumps(p.get('parameters', {}),
-                        indent=2), kind, p[kind.lower()]) for p in rows]
+        rows = [(p['operation'], p['action'], p.get('partner'),
+                 p.get('advertiser'), p.get('campaign'),
+                 p.get('insertion_order'), p.get('line_item'),
+                 json.dumps(p.get('parameters', {}),
+                            indent=2), kind, p[kind.lower()]) for p in rows]
 
-    put_rows(
-        project.task['auth_bigquery'], {
-            'bigquery': {
-                'dataset': project.task['dataset'],
-                'table': 'PATCH_Log',
-                'schema': SCHEMA_LOG,
-                'disposition': 'WRITE_APPEND',
-                'format': 'CSV'
-            }
-        }, rows)
+        put_rows(
+            project.task['auth_bigquery'], {
+                'bigquery': {
+                    'dataset': project.task['dataset'],
+                    'table': 'PATCH_Log',
+                    'schema': SCHEMA_LOG,
+                    'disposition': 'WRITE_APPEND',
+                    'format': 'CSV'
+                }
+            }, rows)
 
-    put_rows(
-        project.task['auth_sheets'], {
-            'sheets': {
-                'sheet': project.task['sheet'],
-                'tab': kind.title(),
-                'range': 'A2',
-                'append': True
-            }
-        }, rows)
+        put_rows(
+            project.task['auth_sheets'], {
+                'sheets': {
+                    'sheet': project.task['sheet'],
+                    'tab': kind.title(),
+                    'range': 'A2',
+                    'append': True
+                }
+            }, rows)
 
-  if patch and 'success' in patch:
-    BUFFER_SUCCESS.append(patch)
-    print('SUCCESS:', patch['success'])
-  elif patch and 'error' in patch:
-    BUFFER_ERROR.append(patch)
-    print('ERROR:', patch['error'])
+    if patch and 'success' in patch:
+        BUFFER_SUCCESS.append(patch)
+        print('SUCCESS:', patch['success'])
+    elif patch and 'error' in patch:
+        BUFFER_ERROR.append(patch)
+        print('ERROR:', patch['error'])
 
-  if len(BUFFER_SUCCESS) > BUFFER_LENGTH or patch is None:
-    _patch_write(BUFFER_SUCCESS, 'SUCCESS')
-    BUFFER_SUCCESS = []
+    if len(BUFFER_SUCCESS) > BUFFER_LENGTH or patch is None:
+        _patch_write(BUFFER_SUCCESS, 'SUCCESS')
+        BUFFER_SUCCESS = []
 
-  if len(BUFFER_ERROR) > BUFFER_LENGTH or patch is None:
-    _patch_write(BUFFER_ERROR, 'ERROR')
-    BUFFER_ERROR = []
+    if len(BUFFER_ERROR) > BUFFER_LENGTH or patch is None:
+        _patch_write(BUFFER_ERROR, 'ERROR')
+        BUFFER_ERROR = []
 
 
 def patch_preview(patches):
-  if patches:
-    rows = [(p['operation'], p['action'], p.get('partner'), p.get('advertiser'),
+    if patches:
+        rows = [
+            (p['operation'], p['action'], p.get('partner'), p.get('advertiser'),
              p.get('campaign'), p.get('insertion_order'), p.get('line_item'),
-             json.dumps(p.get('parameters', {}), indent=2)) for p in patches]
+             json.dumps(p.get('parameters', {}), indent=2)) for p in patches
+        ]
 
-    put_rows(
-        project.task['auth_bigquery'], {
-            'bigquery': {
-                'dataset': project.task['dataset'],
-                'table': 'PATCH_Preview',
-                'schema': SCHEMA_PREVIEW,
-                'disposition': 'WRITE_APPEND',
-                'format': 'CSV'
-            }
-        }, rows)
+        put_rows(
+            project.task['auth_bigquery'], {
+                'bigquery': {
+                    'dataset': project.task['dataset'],
+                    'table': 'PATCH_Preview',
+                    'schema': SCHEMA_PREVIEW,
+                    'disposition': 'WRITE_APPEND',
+                    'format': 'CSV'
+                }
+            }, rows)
 
-    put_rows(
-        project.task['auth_sheets'], {
-            'sheets': {
-                'sheet': project.task['sheet'],
-                'tab': 'Preview',
-                'range': 'A2',
-            }
-        }, rows)
+        put_rows(
+            project.task['auth_sheets'], {
+                'sheets': {
+                    'sheet': project.task['sheet'],
+                    'tab': 'Preview',
+                    'range': 'A2',
+                }
+            }, rows)

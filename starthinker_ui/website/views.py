@@ -23,28 +23,28 @@ from starthinker_ui.recipe.scripts import Script
 
 
 def help(request):
-  # if open source then request will be null
-  if request:
-    return render(request, 'website/help.html', {})
-  else:
-    return render_to_string('website/help.html', {'external': True})
+    # if open source then request will be null
+    if request:
+        return render(request, 'website/help.html', {})
+    else:
+        return render_to_string('website/help.html', {'external': True})
 
 
 def solutions(request):
-  # if open source then request will be null
-  if request:
-    return render(request, 'website/solutions.html', {})
-  else:
-    return render_to_string('website/solutions.html', {'external': True})
+    # if open source then request will be null
+    if request:
+        return render(request, 'website/solutions.html', {})
+    else:
+        return render_to_string('website/solutions.html', {'external': True})
 
 
 def solution(request, tag):
-  script = Script(tag)
-  # if open source then request will be null
-  if request:
-    return render(request, 'website/solution.html', {'script': script})
-  else:
-    return render_to_string('website/solution.html', {
-        'script': script,
-        'external': True
-    })
+    script = Script(tag)
+    # if open source then request will be null
+    if request:
+        return render(request, 'website/solution.html', {'script': script})
+    else:
+        return render_to_string('website/solution.html', {
+            'script': script,
+            'external': True
+        })

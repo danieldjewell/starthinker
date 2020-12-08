@@ -21,10 +21,10 @@ from django.test import TestCase
 
 class WebsiteTest(TestCase):
 
-  def test_ui_solution(self):
-    resp = self.client.get('/solution/')
-    self.assertEqual(resp.status_code, 200)
+    def test_ui_solution(self):
+        resp = self.client.get('/solution/')
+        self.assertEqual(resp.status_code, 200)
 
-  def test_ui_help(self):
-    resp = self.client.get('/help/')
-    self.assertEqual(resp.status_code, 200)
+    def test_ui_help(self):
+        resp = self.client.get('/help/')
+        self.assertEqual(resp.status_code, 200)

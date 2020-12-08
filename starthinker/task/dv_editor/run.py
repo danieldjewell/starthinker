@@ -63,130 +63,131 @@ from starthinker.task.dv_editor.segment import segment_patch
 
 @project.from_parameters
 def dv_editor():
-  print('COMMAND:', project.task['command'])
+    print('COMMAND:', project.task['command'])
 
-  if project.task['command'] == 'Load Partners':
-    partner_clear()
-    partner_load()
+    if project.task['command'] == 'Load Partners':
+        partner_clear()
+        partner_load()
 
-  elif project.task['command'] == 'Load Advertisers':
-    advertiser_clear()
-    advertiser_load()
+    elif project.task['command'] == 'Load Advertisers':
+        advertiser_clear()
+        advertiser_load()
 
-  elif project.task['command'] == 'Load Campaigns':
-    campaign_clear()
-    campaign_load()
+    elif project.task['command'] == 'Load Campaigns':
+        campaign_clear()
+        campaign_load()
 
-  elif project.task['command'] == 'Load Creatives':
-    creative_clear()
-    creative_load()
+    elif project.task['command'] == 'Load Creatives':
+        creative_clear()
+        creative_load()
 
-  elif project.task['command'] == 'Load Insertion Orders':
-    insertion_order_clear()
-    insertion_order_load()
-    segment_clear()
-    segment_load()
-    pacing_clear()
-    pacing_load()
-    bid_strategy_clear()
-    bid_strategy_load()
-    frequency_cap_clear()
-    frequency_cap_load()
-    partner_cost_clear()
-    partner_cost_load()
-    integration_detail_clear()
-    integration_detail_load()
+    elif project.task['command'] == 'Load Insertion Orders':
+        insertion_order_clear()
+        insertion_order_load()
+        segment_clear()
+        segment_load()
+        pacing_clear()
+        pacing_load()
+        bid_strategy_clear()
+        bid_strategy_load()
+        frequency_cap_clear()
+        frequency_cap_load()
+        partner_cost_clear()
+        partner_cost_load()
+        integration_detail_clear()
+        integration_detail_load()
 
-  elif project.task['command'] == 'Load Line Items':
-    line_item_clear()
-    line_item_load()
-    pacing_clear()
-    pacing_load()
-    bid_strategy_clear()
-    bid_strategy_load()
-    frequency_cap_clear()
-    frequency_cap_load()
-    partner_cost_clear()
-    partner_cost_load()
-    integration_detail_clear()
-    integration_detail_load()
+    elif project.task['command'] == 'Load Line Items':
+        line_item_clear()
+        line_item_load()
+        pacing_clear()
+        pacing_load()
+        bid_strategy_clear()
+        bid_strategy_load()
+        frequency_cap_clear()
+        frequency_cap_load()
+        partner_cost_clear()
+        partner_cost_load()
+        integration_detail_clear()
+        integration_detail_load()
 
-  elif project.task['command'] in ('Preview', 'Patch'):
-    audit_clear()
-    patch_clear()
-    audit_load()
+    elif project.task['command'] in ('Preview', 'Patch'):
+        audit_clear()
+        patch_clear()
+        audit_load()
 
-    line_item_insert(commit=project.task['command'] == 'Patch')
-    insertion_order_insert(commit=project.task['command'] == 'Patch')
+        line_item_insert(commit=project.task['command'] == 'Patch')
+        insertion_order_insert(commit=project.task['command'] == 'Patch')
 
-    insertion_order_patch(commit=project.task['command'] == 'Patch')
-    line_item_patch(commit=project.task['command'] == 'Patch')
-    line_item_map_patch(commit=project.task['command'] == 'Patch')
+        insertion_order_patch(commit=project.task['command'] == 'Patch')
+        line_item_patch(commit=project.task['command'] == 'Patch')
+        line_item_map_patch(commit=project.task['command'] == 'Patch')
 
-    segment_patch(commit=project.task['command'] == 'Patch')
-    pacing_patch(commit=project.task['command'] == 'Patch')
-    bid_strategy_patch(commit=project.task['command'] == 'Patch')
-    frequency_cap_patch(commit=project.task['command'] == 'Patch')
-    partner_cost_patch(commit=project.task['command'] == 'Patch')
-    integration_detail_patch(commit=project.task['command'] == 'Patch')
+        segment_patch(commit=project.task['command'] == 'Patch')
+        pacing_patch(commit=project.task['command'] == 'Patch')
+        bid_strategy_patch(commit=project.task['command'] == 'Patch')
+        frequency_cap_patch(commit=project.task['command'] == 'Patch')
+        partner_cost_patch(commit=project.task['command'] == 'Patch')
+        integration_detail_patch(commit=project.task['command'] == 'Patch')
 
-  elif project.task['command'] == 'Clear Partners':
-    partner_clear()
+    elif project.task['command'] == 'Clear Partners':
+        partner_clear()
 
-  elif project.task['command'] == 'Clear Advertisers':
-    advertiser_clear()
+    elif project.task['command'] == 'Clear Advertisers':
+        advertiser_clear()
 
-  elif project.task['command'] == 'Clear Campaigns':
-    campaign_clear()
+    elif project.task['command'] == 'Clear Campaigns':
+        campaign_clear()
 
-  elif project.task['command'] == 'Clear Creatives':
-    creative_clear()
+    elif project.task['command'] == 'Clear Creatives':
+        creative_clear()
 
-  elif project.task['command'] == 'Clear Insertion Orders':
-    segment_clear()
-    pacing_clear()
-    bid_strategy_clear()
-    frequency_cap_clear()
-    partner_cost_clear()
-    integration_detail_clear()
+    elif project.task['command'] == 'Clear Insertion Orders':
+        segment_clear()
+        pacing_clear()
+        bid_strategy_clear()
+        frequency_cap_clear()
+        partner_cost_clear()
+        integration_detail_clear()
 
-    insertion_order_clear()
+        insertion_order_clear()
 
-  elif project.task['command'] == 'Clear Line Items':
-    pacing_clear()
-    bid_strategy_clear()
-    frequency_cap_clear()
-    partner_cost_clear()
-    integration_detail_clear()
+    elif project.task['command'] == 'Clear Line Items':
+        pacing_clear()
+        bid_strategy_clear()
+        frequency_cap_clear()
+        partner_cost_clear()
+        integration_detail_clear()
 
-    line_item_map_clear()
-    line_item_clear()
+        line_item_map_clear()
+        line_item_clear()
 
-  elif project.task['command'] == 'Clear Preview':
-    audit_clear()
+    elif project.task['command'] == 'Clear Preview':
+        audit_clear()
 
-  elif project.task['command'] == 'Clear Patch':
-    patch_clear()
+    elif project.task['command'] == 'Clear Patch':
+        patch_clear()
 
-  elif project.task['command'] == 'Clear All':
-    partner_clear()
-    advertiser_clear()
-    campaign_clear()
-    creative_clear()
+    elif project.task['command'] == 'Clear All':
+        partner_clear()
+        advertiser_clear()
+        campaign_clear()
+        creative_clear()
 
-    segment_clear()
-    pacing_clear()
-    bid_strategy_clear()
-    frequency_cap_clear()
-    partner_cost_clear()
-    integration_detail_clear()
+        segment_clear()
+        pacing_clear()
+        bid_strategy_clear()
+        frequency_cap_clear()
+        partner_cost_clear()
+        integration_detail_clear()
 
-    insertion_order_clear()
-    line_item_map_clear()
-    line_item_clear()
+        insertion_order_clear()
+        line_item_map_clear()
+        line_item_clear()
 
-    audit_clear()
-    patch_clear()
+        audit_clear()
+        patch_clear()
+
 
 if __name__ == '__main__':
-  dv_editor()
+    dv_editor()

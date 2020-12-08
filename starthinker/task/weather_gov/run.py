@@ -95,81 +95,81 @@ LATEST_OBSERVATION_URL = 'https://api.weather.gov/stations/%s/observations/lates
 
 
 def degrees_to_compass(value):
-  """Turns direction from degrees value to compass direction
+    """Turns direction from degrees value to compass direction
 
   Args:
     value: floating point representing the degrees from 0 to 360
   Returns: String representing the compass direction.
   """
-  if value is None:
+    if value is None:
+        return None
+
+    if (value >= 348.75 and value <= 360) or (value >= 0 and value <= 11.25):
+        return 'N'
+    else:
+        for direction in WIND_DIRECTION_MAP.keys():
+            if value >= WIND_DIRECTION_MAP[direction][
+                    'f'] and value <= WIND_DIRECTION_MAP[direction]['t']:
+                return direction
+
     return None
-
-  if (value >= 348.75 and value <= 360) or (value >= 0 and value <= 11.25):
-    return 'N'
-  else:
-    for direction in WIND_DIRECTION_MAP.keys():
-      if value >= WIND_DIRECTION_MAP[direction][
-          'f'] and value <= WIND_DIRECTION_MAP[direction]['t']:
-        return direction
-
-  return None
 
 
 def c_to_f(temperature):
-  """Converts temperature from celcius to fahrenheit
+    """Converts temperature from celcius to fahrenheit
 
   Args:
     temperature: floating point representing the temperature in celcius
   Returns: temperature in fahrenheit
   """
-  if temperature is None:
-    return None
+    if temperature is None:
+        return None
 
-  return (temperature * 9 / 5) + 32
+    return (temperature * 9 / 5) + 32
 
 
 def ms_to_mph(value):
-  """Converts speed from meters per second to miles per hour
+    """Converts speed from meters per second to miles per hour
 
   Args:
     value: floating point representing the speed in meters per second
   Returns: speed in miles per hour
   """
-  if value is None:
-    return None
+    if value is None:
+        return None
 
-  return value * 2.237
+    return value * 2.237
 
 
 def m_to_mile(value):
-  """Converts distance in meters to miles
+    """Converts distance in meters to miles
 
   Args:
     value: floating point representing the distance in meters
   Returns: distance in miles
   """
-  if value is None:
-    return None
+    if value is None:
+        return None
 
-  return value / 1609
+    return value / 1609
 
 
 def m_to_inches(value):
-  """Converts distance in meters to inches
+    """Converts distance in meters to inches
 
   Args:
     value: floating point representing the distance in meters
   Returns: distance in inches
   """
-  if value is None:
-    return None
+    if value is None:
+        return None
 
-  return value / 39.37
+    return value / 39.37
 
 
 @project.from_parameters
 def weather_gov():
-  """Main StarThinker entrypoint for weather_gov task.
+    """Main StarThinker entrypoint for weather_gov task.
 
   "weather_gov": {
     "auth": "user",
@@ -195,31 +195,32 @@ def weather_gov():
   sheets output as an example.
 
   """
-  if project.verbose:
-    print('weather_gov')
+    if project.verbose:
+        print('weather_gov')
 
-  rows = []
+    rows = []
 
-  stations = project.task.get('stations', [])
+    stations = project.task.get('stations', [])
 
-  for station_id in stations:
-    result = json.loads(urlopen(LATEST_OBSERVATION_URL % station_id).read())
+    for station_id in stations:
+        result = json.loads(urlopen(LATEST_OBSERVATION_URL % station_id).read())
 
-    rows += [[
-        datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), station_id,
-        c_to_f(result['properties']['temperature']['value']),
-        c_to_f(result['properties']['windChill']['value']),
-        c_to_f(result['properties']['heatIndex']['value']),
-        degrees_to_compass(result['properties']['windDirection']['value']),
-        ms_to_mph(result['properties']['windSpeed']['value']),
-        m_to_mile(result['properties']['visibility']['value']),
-        result['properties']['relativeHumidity']['value'],
-        m_to_inches(result['properties']['precipitationLast3Hours']['value']),
-        'NOAA'
-    ]]
+        rows += [[
+            datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), station_id,
+            c_to_f(result['properties']['temperature']['value']),
+            c_to_f(result['properties']['windChill']['value']),
+            c_to_f(result['properties']['heatIndex']['value']),
+            degrees_to_compass(result['properties']['windDirection']['value']),
+            ms_to_mph(result['properties']['windSpeed']['value']),
+            m_to_mile(result['properties']['visibility']['value']),
+            result['properties']['relativeHumidity']['value'],
+            m_to_inches(
+                result['properties']['precipitationLast3Hours']['value']),
+            'NOAA'
+        ]]
 
-  put_rows(project.task['auth'], project.task['out'], rows)
+    put_rows(project.task['auth'], project.task['out'], rows)
 
 
 if __name__ == '__main__':
-  weather_gov()
+    weather_gov()

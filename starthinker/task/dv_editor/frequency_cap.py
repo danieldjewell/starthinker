@@ -33,20 +33,20 @@ from starthinker.task.dv_editor.patch import patch_preview
 
 
 def frequency_cap_clear():
-  sheets_clear(project.task["auth_sheets"], project.task["sheet"], "Frequency Caps",
-               "A2:Z")
+    sheets_clear(project.task["auth_sheets"], project.task["sheet"],
+                 "Frequency Caps", "A2:Z")
 
 
 def frequency_cap_load():
 
-  # write frequency_caps to sheet
-  rows = get_rows(
-      project.task["auth_bigquery"], {
-          "bigquery": {
-              "dataset":
-                  project.task["dataset"],
-              "query":
-                  """SELECT
+    # write frequency_caps to sheet
+    rows = get_rows(
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset":
+                    project.task["dataset"],
+                "query":
+                    """SELECT
          CONCAT(P.displayName, ' - ', P.partnerId),
          CONCAT(A.displayName, ' - ', A.advertiserId),
          CONCAT(C.displayName, ' - ', C.campaignId),
@@ -112,61 +112,99 @@ def frequency_cap_load():
        LEFT JOIN `{dataset}.DV_Partners` AS P
        ON A.partnerId=P.partnerId
        """.format(**project.task),
-              "legacy":
-                  False
-          }
-      })
+                "legacy":
+                    False
+            }
+        })
 
-  put_rows(
-      project.task["auth_sheets"], {
-          "sheets": {
-              "sheet": project.task["sheet"],
-              "tab": "Frequency Caps",
-              "range": "A2"
-          }
-      }, rows)
+    put_rows(
+        project.task["auth_sheets"], {
+            "sheets": {
+                "sheet": project.task["sheet"],
+                "tab": "Frequency Caps",
+                "range": "A2"
+            }
+        }, rows)
 
 
 def frequency_cap_audit():
-  rows = get_rows(
-      project.task["auth_sheets"], {
-          "sheets": {
-              "sheet": project.task["sheet"],
-              "tab": "Frequency Caps",
-              "range": "A2:Z"
-          }
-      })
+    rows = get_rows(
+        project.task["auth_sheets"], {
+            "sheets": {
+                "sheet": project.task["sheet"],
+                "tab": "Frequency Caps",
+                "range": "A2:Z"
+            }
+        })
 
-  put_rows(
-      project.task["auth_bigquery"], {
-          "bigquery": {
-              "dataset": project.task["dataset"],
-              "table": "SHEET_FrequencyCaps",
-              "schema": [
-                  { "name": "Partner", "type": "STRING" },
-                  { "name": "Advertiser", "type": "STRING" },
-                  { "name": "Campaign", "type": "STRING" },
-                  { "name": "Insertion_Order", "type": "STRING" },
-                  { "name": "Line_Item", "type": "STRING" },
-                  { "name": "Unlimited", "type": "BOOLEAN" },
-                  { "name": "Unlimited_Edit", "type": "BOOLEAN" },
-                  { "name": "Time_Unit", "type": "STRING" },
-                  { "name": "Time_Unit_Edit", "type": "STRING" },
-                  { "name": "Time_Count", "type": "INTEGER" },
-                  { "name": "Time_Count_Edit", "type": "INTEGER" },
-                  { "name": "Max_impressions", "type": "INTEGER" },
-                  { "name": "Max_impressions_Edit", "type": "INTEGER" },
-              ],
-              "format": "CSV"
-          }
-      }, rows)
+    put_rows(
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset": project.task["dataset"],
+                "table": "SHEET_FrequencyCaps",
+                "schema": [
+                    {
+                        "name": "Partner",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Advertiser",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Campaign",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Insertion_Order",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Line_Item",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Unlimited",
+                        "type": "BOOLEAN"
+                    },
+                    {
+                        "name": "Unlimited_Edit",
+                        "type": "BOOLEAN"
+                    },
+                    {
+                        "name": "Time_Unit",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Time_Unit_Edit",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Time_Count",
+                        "type": "INTEGER"
+                    },
+                    {
+                        "name": "Time_Count_Edit",
+                        "type": "INTEGER"
+                    },
+                    {
+                        "name": "Max_impressions",
+                        "type": "INTEGER"
+                    },
+                    {
+                        "name": "Max_impressions_Edit",
+                        "type": "INTEGER"
+                    },
+                ],
+                "format": "CSV"
+            }
+        }, rows)
 
-  query_to_view(
-      project.task["auth_bigquery"],
-      project.id,
-      project.task["dataset"],
-      "AUDIT_FrequencyCaps",
-      """WITH
+    query_to_view(project.task["auth_bigquery"],
+                  project.id,
+                  project.task["dataset"],
+                  "AUDIT_FrequencyCaps",
+                  """WITH
       /* Check if sheet values are set */
       INPUT_ERRORS AS (
         SELECT
@@ -194,81 +232,81 @@ def frequency_cap_audit():
       SELECT * FROM INPUT_ERRORS
       ;
     """.format(**project.task),
-      legacy=False)
+                  legacy=False)
 
-  query_to_view(
-    project.task["auth_bigquery"],
-    project.id,
-    project.task["dataset"],
-    "PATCH_FrequencyCaps",
-    """SELECT *
+    query_to_view(project.task["auth_bigquery"],
+                  project.id,
+                  project.task["dataset"],
+                  "PATCH_FrequencyCaps",
+                  """SELECT *
       FROM `{dataset}.SHEET_FrequencyCaps`
       WHERE Line_Item NOT IN (SELECT Id FROM `{dataset}.AUDIT_FrequencyCaps` WHERE Severity='ERROR')
       AND Insertion_Order NOT IN (SELECT Id FROM `{dataset}.AUDIT_FrequencyCaps` WHERE Severity='ERROR')
       AND Campaign NOT IN (SELECT Id FROM `{dataset}.AUDIT_FrequencyCaps` WHERE Severity='ERROR')
     """.format(**project.task),
-    legacy=False
-  )
+                  legacy=False)
 
 
 def frequency_cap_patch(commit=False):
-  patches = []
+    patches = []
 
-  rows = get_rows(
-    project.task["auth_bigquery"],
-    { "bigquery": {
-      "dataset": project.task["dataset"],
-      "table":"PATCH_FrequencyCaps",
-    }},
-    as_object=True
-  )
+    rows = get_rows(project.task["auth_bigquery"], {
+        "bigquery": {
+            "dataset": project.task["dataset"],
+            "table": "PATCH_FrequencyCaps",
+        }
+    },
+                    as_object=True)
 
-  for row in rows:
+    for row in rows:
 
-    frequency_cap = {}
+        frequency_cap = {}
 
-    if row['Unlimited'] != row['Unlimited_Edit']:
-      frequency_cap.setdefault("frequencyCap", {})
-      frequency_cap["frequencyCap"]["unlimited"] = row['Unlimited_Edit']
-    if row['Time_Unit'] != row['Time_Unit_Edit']:
-      frequency_cap.setdefault("frequencyCap", {})
-      frequency_cap["frequencyCap"]["timeUnit"] = row['Time_Unit_Edit']
-    if row['Time_Count'] != row['Time_Count_Edit']:
-      frequency_cap.setdefault("frequencyCap", {})
-      frequency_cap["frequencyCap"]["timeUnitCount"] = row['Time_Count_Edit']
-    if row['Max_impressions'] != row['Max_impressions_Edit']:
-      frequency_cap.setdefault("frequencyCap", {})
-      frequency_cap["frequencyCap"]["maxImpressions"] = row['Max_impressions_Edit']
+        if row['Unlimited'] != row['Unlimited_Edit']:
+            frequency_cap.setdefault("frequencyCap", {})
+            frequency_cap["frequencyCap"]["unlimited"] = row['Unlimited_Edit']
+        if row['Time_Unit'] != row['Time_Unit_Edit']:
+            frequency_cap.setdefault("frequencyCap", {})
+            frequency_cap["frequencyCap"]["timeUnit"] = row['Time_Unit_Edit']
+        if row['Time_Count'] != row['Time_Count_Edit']:
+            frequency_cap.setdefault("frequencyCap", {})
+            frequency_cap["frequencyCap"]["timeUnitCount"] = row[
+                'Time_Count_Edit']
+        if row['Max_impressions'] != row['Max_impressions_Edit']:
+            frequency_cap.setdefault("frequencyCap", {})
+            frequency_cap["frequencyCap"]["maxImpressions"] = row[
+                'Max_impressions_Edit']
 
-    if frequency_cap:
-      patch = {
-          "operation": "Frequency Caps",
-          "action": "PATCH",
-          "partner": row['Partner'],
-          "advertiser": row['Advertiser'],
-          "parameters": {
-              "advertiserId": lookup_id(row['Advertiser']),
-              "body": frequency_cap
-          }
-      }
+        if frequency_cap:
+            patch = {
+                "operation": "Frequency Caps",
+                "action": "PATCH",
+                "partner": row['Partner'],
+                "advertiser": row['Advertiser'],
+                "parameters": {
+                    "advertiserId": lookup_id(row['Advertiser']),
+                    "body": frequency_cap
+                }
+            }
 
-      if row['Line_Item']:
-        patch["line_item"] = row['Line_Item']
-        patch["parameters"]["lineItemId"] = lookup_id(row['Line_Item'])
-      elif row['Insertion_Order']:
-        patch["insertion_order"] = row['Insertion_Order']
-        patch["parameters"]["insertionOrderId"] = lookup_id(row['Insertion_Order'])
-      else:
-        patch["campaign"] = row['Campaign']
-        patch["parameters"]["campaignId"] = lookup_id(row['Campaign'])
+            if row['Line_Item']:
+                patch["line_item"] = row['Line_Item']
+                patch["parameters"]["lineItemId"] = lookup_id(row['Line_Item'])
+            elif row['Insertion_Order']:
+                patch["insertion_order"] = row['Insertion_Order']
+                patch["parameters"]["insertionOrderId"] = lookup_id(
+                    row['Insertion_Order'])
+            else:
+                patch["campaign"] = row['Campaign']
+                patch["parameters"]["campaignId"] = lookup_id(row['Campaign'])
 
-      patches.append(patch)
+            patches.append(patch)
 
-  patch_masks(patches)
+    patch_masks(patches)
 
-  if commit:
-    insertion_order_commit(patches)
-    line_item_commit(patches)
-    campaign_commit(patches)
-  else:
-    patch_preview(patches)
+    if commit:
+        insertion_order_commit(patches)
+        line_item_commit(patches)
+        campaign_commit(patches)
+    else:
+        patch_preview(patches)

@@ -29,83 +29,85 @@ from starthinker_ui.account.models import Account
 
 
 class Command(BaseCommand):
-  help = 'Send email status to users'
+    help = 'Send email status to users'
 
-  def add_arguments(self, parser):
-    parser.add_argument(
-        '--template',
-        action='store',
-        dest='template',
-        help='Template to use for email construction.',
-    )
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--template',
+            action='store',
+            dest='template',
+            help='Template to use for email construction.',
+        )
 
-    parser.add_argument(
-        '--from',
-        action='store',
-        dest='email_from',
-        help='Email to send from ( must match an account).',
-    )
+        parser.add_argument(
+            '--from',
+            action='store',
+            dest='email_from',
+            help='Email to send from ( must match an account).',
+        )
 
-    parser.add_argument(
-        '--to',
-        action='store',
-        dest='email_to',
-        default=None,
-        help='Email to send to ( if not givem sends to all ).',
-    )
+        parser.add_argument(
+            '--to',
+            action='store',
+            dest='email_to',
+            default=None,
+            help='Email to send to ( if not givem sends to all ).',
+        )
 
-    parser.add_argument(
-        '--ignore',
-        action='store',
-        nargs='+',
-        dest='ignore',
-        default=[],
-        help='Email to send to ( if not givem sends to all ).',
-    )
+        parser.add_argument(
+            '--ignore',
+            action='store',
+            nargs='+',
+            dest='ignore',
+            default=[],
+            help='Email to send to ( if not givem sends to all ).',
+        )
 
-    parser.add_argument(
-        '--test',
-        action='store_true',
-        dest='test',
-        default=False,
-        help='Test print emails instead of sending them.',
-    )
+        parser.add_argument(
+            '--test',
+            action='store_true',
+            dest='test',
+            default=False,
+            help='Test print emails instead of sending them.',
+        )
 
-  def handle(self, *args, **kwargs):
+    def handle(self, *args, **kwargs):
 
-    user = None
-    accounts = Account.objects.all()
+        user = None
+        accounts = Account.objects.all()
 
-    # find user to send from
-    for account in accounts:
-      if account.email == kwargs['email_from']:
-        user = account.get_credentials_path()
+        # find user to send from
+        for account in accounts:
+            if account.email == kwargs['email_from']:
+                user = account.get_credentials_path()
 
-    if user:
-      print('SEND USER FOUND')
+        if user:
+            print('SEND USER FOUND')
 
-      # initialize project
-      project.initialize(_user=user)
+            # initialize project
+            project.initialize(_user=user)
 
-      # load template
-      with open(kwargs['template'], 'r') as json_file:
-        email = EmailTemplate(json.load(json_file))
+            # load template
+            with open(kwargs['template'], 'r') as json_file:
+                email = EmailTemplate(json.load(json_file))
 
-      # loop through accounts
-      for account in accounts:
-        # if account is given only do that one
-        if kwargs['email_to'] is None or account.email == kwargs['email_to']:
-          if account.email in kwargs['ignore']:
-            print('IGNORING: ', account.email)
-          else:
-            print('EMAILING: ', account.email)
+            # loop through accounts
+            for account in accounts:
+                # if account is given only do that one
+                if kwargs['email_to'] is None or account.email == kwargs[
+                        'email_to']:
+                    if account.email in kwargs['ignore']:
+                        print('IGNORING: ', account.email)
+                    else:
+                        print('EMAILING: ', account.email)
 
-            if kwargs['test']:
-              # write to STDOUT
-              print(email.get_html())
-            else:
-              # send message via email
-              send_email('user', account.email, kwargs['email_from'], None,
-                         email.get_subject(), email.get_text(),
-                         email.get_html())
-              sleep(1)
+                        if kwargs['test']:
+                            # write to STDOUT
+                            print(email.get_html())
+                        else:
+                            # send message via email
+                            send_email('user', account.email,
+                                       kwargs['email_from'], None,
+                                       email.get_subject(), email.get_text(),
+                                       email.get_html())
+                            sleep(1)

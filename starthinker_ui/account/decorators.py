@@ -27,25 +27,27 @@ from starthinker.util.auth.wrapper import CredentialsFlowWrapper
 
 def permission_admin():
 
-  def _decorator(_view):
+    def _decorator(_view):
 
-    @wraps(_view)
-    def _wrapper(request, *args, **kwargs):
+        @wraps(_view)
+        def _wrapper(request, *args, **kwargs):
 
-      # user is logged in
-      if request.user.is_authenticated:
-        return _view(request, *args, **kwargs)
+            # user is logged in
+            if request.user.is_authenticated:
+                return _view(request, *args, **kwargs)
 
-      # multi user mode, log user in using oauth
-      else:
-        flow = CredentialsFlowWrapper(
-            settings.UI_CLIENT,
-            redirect_uri=settings.CONST_URL + '/oauth_callback/')
-        auth_url, _ = flow.authorization_url(
-            prompt='', access_type='offline', include_granted_scopes='true')
-        request.session['code_verifier'] = flow.code_verifier
-        return HttpResponseRedirect(auth_url)
+            # multi user mode, log user in using oauth
+            else:
+                flow = CredentialsFlowWrapper(settings.UI_CLIENT,
+                                              redirect_uri=settings.CONST_URL +
+                                              '/oauth_callback/')
+                auth_url, _ = flow.authorization_url(
+                    prompt='',
+                    access_type='offline',
+                    include_granted_scopes='true')
+                request.session['code_verifier'] = flow.code_verifier
+                return HttpResponseRedirect(auth_url)
 
-    return _wrapper
+        return _wrapper
 
-  return _decorator
+    return _decorator

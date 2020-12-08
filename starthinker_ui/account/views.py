@@ -29,24 +29,25 @@ from starthinker_ui.account.models import Account
 
 def oauth_callback(request):
 
-  # get the credentials from the Google redirect
-  flow = CredentialsFlowWrapper(
-      settings.UI_CLIENT, redirect_uri=settings.CONST_URL + '/oauth_callback/')
-  flow.code_verifier = request.session.get('code_verifier')
-  flow.fetch_token(code=request.GET['code'])
+    # get the credentials from the Google redirect
+    flow = CredentialsFlowWrapper(settings.UI_CLIENT,
+                                  redirect_uri=settings.CONST_URL +
+                                  '/oauth_callback/')
+    flow.code_verifier = request.session.get('code_verifier')
+    flow.fetch_token(code=request.GET['code'])
 
-  # get or create the account
-  account = Account.objects.get_or_create_user(flow.credentials)
+    # get or create the account
+    account = Account.objects.get_or_create_user(flow.credentials)
 
-  # log the account in ( set cookie )
-  django_login(request, account, backend=settings.AUTHENTICATION_BACKENDS[0])
+    # log the account in ( set cookie )
+    django_login(request, account, backend=settings.AUTHENTICATION_BACKENDS[0])
 
-  messages.success(request, 'Welcome To StarThinker')
+    messages.success(request, 'Welcome To StarThinker')
 
-  return HttpResponseRedirect('/')
+    return HttpResponseRedirect('/')
 
 
 def logout(request):
-  django_logout(request)
-  messages.success(request, 'You Are Logged Out')
-  return HttpResponseRedirect('/')
+    django_logout(request)
+    messages.success(request, 'You Are Logged Out')
+    return HttpResponseRedirect('/')

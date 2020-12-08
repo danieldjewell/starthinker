@@ -31,16 +31,16 @@
 
 
 class Store(object):
-  """Class that handles interaction with the Store."""
+    """Class that handles interaction with the Store."""
 
-  def __init__(self):
-    """Initializes the store.
+    def __init__(self):
+        """Initializes the store.
 
     Since this is a sigleton, before the fist usage the trix id and auth scheme
     must be set.
     """
-    self._store = {}
-    self._id_map = {}
+        self._store = {}
+        self._id_map = {}
 
 
 #    self.trix_id = None
@@ -82,22 +82,22 @@ class Store(object):
 #    self._store = {}
 #    self._id_map = {}
 
-  def map(self, entity, ext_id, dcm_id):
-    """Maps a CM id and an ext id for an entity.
+    def map(self, entity, ext_id, dcm_id):
+        """Maps a CM id and an ext id for an entity.
 
     Args:
       entity: The name of the entity for which the ID relates.
       ext_id: Placeholder ext id.
       dcm_id: Real CM id of the object.
     """
-    if not entity in self._id_map:
-      self._id_map[entity] = {}
+        if not entity in self._id_map:
+            self._id_map[entity] = {}
 
-    self._id_map[entity][ext_id] = dcm_id
-    self._id_map[entity][dcm_id] = ext_id
+        self._id_map[entity][ext_id] = dcm_id
+        self._id_map[entity][dcm_id] = ext_id
 
-  def translate(self, entity, identifier):
-    """Given an id, returns its counterpart.
+    def translate(self, entity, identifier):
+        """Given an id, returns its counterpart.
 
     ext id to cm id and vice versa.
 
@@ -105,13 +105,13 @@ class Store(object):
       entity: The name of the entity for which the ID relates.
       identifier: Ext id or actual CM id to map.
     """
-    if entity in self._id_map and identifier in self._id_map[entity]:
-      return self._id_map[entity][identifier]
+        if entity in self._id_map and identifier in self._id_map[entity]:
+            return self._id_map[entity][identifier]
 
-    return None
+        return None
 
-  def set(self, entity, keys, item):
-    """Sets an item in the cache.
+    def set(self, entity, keys, item):
+        """Sets an item in the cache.
 
     Args:
       entity: The name of the entity cache to use.
@@ -119,22 +119,22 @@ class Store(object):
         and the actual CM id.
       item: The item to cache.
     """
-    if not entity in self._store:
-      self._store[entity] = {}
+        if not entity in self._store:
+            self._store[entity] = {}
 
-    for key in keys:
-      self._store[entity][str(key)] = item
+        for key in keys:
+            self._store[entity][str(key)] = item
 
-  def get(self, entity, key):
-    """Gets and item from the cache.
+    def get(self, entity, key):
+        """Gets and item from the cache.
 
     Args:
       entity: The entity cache to use.
       key: The key to use to lookup the cached item.
     """
-    if entity in self._store:
-      return self._store[entity].get(str(key))
+        if entity in self._store:
+            return self._store[entity].get(str(key))
 
-    return None
+        return None
 
 store = Store()

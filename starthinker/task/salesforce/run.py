@@ -29,18 +29,18 @@ from starthinker.util.salesforce import authenticate, query
 
 @project.from_parameters
 def salesforce():
-  if project.verbose:
-    print('Salesforce')
+    if project.verbose:
+        print('Salesforce')
 
-  sf = authenticate(project.task['domain'], project.task['client'],
-                    project.task['secret'], project.task['username'],
-                    project.task['password'])
+    sf = authenticate(project.task['domain'], project.task['client'],
+                      project.task['secret'], project.task['username'],
+                      project.task['password'])
 
-  if 'query' in project.task:
-    rows = query(sf, project.task['query'])
-    if rows:
-      put_rows(project.task['auth'], project.task['out'], rows)
+    if 'query' in project.task:
+        rows = query(sf, project.task['query'])
+        if rows:
+            put_rows(project.task['auth'], project.task['out'], rows)
 
 
 if __name__ == '__main__':
-  salesforce()
+    salesforce()

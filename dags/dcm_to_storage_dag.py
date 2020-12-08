@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -82,90 +81,88 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
-  'auth_write': 'service',  # Credentials used for writing data.
-  'account': '',
-  'report_id': '',
-  'report_name': '',
-  'bucket': '',
-  'path': 'CM_Report',
+    'auth_read': 'user',  # Credentials used for reading data.
+    'auth_write': 'service',  # Credentials used for writing data.
+    'account': '',
+    'report_id': '',
+    'report_name': '',
+    'bucket': '',
+    'path': 'CM_Report',
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'dcm': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'report': {
-          'account': {
-            'field': {
-              'name': 'account',
-              'kind': 'integer',
-              'order': 2,
-              'default': ''
-            }
-          },
-          'report_id': {
-            'field': {
-              'name': 'report_id',
-              'kind': 'integer',
-              'order': 3,
-              'default': ''
-            }
-          },
-          'name': {
-            'field': {
-              'name': 'report_name',
-              'kind': 'string',
-              'order': 4,
-              'default': ''
-            }
-          }
-        },
-        'out': {
-          'storage': {
+    'tasks': [{
+        'dcm': {
             'auth': {
-              'field': {
-                'name': 'auth_write',
-                'kind': 'authentication',
-                'order': 1,
-                'default': 'service',
-                'description': 'Credentials used for writing data.'
-              }
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
             },
-            'bucket': {
-              'field': {
-                'name': 'bucket',
-                'kind': 'string',
-                'order': 5,
-                'default': ''
-              }
+            'report': {
+                'account': {
+                    'field': {
+                        'name': 'account',
+                        'kind': 'integer',
+                        'order': 2,
+                        'default': ''
+                    }
+                },
+                'report_id': {
+                    'field': {
+                        'name': 'report_id',
+                        'kind': 'integer',
+                        'order': 3,
+                        'default': ''
+                    }
+                },
+                'name': {
+                    'field': {
+                        'name': 'report_name',
+                        'kind': 'string',
+                        'order': 4,
+                        'default': ''
+                    }
+                }
             },
-            'path': {
-              'field': {
-                'name': 'path',
-                'kind': 'string',
-                'order': 6,
-                'default': 'CM_Report'
-              }
+            'out': {
+                'storage': {
+                    'auth': {
+                        'field': {
+                            'name': 'auth_write',
+                            'kind': 'authentication',
+                            'order': 1,
+                            'default': 'service',
+                            'description': 'Credentials used for writing data.'
+                        }
+                    },
+                    'bucket': {
+                        'field': {
+                            'name': 'bucket',
+                            'kind': 'string',
+                            'order': 5,
+                            'default': ''
+                        }
+                    },
+                    'path': {
+                        'field': {
+                            'name': 'path',
+                            'kind': 'string',
+                            'order': 6,
+                            'default': 'CM_Report'
+                        }
+                    }
+                }
             }
-          }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('dcm_to_storage', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

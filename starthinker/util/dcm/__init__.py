@@ -38,7 +38,7 @@ DCM_CONVERSION_SIZE = 1000
 
 
 def get_profile_for_api(auth, account_id):
-  """Return a DCM profile ID for the currently supplied credentials.
+    """Return a DCM profile ID for the currently supplied credentials.
 
   Bulletproofing:
   https://developers.google.com/doubleclick-advertisers/v3.2/userProfiles/get
@@ -60,33 +60,33 @@ def get_profile_for_api(auth, account_id):
 
   """
 
-  profile_admin = None
-  profile_network = None
+    profile_admin = None
+    profile_network = None
 
-  for p in API_DCM(auth, iterate=True).userProfiles().list().execute():
-    p_id = int(p['profileId'])
-    a_id = int(p['accountId'])
+    for p in API_DCM(auth, iterate=True).userProfiles().list().execute():
+        p_id = int(p['profileId'])
+        a_id = int(p['accountId'])
 
-    # take the first profile for admin
-    if a_id == 2515 and 'subAccountId' not in p:
-      profile_admin = p_id
-      break
+        # take the first profile for admin
+        if a_id == 2515 and 'subAccountId' not in p:
+            profile_admin = p_id
+            break
 
-    # try to find a network profile if exists
-    if a_id == account_id:
-      profile_network = p_id
-      break
+        # try to find a network profile if exists
+        if a_id == account_id:
+            profile_network = p_id
+            break
 
-  if profile_admin:
-    return True, profile_admin
-  elif profile_network:
-    return False, profile_network
-  else:
-    raise Exception('Add your user profile to DCM account %s.' % account_id)
+    if profile_admin:
+        return True, profile_admin
+    elif profile_network:
+        return False, profile_network
+    else:
+        raise Exception('Add your user profile to DCM account %s.' % account_id)
 
 
 def get_account_name(auth, account):
-  """ Return the name of a DCM account given the account ID.
+    """ Return the name of a DCM account given the account ID.
 
   Args:
     * auth: (string) Either user or service.
@@ -100,16 +100,15 @@ def get_account_name(auth, account):
 
   """
 
-  account_id, advertiser_ids = parse_account(auth, account)
-  is_superuser, profile_id = get_profile_for_api(auth, account_id)
-  response = API_DCM(
-      auth, internal=is_superuser).accounts().get(
-          id=account_id, profileId=profile_id).execute()
-  return response['name']
+    account_id, advertiser_ids = parse_account(auth, account)
+    is_superuser, profile_id = get_profile_for_api(auth, account_id)
+    response = API_DCM(auth, internal=is_superuser).accounts().get(
+        id=account_id, profileId=profile_id).execute()
+    return response['name']
 
 
 def parse_account(auth, account):
-  """ Breaks a [account:advertiser@profile] string into parts if supplied.
+    """ Breaks a [account:advertiser@profile] string into parts if supplied.
 
   This function was created to accomodate supplying advertiser and profile
   information
@@ -129,36 +128,36 @@ def parse_account(auth, account):
 
   """
 
-  network_id = account
-  advertiser_ids = None
-  profile_id = None
-
-  # if exists, get profile from end
-  try:
-    network_id, profile_id = network_id.split('@', 1)
-  except:
+    network_id = account
+    advertiser_ids = None
     profile_id = None
 
-  # if exists, get avertiser from end
-  try:
-    network_id, advertiser_ids = network_id.split(':', 1)
-  except:
-    pass
+    # if exists, get profile from end
+    try:
+        network_id, profile_id = network_id.split('@', 1)
+    except:
+        profile_id = None
 
-  # if network or advertiser, convert to integer
-  if network_id is not None:
-    network_id = int(network_id)
-  if advertiser_ids is not None:
-    advertiser_ids = [
-        int(advertiser_id.strip())
-        for advertiser_id in advertiser_ids.split(',')
-    ]
+    # if exists, get avertiser from end
+    try:
+        network_id, advertiser_ids = network_id.split(':', 1)
+    except:
+        pass
 
-  return network_id, advertiser_ids
+    # if network or advertiser, convert to integer
+    if network_id is not None:
+        network_id = int(network_id)
+    if advertiser_ids is not None:
+        advertiser_ids = [
+            int(advertiser_id.strip())
+            for advertiser_id in advertiser_ids.split(',')
+        ]
+
+    return network_id, advertiser_ids
 
 
 def report_get(auth, account, report_id=None, name=None):
-  """ Returns the DCM JSON definition of a report based on name or ID.
+    """ Returns the DCM JSON definition of a report based on name or ID.
 
   Bulletproofing:
   https://developers.google.com/doubleclick-advertisers/v3.2/reports/get
@@ -174,34 +173,34 @@ def report_get(auth, account, report_id=None, name=None):
 
   """
 
-  report = None
+    report = None
 
-  account_id, advertiser_ids = parse_account(auth, account)
-  is_superuser, profile_id = get_profile_for_api(auth, account_id)
-  kwargs = {
-      'profileId': profile_id,
-      'accountId': account_id
-  } if is_superuser else {
-      'profileId': profile_id
-  }
+    account_id, advertiser_ids = parse_account(auth, account)
+    is_superuser, profile_id = get_profile_for_api(auth, account_id)
+    kwargs = {
+        'profileId': profile_id,
+        'accountId': account_id
+    } if is_superuser else {
+        'profileId': profile_id
+    }
 
-  if name:
-    for r in API_DCM(
-        auth, internal=is_superuser).reports().list(**kwargs).execute():
-      if r['name'] == name:
-        report = r
-        break
+    if name:
+        for r in API_DCM(
+                auth, internal=is_superuser).reports().list(**kwargs).execute():
+            if r['name'] == name:
+                report = r
+                break
 
-  elif report_id:
-    kwargs['reportId'] = report_id
-    report = API_DCM(
-        auth, internal=is_superuser).reports().get(**kwargs).execute()
+    elif report_id:
+        kwargs['reportId'] = report_id
+        report = API_DCM(
+            auth, internal=is_superuser).reports().get(**kwargs).execute()
 
-  return report
+    return report
 
 
 def report_delete(auth, account, report_id=None, name=None):
-  """ Deletes a DCM report based on name or ID.
+    """ Deletes a DCM report based on name or ID.
 
   Bulletproofing:
   https://developers.google.com/doubleclick-advertisers/v3.2/reports/delete
@@ -217,25 +216,26 @@ def report_delete(auth, account, report_id=None, name=None):
 
   """
 
-  report = report_get(auth, account, report_id, name)
-  if report:
-    account_id, advertiser_ids = parse_account(auth, account)
-    is_superuser, profile_id = get_profile_for_api(auth, account_id)
-    kwargs = {
-        'profileId': profile_id,
-        'accountId': account_id
-    } if is_superuser else {
-        'profileId': profile_id
-    }
-    kwargs['reportId'] = report['id']
-    API_DCM(auth, internal=is_superuser).reports().delete(**kwargs).execute()
-  else:
-    if project.verbose:
-      print('DCM DELETE: No Report')
+    report = report_get(auth, account, report_id, name)
+    if report:
+        account_id, advertiser_ids = parse_account(auth, account)
+        is_superuser, profile_id = get_profile_for_api(auth, account_id)
+        kwargs = {
+            'profileId': profile_id,
+            'accountId': account_id
+        } if is_superuser else {
+            'profileId': profile_id
+        }
+        kwargs['reportId'] = report['id']
+        API_DCM(auth,
+                internal=is_superuser).reports().delete(**kwargs).execute()
+    else:
+        if project.verbose:
+            print('DCM DELETE: No Report')
 
 
 def report_filter(auth, body, filters):
-  """ Adds filters to a report body
+    """ Adds filters to a report body
 
   Filters cannot be easily added to the reports without templateing, this allows
   filters to be passed as lists.
@@ -265,39 +265,39 @@ def report_filter(auth, body, filters):
     * body: ( json ) modified report body
   """
 
-  new_body = body.copy()
+    new_body = body.copy()
 
-  for f, d in filters.items():
-    for v in get_rows(auth, d):
+    for f, d in filters.items():
+        for v in get_rows(auth, d):
 
-      # accounts are specified in a unique part of the report json
-      if f == 'accountId':
-        new_body['accountId'] = v
+            # accounts are specified in a unique part of the report json
+            if f == 'accountId':
+                new_body['accountId'] = v
 
-      # activities are specified in a unique part of the report json
-      elif f == 'dfa:activity':
-        new_body['reachCriteria']['activities'].setdefault(
-            'filters', []).append({
-                'kind': 'dfareporting#dimensionValue',
-                'dimensionName': f,
-                'id': v
-            })
+            # activities are specified in a unique part of the report json
+            elif f == 'dfa:activity':
+                new_body['reachCriteria']['activities'].setdefault(
+                    'filters', []).append({
+                        'kind': 'dfareporting#dimensionValue',
+                        'dimensionName': f,
+                        'id': v
+                    })
 
-      # all other filters go in the same place
-      else:
-        new_body.setdefault('criteria',
-                            {}).setdefault('dimensionFilters', []).append({
-                                'kind': 'dfareporting#dimensionValue',
-                                'dimensionName': f,
-                                'id': v,
-                                'matchType': 'EXACT'
-                            })
+            # all other filters go in the same place
+            else:
+                new_body.setdefault('criteria', {}).setdefault(
+                    'dimensionFilters', []).append({
+                        'kind': 'dfareporting#dimensionValue',
+                        'dimensionName': f,
+                        'id': v,
+                        'matchType': 'EXACT'
+                    })
 
-  return new_body
+    return new_body
 
 
 def report_build(auth, account, body):
-  """ Creates a DCM report given a JSON definition.
+    """ Creates a DCM report given a JSON definition.
 
   Bulletproofing:
   https://developers.google.com/doubleclick-advertisers/v3.2/reports/insert
@@ -318,71 +318,71 @@ def report_build(auth, account, body):
 
   """
 
-  report = report_get(auth, account, name=body['name'])
+    report = report_get(auth, account, name=body['name'])
 
-  if report is None:
-    account_id, advertiser_ids = parse_account(auth, account)
-    is_superuser, profile_id = get_profile_for_api(auth, account_id)
+    if report is None:
+        account_id, advertiser_ids = parse_account(auth, account)
+        is_superuser, profile_id = get_profile_for_api(auth, account_id)
 
-    # add the account id to the body
-    body['accountId'] = account_id
-    body['ownerProfileId'] = profile_id
+        # add the account id to the body
+        body['accountId'] = account_id
+        body['ownerProfileId'] = profile_id
 
-    # add advertisers to the body, ignore for floodlight reports
-    if advertiser_ids and 'criteria' in body:
-      body['criteria']['dimensionFilters'] = body.get('criteria', {}).get(
-          'dimensionFilters', []) + [{
-              'kind': 'dfareporting#dimensionValue',
-              'dimensionName': 'dfa:advertiser',
-              'id': advertiser_id,
-              'matchType': 'EXACT'
-          } for advertiser_id in advertiser_ids]
+        # add advertisers to the body, ignore for floodlight reports
+        if advertiser_ids and 'criteria' in body:
+            body['criteria']['dimensionFilters'] = body.get('criteria', {}).get(
+                'dimensionFilters', []) + [{
+                    'kind': 'dfareporting#dimensionValue',
+                    'dimensionName': 'dfa:advertiser',
+                    'id': advertiser_id,
+                    'matchType': 'EXACT'
+                } for advertiser_id in advertiser_ids]
 
-    # add default daily schedule if it does not exist ( convenience )
-    if 'schedule' not in body:
-      body['schedule'] = {'active': True, 'repeats': 'DAILY', 'every': 1}
+        # add default daily schedule if it does not exist ( convenience )
+        if 'schedule' not in body:
+            body['schedule'] = {'active': True, 'repeats': 'DAILY', 'every': 1}
 
-    # add default start and end if it does not exist ( convenience )
-    if 'startDate' not in body['schedule']:
-      body['schedule']['startDate'] = str(date.today())
+        # add default start and end if it does not exist ( convenience )
+        if 'startDate' not in body['schedule']:
+            body['schedule']['startDate'] = str(date.today())
 
-    # add default start and end if it does not exist ( convenience )
-    if 'expirationDate' not in body['schedule']:
-      body['schedule']['expirationDate'] = str(
-          (date.today() + timedelta(days=365)))
+        # add default start and end if it does not exist ( convenience )
+        if 'expirationDate' not in body['schedule']:
+            body['schedule']['expirationDate'] = str(
+                (date.today() + timedelta(days=365)))
 
-    #pprint.PrettyPrinter().pprint(body)
+        #pprint.PrettyPrinter().pprint(body)
 
-    # create the report
-    kwargs = {
-        'profileId': profile_id,
-        'accountId': account_id
-    } if is_superuser else {
-        'profileId': profile_id
-    }
-    kwargs['body'] = body
-    report = API_DCM(
-        auth, internal=is_superuser).reports().insert(**kwargs).execute()
+        # create the report
+        kwargs = {
+            'profileId': profile_id,
+            'accountId': account_id
+        } if is_superuser else {
+            'profileId': profile_id
+        }
+        kwargs['body'] = body
+        report = API_DCM(
+            auth, internal=is_superuser).reports().insert(**kwargs).execute()
 
-    # run the report
-    kwargs = {
-        'profileId': profile_id,
-        'accountId': account_id
-    } if is_superuser else {
-        'profileId': profile_id
-    }
-    kwargs['reportId'] = report['id']
-    API_DCM(auth, internal=is_superuser).reports().run(**kwargs).execute()
+        # run the report
+        kwargs = {
+            'profileId': profile_id,
+            'accountId': account_id
+        } if is_superuser else {
+            'profileId': profile_id
+        }
+        kwargs['reportId'] = report['id']
+        API_DCM(auth, internal=is_superuser).reports().run(**kwargs).execute()
 
-  else:
-    if project.verbose:
-      print('DCM Report Exists:', body['name'])
+    else:
+        if project.verbose:
+            print('DCM Report Exists:', body['name'])
 
-  return report
+    return report
 
 
 def report_fetch(auth, account, report_id=None, name=None, timeout=60):
-  """ Retrieves most recent DCM file JSON by name or ID, if in progress, waits for it to complete.
+    """ Retrieves most recent DCM file JSON by name or ID, if in progress, waits for it to complete.
 
   Bulletproofing:
   https://developers.google.com/doubleclick-advertisers/v3.2/files/get
@@ -404,62 +404,62 @@ def report_fetch(auth, account, report_id=None, name=None, timeout=60):
 
   """
 
-  if project.verbose:
-    print('DCM REPORT FILE', report_id or name)
+    if project.verbose:
+        print('DCM REPORT FILE', report_id or name)
 
-  if report_id is None:
-    report = report_get(auth, account, name=name)
-    if report is None:
-      raise Exception('Report does not exist:', name)
-    else:
-      report_id = report['id']
+    if report_id is None:
+        report = report_get(auth, account, name=name)
+        if report is None:
+            raise Exception('Report does not exist:', name)
+        else:
+            report_id = report['id']
 
-  running = False
+    running = False
 
-  # zero means run once
-  while timeout >= 0:
+    # zero means run once
+    while timeout >= 0:
 
-    # loop all files recent to oldest looking for valid one
-    for file_json in report_files(auth, account, report_id):
-      #pprint.PrettyPrinter().pprint(file)
+        # loop all files recent to oldest looking for valid one
+        for file_json in report_files(auth, account, report_id):
+            #pprint.PrettyPrinter().pprint(file)
 
-      # still running ( wait for timeout )
-      if file_json['status'] == 'PROCESSING':
-        if project.verbose:
-          print('REPORT PROCESSING WILL WAIT')
-        running = True
+            # still running ( wait for timeout )
+            if file_json['status'] == 'PROCESSING':
+                if project.verbose:
+                    print('REPORT PROCESSING WILL WAIT')
+                running = True
+                if timeout > 0:
+                    break  # go to outer loop wait
+
+            # ready for download ( return file )
+            elif file_json['status'] == 'REPORT_AVAILABLE':
+                if project.verbose:
+                    print('REPORT DONE')
+                return file_json
+
+            # cancelled or failed ( go to next file in loop )
+
+        # if no report running ( skip wait )
+        if not running:
+            break
+
+        # sleep a minute
         if timeout > 0:
-          break  # go to outer loop wait
+            if project.verbose:
+                print('WAITING MINUTES', timeout)
+            sleep(60)
 
-      # ready for download ( return file )
-      elif file_json['status'] == 'REPORT_AVAILABLE':
-        if project.verbose:
-          print('REPORT DONE')
-        return file_json
+        # advance timeout
+        timeout -= 1
 
-      # cancelled or failed ( go to next file in loop )
-
-    # if no report running ( skip wait )
-    if not running:
-      break
-
-    # sleep a minute
-    if timeout > 0:
-      if project.verbose:
-        print('WAITING MINUTES', timeout)
-      sleep(60)
-
-    # advance timeout
-    timeout -= 1
-
-  # if here, no file is ready, return status
-  if project.verbose:
-    print('NO REPORT FILES')
-  return running
+    # if here, no file is ready, return status
+    if project.verbose:
+        print('NO REPORT FILES')
+    return running
 
 
 def report_run(auth, account, report_id=None, name=None):
-  """ Trigger a DCM report to run by name or ID.
+    """ Trigger a DCM report to run by name or ID.
 
   Will do nothing if report is currently in progress.
 
@@ -478,43 +478,43 @@ def report_run(auth, account, report_id=None, name=None):
 
   """
 
-  account_id, advertiser_id = parse_account(auth, account)
-  is_superuser, profile_id = get_profile_for_api(auth, account_id)
-  kwargs = {
-      'profileId': profile_id,
-      'accountId': account_id
-  } if is_superuser else {
-      'profileId': profile_id
-  }
+    account_id, advertiser_id = parse_account(auth, account)
+    is_superuser, profile_id = get_profile_for_api(auth, account_id)
+    kwargs = {
+        'profileId': profile_id,
+        'accountId': account_id
+    } if is_superuser else {
+        'profileId': profile_id
+    }
 
-  if project.verbose:
-    print('DCM REPORT RUN INIT', report_id or name)
-  if report_id is None:
-    report = report_get(auth, account, name=name)
-    if report is None:
-      raise Exception('Report does not exist:', name)
-    else:
-      report_id = report['id']
-
-  kwargs = {
-      'profileId': profile_id,
-      'accountId': account_id
-  } if is_superuser else {
-      'profileId': profile_id
-  }
-  kwargs['reportId'] = report_id
-
-  files = report_files(auth, account, report_id)
-  latest_file_json = next(files, None)
-  if latest_file_json == None or latest_file_json['status'] != 'PROCESSING':
-    # run report if previously never run or currently not running
     if project.verbose:
-      print('RUNNING REPORT', report_id or name)
-    API_DCM(auth, internal=is_superuser).reports().run(**kwargs).execute()
-    return True
-  if project.verbose:
-    print('REPORT RUN SKIPPED', report_id or name)
-  return False
+        print('DCM REPORT RUN INIT', report_id or name)
+    if report_id is None:
+        report = report_get(auth, account, name=name)
+        if report is None:
+            raise Exception('Report does not exist:', name)
+        else:
+            report_id = report['id']
+
+    kwargs = {
+        'profileId': profile_id,
+        'accountId': account_id
+    } if is_superuser else {
+        'profileId': profile_id
+    }
+    kwargs['reportId'] = report_id
+
+    files = report_files(auth, account, report_id)
+    latest_file_json = next(files, None)
+    if latest_file_json == None or latest_file_json['status'] != 'PROCESSING':
+        # run report if previously never run or currently not running
+        if project.verbose:
+            print('RUNNING REPORT', report_id or name)
+        API_DCM(auth, internal=is_superuser).reports().run(**kwargs).execute()
+        return True
+    if project.verbose:
+        print('REPORT RUN SKIPPED', report_id or name)
+    return False
 
 
 def report_file(auth,
@@ -523,7 +523,7 @@ def report_file(auth,
                 name=None,
                 timeout=60,
                 chunksize=DCM_CHUNK_SIZE):
-  """ Retrieves most recent DCM file by name or ID, if in progress, waits for it to complete.
+    """ Retrieves most recent DCM file by name or ID, if in progress, waits for it to complete.
 
   Bulletproofing:
   https://developers.google.com/doubleclick-advertisers/v3.2/files/get
@@ -549,35 +549,35 @@ def report_file(auth,
 
   """
 
-  account_id, advertiser_id = parse_account(auth, account)
-  file_json = report_fetch(auth, account, report_id, name, timeout)
+    account_id, advertiser_id = parse_account(auth, account)
+    file_json = report_fetch(auth, account, report_id, name, timeout)
 
-  if file_json == False:
-    return None, None
-  elif file_json == True:
-    return 'report_running.csv', None
-  else:
-    filename = '%s_%s.csv' % (file_json['fileName'],
-                              file_json['dateRange']['endDate'].replace(
-                                  '-', ''))
-
-    # streaming
-    if chunksize:
-      return filename, media_download(
-          API_DCM(auth).files().get_media(
-              reportId=file_json['reportId'],
-              fileId=file_json['id']).execute(False), chunksize, 'utf-8')
-
-    # single object
+    if file_json == False:
+        return None, None
+    elif file_json == True:
+        return 'report_running.csv', None
     else:
-      return filename, StringIO(
-          API_DCM(auth).files().get_media(
-              reportId=file_json['reportId'],
-              fileId=file_json['id']).execute().decode('utf-8'))
+        filename = '%s_%s.csv' % (file_json['fileName'],
+                                  file_json['dateRange']['endDate'].replace(
+                                      '-', ''))
+
+        # streaming
+        if chunksize:
+            return filename, media_download(
+                API_DCM(auth).files().get_media(
+                    reportId=file_json['reportId'],
+                    fileId=file_json['id']).execute(False), chunksize, 'utf-8')
+
+        # single object
+        else:
+            return filename, StringIO(
+                API_DCM(auth).files().get_media(
+                    reportId=file_json['reportId'],
+                    fileId=file_json['id']).execute().decode('utf-8'))
 
 
 def report_list(auth, account):
-  """ Lists all the DCM report configurations for an account given the current credentials.
+    """ Lists all the DCM report configurations for an account given the current credentials.
 
   Bulletproofing:
   https://developers.google.com/doubleclick-advertisers/v3.2/reports/list
@@ -591,21 +591,21 @@ def report_list(auth, account):
 
   """
 
-  account_id, advertiser_id = parse_account(auth, account)
-  is_superuser, profile_id = get_profile_for_api(auth, account_id)
-  kwargs = {
-      'profileId': profile_id,
-      'accountId': account_id
-  } if is_superuser else {
-      'profileId': profile_id
-  }
-  for report in API_DCM(
-      auth, internal=is_superuser).reports().list(**kwargs).execute():
-    yield report
+    account_id, advertiser_id = parse_account(auth, account)
+    is_superuser, profile_id = get_profile_for_api(auth, account_id)
+    kwargs = {
+        'profileId': profile_id,
+        'accountId': account_id
+    } if is_superuser else {
+        'profileId': profile_id
+    }
+    for report in API_DCM(
+            auth, internal=is_superuser).reports().list(**kwargs).execute():
+        yield report
 
 
 def report_files(auth, account, report_id):
-  """ Lists all the files available for a given DCM report configuration.
+    """ Lists all the files available for a given DCM report configuration.
 
   Bulletproofing:
   https://developers.google.com/doubleclick-advertisers/v3.2/files/list
@@ -620,22 +620,23 @@ def report_files(auth, account, report_id):
 
   """
 
-  account_id, advertiser_id = parse_account(auth, account)
-  is_superuser, profile_id = get_profile_for_api(auth, account_id)
-  kwargs = {
-      'profileId': profile_id,
-      'accountId': account_id
-  } if is_superuser else {
-      'profileId': profile_id
-  }
-  kwargs['reportId'] = report_id
-  for report_file in API_DCM(
-      auth, internal=is_superuser).reports().files().list(**kwargs).execute():
-    yield report_file
+    account_id, advertiser_id = parse_account(auth, account)
+    is_superuser, profile_id = get_profile_for_api(auth, account_id)
+    kwargs = {
+        'profileId': profile_id,
+        'accountId': account_id
+    } if is_superuser else {
+        'profileId': profile_id
+    }
+    kwargs['reportId'] = report_id
+    for report_file in API_DCM(
+            auth,
+            internal=is_superuser).reports().files().list(**kwargs).execute():
+        yield report_file
 
 
 def report_to_rows(report):
-  """ Helper to convert DCM files into iterator of rows, memory efficient.
+    """ Helper to convert DCM files into iterator of rows, memory efficient.
 
   Usage example:
 
@@ -653,23 +654,23 @@ def report_to_rows(report):
 
   """
 
-  # if reading from stream
-  if type(report) is GeneratorType:
-    leftovers = ''
-    for chunk in report:
-      data, extra = chunk.rsplit('\n', 1)
-      for row in csv_to_rows(leftovers + data):
-        yield row
-      leftovers = extra
+    # if reading from stream
+    if type(report) is GeneratorType:
+        leftovers = ''
+        for chunk in report:
+            data, extra = chunk.rsplit('\n', 1)
+            for row in csv_to_rows(leftovers + data):
+                yield row
+            leftovers = extra
 
-  # if reading from buffer
-  else:
-    for row in csv_to_rows(report):
-      yield row
+    # if reading from buffer
+    else:
+        for row in csv_to_rows(report):
+            yield row
 
 
 def report_schema(headers):
-  """ Helper to determine the schema of a given set of report headers.
+    """ Helper to determine the schema of a given set of report headers.
 
   Using a match table generated from the DCM proto, each report header is
   matched
@@ -691,36 +692,36 @@ def report_schema(headers):
     * JSON schema definition.
 
   """
-  schema = []
+    schema = []
 
-  for header_name in headers:
-    header_sanitized = column_header_sanitize(header_name)
+    for header_name in headers:
+        header_sanitized = column_header_sanitize(header_name)
 
-    # first try exact match
-    header_type = DCM_Field_Lookup.get(header_sanitized)
+        # first try exact match
+        header_type = DCM_Field_Lookup.get(header_sanitized)
 
-    # second try to match end for custom field names ( activity reports )
-    if header_type is None:
-      for field_name, field_type in DCM_Field_Lookup.items():
-        if header_sanitized.endswith('_' + field_name):
-          header_type = field_type
-          break
+        # second try to match end for custom field names ( activity reports )
+        if header_type is None:
+            for field_name, field_type in DCM_Field_Lookup.items():
+                if header_sanitized.endswith('_' + field_name):
+                    header_type = field_type
+                    break
 
-    # finally default it to STRING
-    if header_type is None:
-      header_type = 'STRING'
+        # finally default it to STRING
+        if header_type is None:
+            header_type = 'STRING'
 
-    schema.append({
-        'name': header_sanitized,
-        'type': header_type,
-        'mode': 'NULLABLE'
-    })
+        schema.append({
+            'name': header_sanitized,
+            'type': header_type,
+            'mode': 'NULLABLE'
+        })
 
-  return schema
+    return schema
 
 
 def report_clean(rows):
-  """ Helper to fix DCM report issues for BigQuery and ensure schema compliance.
+    """ Helper to fix DCM report issues for BigQuery and ensure schema compliance.
 
   Memory efficiently cleans each row by fixing:
   * Strips header and footer to preserve only data rows.
@@ -744,44 +745,46 @@ def report_clean(rows):
 
   """
 
-  if project.verbose:
-    print('DCM REPORT CLEAN')
+    if project.verbose:
+        print('DCM REPORT CLEAN')
 
-  first = True
-  last = False
+    first = True
+    last = False
 
-  # find start of report
-  for row in rows:
-    if row and row[0] == 'Report Fields':
-      break
+    # find start of report
+    for row in rows:
+        if row and row[0] == 'Report Fields':
+            break
 
-  # process the report
-  for row in rows:
-    # quit if empty report
-    if 'No data returned by the reporting service.' in row:
-      break
+    # process the report
+    for row in rows:
+        # quit if empty report
+        if 'No data returned by the reporting service.' in row:
+            break
 
-    # stop parsing if end of data
-    if not row or row[0] == 'Grand Total:':
-      break
+        # stop parsing if end of data
+        if not row or row[0] == 'Grand Total:':
+            break
 
-    # find 'Date' column if it exists
-    if first:
-      try:
-        date_column = row.index('Date')
-        row[date_column] = 'Report_Day'
-      except ValueError:
-        pass
-      row = [column_header_sanitize(cell) for cell in row]
+        # find 'Date' column if it exists
+        if first:
+            try:
+                date_column = row.index('Date')
+                row[date_column] = 'Report_Day'
+            except ValueError:
+                pass
+            row = [column_header_sanitize(cell) for cell in row]
 
-    # remove not set columns ( which throw off schema on import types )
-    row = ['' if cell.strip() in ('(not set)', '-') else cell for cell in row]
+        # remove not set columns ( which throw off schema on import types )
+        row = [
+            '' if cell.strip() in ('(not set)', '-') else cell for cell in row
+        ]
 
-    # return the row
-    yield row
+        # return the row
+        yield row
 
-    # not first row anymore
-    first = False
+        # not first row anymore
+        first = False
 
 
 def conversions_upload(auth,
@@ -791,7 +794,7 @@ def conversions_upload(auth,
                        conversion_rows,
                        encryption_entity=None,
                        update=False):
-  """ Uploads an offline conversion list to DCM.
+    """ Uploads an offline conversion list to DCM.
 
   BulletProofing:
   https://developers.google.com/doubleclick-advertisers/guides/conversions_upload
@@ -812,93 +815,93 @@ def conversions_upload(auth,
       https://developers.google.com/doubleclick-advertisers/v3.2/conversions/batchinsert#encryptionInfo
   """
 
-  account_id, advertiser_id = parse_account(auth, account)
-  is_superuser, profile_id = get_profile_for_api(auth, account_id)
+    account_id, advertiser_id = parse_account(auth, account)
+    is_superuser, profile_id = get_profile_for_api(auth, account_id)
 
-  kwargs = {
-      'profileId': profile_id,
-      'accountId': account_id
-  } if is_superuser else {
-      'profileId': profile_id
-  }
-  kwargs['id'] = floodlight_activity_id
-  response = API_DCM(
-      auth,
-      internal=is_superuser).floodlightActivities().get(**kwargs).execute()
+    kwargs = {
+        'profileId': profile_id,
+        'accountId': account_id
+    } if is_superuser else {
+        'profileId': profile_id
+    }
+    kwargs['id'] = floodlight_activity_id
+    response = API_DCM(
+        auth,
+        internal=is_superuser).floodlightActivities().get(**kwargs).execute()
 
-  # upload in batch sizes of DCM_CONVERSION_SIZE
-  row_count = 0
-  row_buffer = []
-  for is_last, row in flag_last(conversion_rows):
-    row_buffer.append(row)
+    # upload in batch sizes of DCM_CONVERSION_SIZE
+    row_count = 0
+    row_buffer = []
+    for is_last, row in flag_last(conversion_rows):
+        row_buffer.append(row)
 
-    if is_last or len(row_buffer) == DCM_CONVERSION_SIZE:
+        if is_last or len(row_buffer) == DCM_CONVERSION_SIZE:
 
-      if project.verbose:
-        print('CONVERSION UPLOADING ROWS: %d - %d' %
-              (row_count, row_count + len(row_buffer)))
+            if project.verbose:
+                print('CONVERSION UPLOADING ROWS: %d - %d' %
+                      (row_count, row_count + len(row_buffer)))
 
-      body = {
-          'conversions': [{
-              'floodlightActivityId':
-                  floodlight_activity_id,
-              'floodlightConfigurationId':
-                  response['floodlightConfigurationId'],
-              'ordinal':
-                  row[0],
-              'timestampMicros':
-                  row[1],
-              'quantity':
-                  1,
-              'value':
-                  0.0,
-              conversion_type:
-                  row[2],
-          } for row in row_buffer]
-      }
+            body = {
+                'conversions': [{
+                    'floodlightActivityId':
+                        floodlight_activity_id,
+                    'floodlightConfigurationId':
+                        response['floodlightConfigurationId'],
+                    'ordinal':
+                        row[0],
+                    'timestampMicros':
+                        row[1],
+                    'quantity':
+                        1,
+                    'value':
+                        0.0,
+                    conversion_type:
+                        row[2],
+                } for row in row_buffer]
+            }
 
-      if encryption_entity:
-        body['encryptionInfo'] = encryption_entity
+            if encryption_entity:
+                body['encryptionInfo'] = encryption_entity
 
-      kwargs = {
-          'profileId': profile_id,
-          'accountId': account_id
-      } if is_superuser else {
-          'profileId': profile_id
-      }
-      kwargs['body'] = body
+            kwargs = {
+                'profileId': profile_id,
+                'accountId': account_id
+            } if is_superuser else {
+                'profileId': profile_id
+            }
+            kwargs['body'] = body
 
-      if update:
-        results = API_DCM(
-            auth, internal=is_superuser).conversions().batchupdate(
-                **kwargs).execute()
-      else:
-        results = API_DCM(
-            auth, internal=is_superuser).conversions().batchinsert(
-                **kwargs).execute()
+            if update:
+                results = API_DCM(
+                    auth, internal=is_superuser).conversions().batchupdate(
+                        **kwargs).execute()
+            else:
+                results = API_DCM(
+                    auth, internal=is_superuser).conversions().batchinsert(
+                        **kwargs).execute()
 
-      # stream back satus
-      for status in results['status']:
-        yield status
+            # stream back satus
+            for status in results['status']:
+                yield status
 
-      # clear the buffer
-      row_count += len(row_buffer)
-      row_buffer = []
+            # clear the buffer
+            row_count += len(row_buffer)
+            row_buffer = []
 
 
 def id_to_timezone(reportGenerationTimeZoneId):
-  return {
-      1: 'America/New_York',
-      2: 'Europe/London',
-      3: 'Europe/Paris',
-      4: 'Africa/Johannesburg',
-      5: 'Asia/Jerusalem',
-      6: 'Asia/Shanghai',
-      7: 'Asia/Hong_Kong',
-      8: 'Asia/Tokyo',
-      9: 'Australia/Sydney',
-      10: 'Asia/Dubai',
-      11: 'America/Los_Angeles',
-      12: 'Pacific/Auckland',
-      13: 'America/Sao_Paulo',
-  }.get(reportGenerationTimeZoneId)
+    return {
+        1: 'America/New_York',
+        2: 'Europe/London',
+        3: 'Europe/Paris',
+        4: 'Africa/Johannesburg',
+        5: 'Asia/Jerusalem',
+        6: 'Asia/Shanghai',
+        7: 'Asia/Hong_Kong',
+        8: 'Asia/Tokyo',
+        9: 'Australia/Sydney',
+        10: 'Asia/Dubai',
+        11: 'America/Los_Angeles',
+        12: 'Pacific/Auckland',
+        13: 'America/Sao_Paulo',
+    }.get(reportGenerationTimeZoneId)

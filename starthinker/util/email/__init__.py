@@ -39,84 +39,89 @@ from starthinker.util.csv import rows_to_csv
 
 
 def _list_unique(seq):
-  seen = set()
-  seen_add = seen.add
-  return [x for x in seq if not (x in seen or seen_add(x))]
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
 
 
 def get_subject(message):
-  for header in message['payload']['headers']:
-    if header.get('name', '').lower() == 'subject':
-      return header['value']
-  return ''
+    for header in message['payload']['headers']:
+        if header.get('name', '').lower() == 'subject':
+            return header['value']
+    return ''
 
 
 def get_email_links(auth, message, link_regexp, download=False):
-  links = []
-  html_parser = HTMLParser()
-  link_filter = re.compile(r'%s' % link_regexp) if link_regexp else None
+    links = []
+    html_parser = HTMLParser()
+    link_filter = re.compile(r'%s' % link_regexp) if link_regexp else None
 
-  try:
-    for part in message['payload'].get('parts', []) or [message['payload']]:
-      if 'data' in part['body']:
-        data = part['body']['data']
-        content = base64.urlsafe_b64decode(data).decode('utf-8')
-        # plain text may be different than html
-        if part['mimeType'] == 'text/plain':
-          links.extend(parse_url(content))
-        # html needs to decode links
-        elif part['mimeType'] == 'text/html':
-          links.extend(
-              map(lambda link: html_parser.unescape(link), parse_url(content)))
+    try:
+        for part in message['payload'].get('parts', []) or [message['payload']]:
+            if 'data' in part['body']:
+                data = part['body']['data']
+                content = base64.urlsafe_b64decode(data).decode('utf-8')
+                # plain text may be different than html
+                if part['mimeType'] == 'text/plain':
+                    links.extend(parse_url(content))
+                # html needs to decode links
+                elif part['mimeType'] == 'text/html':
+                    links.extend(
+                        map(lambda link: html_parser.unescape(link),
+                            parse_url(content)))
 
-  except HttpError as error:
-    print('EMAIL LINK ERROR: %s' % error)
+    except HttpError as error:
+        print('EMAIL LINK ERROR: %s' % error)
 
-  # remove duplicates
-  links = _list_unique(links)
+    # remove duplicates
+    links = _list_unique(links)
 
-  # filter links
-  if link_filter:
-    links = [link for link in links if link_filter.match(link)]
+    # filter links
+    if link_filter:
+        links = [link for link in links if link_filter.match(link)]
 
-  # for downloads convert links into files and data
-  for link in links:
-    if download:
-      try:
-        yield parse_filename(link, url=True), BytesIO(urlopen(link).read())
-      except:
-        'ERROR: Unable To Download', link
-    else:
-      yield link
+    # for downloads convert links into files and data
+    for link in links:
+        if download:
+            try:
+                yield parse_filename(link,
+                                     url=True), BytesIO(urlopen(link).read())
+            except:
+                'ERROR: Unable To Download', link
+        else:
+            yield link
 
 
 def get_email_attachments(auth, message, attachment_regexp):
 
-  file_filter = re.compile(r'%s' %
-                           attachment_regexp) if attachment_regexp else None
+    file_filter = re.compile(r'%s' %
+                             attachment_regexp) if attachment_regexp else None
 
-  try:
-    for part in message['payload'].get('parts', []):
+    try:
+        for part in message['payload'].get('parts', []):
 
-      if part['filename']:
+            if part['filename']:
 
-        # filter regexp
-        if not file_filter or file_filter.match(part['filename']):
+                # filter regexp
+                if not file_filter or file_filter.match(part['filename']):
 
-          if 'data' in part['body']:
-            data = part['body']['data']
+                    if 'data' in part['body']:
+                        data = part['body']['data']
 
-          else:
-            att_id = part['body']['attachmentId']
-            att = API_Gmail(auth).users().messages().attachments().get(
-                userId='me', messageId=message['id'], id=att_id).execute()
-            data = att['data']
+                    else:
+                        att_id = part['body']['attachmentId']
+                        att = API_Gmail(
+                            auth).users().messages().attachments().get(
+                                userId='me', messageId=message['id'],
+                                id=att_id).execute()
+                        data = att['data']
 
-          file_data = BytesIO(base64.urlsafe_b64decode(data.encode('UTF-8')))
-          yield part['filename'], file_data
+                    file_data = BytesIO(
+                        base64.urlsafe_b64decode(data.encode('UTF-8')))
+                    yield part['filename'], file_data
 
-  except HttpError as e:
-    print('EMAIL ATTACHMENT ERROR:', str(e))
+    except HttpError as e:
+        print('EMAIL ATTACHMENT ERROR:', str(e))
 
 
 def get_email_messages(auth,
@@ -125,29 +130,28 @@ def get_email_messages(auth,
                        subject_regexp=None,
                        date_min=None,
                        date_max=None):
-  if project.verbose:
-    print('GETTING EMAILS')
+    if project.verbose:
+        print('GETTING EMAILS')
 
-  query = 'from:%s AND to:%s' % (email_from, email_to)
-  if date_min:
-    query += ' AND after:%s' % date_to_str(date_min)
-  if date_max:
-    query += ' AND before:%s' % date_to_str(
-        date_max + timedelta(days=1))  # make it inclusive
-  if project.verbose:
-    print('EMAIL SEARCH:', query)
+    query = 'from:%s AND to:%s' % (email_from, email_to)
+    if date_min:
+        query += ' AND after:%s' % date_to_str(date_min)
+    if date_max:
+        query += ' AND before:%s' % date_to_str(
+            date_max + timedelta(days=1))  # make it inclusive
+    if project.verbose:
+        print('EMAIL SEARCH:', query)
 
-  messages = API_Gmail(
-      auth, iterate=True).users().messages().list(
-          userId='me', q=query).execute()
+    messages = API_Gmail(auth, iterate=True).users().messages().list(
+        userId='me', q=query).execute()
 
-  subject_filter = re.compile(r'%s' %
-                              subject_regexp) if subject_regexp else None
-  for message in messages:
-    message = API_Gmail(auth).users().messages().get(
-        userId='me', id=message['id']).execute()
-    if subject_filter is None or subject_filter.match(get_subject(message)):
-      yield message
+    subject_filter = re.compile(r'%s' %
+                                subject_regexp) if subject_regexp else None
+    for message in messages:
+        message = API_Gmail(auth).users().messages().get(
+            userId='me', id=message['id']).execute()
+        if subject_filter is None or subject_filter.match(get_subject(message)):
+            yield message
 
 
 def send_email(auth,
@@ -159,32 +163,33 @@ def send_email(auth,
                html=None,
                attachment_filename=None,
                attachment_rows=None):
-  if project.verbose:
-    print('SENDING EMAIL', email_to)
+    if project.verbose:
+        print('SENDING EMAIL', email_to)
 
-  message = MIMEMultipart('alternative')
-  message.set_charset('utf8')
+    message = MIMEMultipart('alternative')
+    message.set_charset('utf8')
 
-  message['to'] = email_to
-  message['cc'] = email_cc
-  message['from'] = email_from
-  message['subject'] = subject
-  message.attach(MIMEText(text, 'plain', 'UTF-8'))
+    message['to'] = email_to
+    message['cc'] = email_cc
+    message['from'] = email_from
+    message['subject'] = subject
+    message.attach(MIMEText(text, 'plain', 'UTF-8'))
 
-  if html:
-    message.attach(MIMEText(html, 'html', 'UTF-8'))
+    if html:
+        message.attach(MIMEText(html, 'html', 'UTF-8'))
 
-  if attachment_filename and attachment_rows:
-    attachment = MIMEBase('text', 'csv')
-    attachment.set_payload(rows_to_csv(attachment_rows).read())
-    attachment.add_header(
-        'Content-Disposition', 'attachment', filename=attachment_filename)
-    encode_base64(attachment)
-    message.attach(attachment)
+    if attachment_filename and attachment_rows:
+        attachment = MIMEBase('text', 'csv')
+        attachment.set_payload(rows_to_csv(attachment_rows).read())
+        attachment.add_header('Content-Disposition',
+                              'attachment',
+                              filename=attachment_filename)
+        encode_base64(attachment)
+        message.attach(attachment)
 
-  #API_Gmail(auth).users().messages().send(userId='me', body={'raw': base64.urlsafe_b64encode(message.as_string())}).execute()
-  API_Gmail(auth).users().messages().send(
-      userId='me',
-      body={
-          'raw': base64.urlsafe_b64encode(message.as_bytes()).decode()
-      }).execute()
+    #API_Gmail(auth).users().messages().send(userId='me', body={'raw': base64.urlsafe_b64encode(message.as_string())}).execute()
+    API_Gmail(auth).users().messages().send(
+        userId='me',
+        body={
+            'raw': base64.urlsafe_b64encode(message.as_bytes()).decode()
+        }).execute()

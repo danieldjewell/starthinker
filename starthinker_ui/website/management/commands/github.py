@@ -27,47 +27,53 @@ from website.views import solutions, solution, help
 
 RE_TRAILING_WHITESPACE = re.compile(r'\s+$', re.MULTILINE)
 
+
 class Command(BaseCommand):
-  help = 'Generate HTML For GitHub'
+    help = 'Generate HTML For GitHub'
 
-  def add_arguments(self, parser):
-    parser.add_argument(
-        '--analytics',
-        action='store',
-        dest='analytics',
-        required=True,
-        type=str,
-        help='Google analytics tag.',
-    )
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--analytics',
+            action='store',
+            dest='analytics',
+            required=True,
+            type=str,
+            help='Google analytics tag.',
+        )
 
-  def strip_trailing_whitespace(self, value):
-    return RE_TRAILING_WHITESPACE.sub('', value) + '\n'
+    def strip_trailing_whitespace(self, value):
+        return RE_TRAILING_WHITESPACE.sub('', value) + '\n'
 
-  def handle(self, *args, **kwargs):
+    def handle(self, *args, **kwargs):
 
-    settings.GOOGLE_ANALYTICS = kwargs['analytics']
+        settings.GOOGLE_ANALYTICS = kwargs['analytics']
 
-    directory = '%s/docs' % settings.UI_ROOT
-    print('Writing:', directory)
-    with open('%s/index.html' % directory, 'w') as index_file:
-      index_file.write(self.strip_trailing_whitespace(solutions(request=None)))
+        directory = '%s/docs' % settings.UI_ROOT
+        print('Writing:', directory)
+        with open('%s/index.html' % directory, 'w') as index_file:
+            index_file.write(
+                self.strip_trailing_whitespace(solutions(request=None)))
 
-    directory = '%s/docs/help' % settings.UI_ROOT
-    print('Writing:', directory)
-    os.makedirs(directory, exist_ok=True)
-    with open('%s/index.html' % directory, 'w') as index_file:
-      index_file.write(self.strip_trailing_whitespace(help(request=None)))
-
-    directory = '%s/docs/solution' % settings.UI_ROOT
-    print('Writing:', directory)
-    os.makedirs(directory, exist_ok=True)
-    with open('%s/index.html' % directory, 'w') as index_file:
-      index_file.write(self.strip_trailing_whitespace(solutions(request=None)))
-
-    for s in Script.get_scripts():
-      if s.get_open_source():
-        directory = '%s/docs/solution/%s' % (settings.UI_ROOT, s.get_tag())
+        directory = '%s/docs/help' % settings.UI_ROOT
         print('Writing:', directory)
         os.makedirs(directory, exist_ok=True)
-        with open('%s/index.html' % directory, 'w') as solution_file:
-          solution_file.write(self.strip_trailing_whitespace(solution(request=None, tag=s.get_tag())))
+        with open('%s/index.html' % directory, 'w') as index_file:
+            index_file.write(self.strip_trailing_whitespace(help(request=None)))
+
+        directory = '%s/docs/solution' % settings.UI_ROOT
+        print('Writing:', directory)
+        os.makedirs(directory, exist_ok=True)
+        with open('%s/index.html' % directory, 'w') as index_file:
+            index_file.write(
+                self.strip_trailing_whitespace(solutions(request=None)))
+
+        for s in Script.get_scripts():
+            if s.get_open_source():
+                directory = '%s/docs/solution/%s' % (settings.UI_ROOT,
+                                                     s.get_tag())
+                print('Writing:', directory)
+                os.makedirs(directory, exist_ok=True)
+                with open('%s/index.html' % directory, 'w') as solution_file:
+                    solution_file.write(
+                        self.strip_trailing_whitespace(
+                            solution(request=None, tag=s.get_tag())))

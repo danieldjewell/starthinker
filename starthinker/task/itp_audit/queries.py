@@ -16,8 +16,9 @@
 #
 ###########################################################################
 
+
 class Queries:
-  browser_env_90 = """
+    browser_env_90 = """
     SELECT
       Partner,
       Advertiser,
@@ -60,7 +61,7 @@ class Queries:
       Line_item_type
   """
 
-  browser_2_year = """
+    browser_2_year = """
     SELECT
       Partner,
       Advertiser,
@@ -118,7 +119,7 @@ class Queries:
       Week_start
   """
 
-  browser_share_multichart = """
+    browser_share_multichart = """
     WITH
     filtered AS
     (
@@ -234,7 +235,7 @@ class Queries:
     ORDER BY 1, 2
   """
 
-  clean_browser_report = """
+    clean_browser_report = """
     SELECT
       DV3_reporting.Partner AS Partner_clean,
       DV3_reporting.Partner_Id,
@@ -326,7 +327,7 @@ class Queries:
       seg.Segment3
   """
 
-  cm_floodlight_join = """
+    cm_floodlight_join = """
     SELECT
       Flood.Floodlight_Attribution_Type AS Floodlight_Attribution_Type,
       Att.Attribution_Type AS Attribution_Type,
@@ -354,7 +355,7 @@ class Queries:
       Browser_Platform_clean
   """
 
-  cm_floodlight_multichart = """
+    cm_floodlight_multichart = """
     WITH
     attrtype_browser_total AS
     (
@@ -389,7 +390,7 @@ class Queries:
     ORDER BY 4 DESC
   """
 
-  cm_segmentation = """
+    cm_segmentation = """
     SELECT
       CONCAT(CM.Advertiser," - ",CAST(CM.Advertiser_Id AS STRING)) AS Advertiser,
       CONCAT(CM.Campaign," - ",CAST(CM.Campaign_Id AS STRING)) AS Campaign,
@@ -427,7 +428,7 @@ class Queries:
       Week
   """
 
-  cm_site_segmentation = """
+    cm_site_segmentation = """
     SELECT
     r.Site_Dcm,
     Sum(r.Impressions) AS Impressions,
@@ -442,7 +443,7 @@ class Queries:
     Impressions desc
   """
 
-  dv360_custom_segments = """
+    dv360_custom_segments = """
     SELECT DISTINCT
       c.Advertiser,
       c.Advertiser_Id,
@@ -480,7 +481,7 @@ class Queries:
       s.Segment3
   """
 
-  safari_distribution_90days = """
+    safari_distribution_90days = """
       SELECT
       Partner,
       Advertiser,
@@ -522,7 +523,7 @@ class Queries:
         Impressions DESC
   """
 
-  sdf_join = """
+    sdf_join = """
     SELECT
     C.Campaign_Id as Campaign_Id,
     C.Advertiser_Id as Advertiser_Id,

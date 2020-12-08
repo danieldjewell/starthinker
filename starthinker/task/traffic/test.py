@@ -22,19 +22,21 @@ from starthinker.util.project import project, get_project
 
 
 def bulkdozer_test():
-  print('testing bulkdozer')
+    print('testing bulkdozer')
 
-  if 'verify' in project.task['traffic']:
-    is_admin, profile_id = get_profile_for_api(
-        project.task['auth'], project.task['traffic']['account_id'])
+    if 'verify' in project.task['traffic']:
+        is_admin, profile_id = get_profile_for_api(
+            project.task['auth'], project.task['traffic']['account_id'])
 
-    for entity in project.task['traffic']['verify']:
-      service = getattr(
-          API_DCM(project.task['auth'], internal=is_admin), entity['type'])
-      cm_entity = service().get(profileId=profile_id, id=entity['id']).execute()
+        for entity in project.task['traffic']['verify']:
+            service = getattr(API_DCM(project.task['auth'], internal=is_admin),
+                              entity['type'])
+            cm_entity = service().get(profileId=profile_id,
+                                      id=entity['id']).execute()
 
-      values = entity['values']
+            values = entity['values']
 
-      for key in values:
-        if values[key] != cm_entity[key]:
-          raise '%s %s expected to be %s, was %s' % (entity['type'], key, values[key], cm_entity[key])
+            for key in values:
+                if values[key] != cm_entity[key]:
+                    raise '%s %s expected to be %s, was %s' % (
+                        entity['type'], key, values[key], cm_entity[key])

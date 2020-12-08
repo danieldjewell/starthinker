@@ -25,66 +25,65 @@ from django.core import serializers
 
 
 class Command(BaseCommand):
-  help = 'Replace task or field in recipes with new value.'
+    help = 'Replace task or field in recipes with new value.'
 
-  def add_arguments(self, parser):
-    parser.add_argument(
-        '--task',
-        action='store',
-        dest='task',
-        default=None,
-        help='Task to edit.',
-    )
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--task',
+            action='store',
+            dest='task',
+            default=None,
+            help='Task to edit.',
+        )
 
-    parser.add_argument(
-        '--field',
-        action='store',
-        dest='field',
-        default=None,
-        help='Task to edit.',
-    )
+        parser.add_argument(
+            '--field',
+            action='store',
+            dest='field',
+            default=None,
+            help='Task to edit.',
+        )
 
-    parser.add_argument(
-        '--replacement',
-        action='store',
-        dest='replacement',
-        default=None,
-        help='Key to replace with.',
-    )
+        parser.add_argument(
+            '--replacement',
+            action='store',
+            dest='replacement',
+            default=None,
+            help='Key to replace with.',
+        )
 
-    parser.add_argument(
-        '--write',
-        action='store_true',
-        dest='write',
-        default=False,
-        help='Key to replace with.')
+        parser.add_argument('--write',
+                            action='store_true',
+                            dest='write',
+                            default=False,
+                            help='Key to replace with.')
 
-  def handle(self, *args, **kwargs):
-    for recipe in (Recipe.objects.all()):
+    def handle(self, *args, **kwargs):
+        for recipe in (Recipe.objects.all()):
 
-      print('---------------------------------------')
-      print('Name:', recipe.name)
-      print('Account:', recipe.account.email)
+            print('---------------------------------------')
+            print('Name:', recipe.name)
+            print('Account:', recipe.account.email)
 
-      changed = False
-      tasks = json.loads(recipe.tasks)
+            changed = False
+            tasks = json.loads(recipe.tasks)
 
-      if kwargs['replacement']:
-        for task in tasks:
-          if kwargs['field']:
-            if kwargs['field'] in task['values']:
-              task['values'][kwargs['replacement']] = task['values'][
-                  kwargs['field']]
-              del task['values'][kwargs['field']]
-              changed = True
-          else:
-            if task['tag'] == kwargs['task']:
-              task['tag'] = kwargs['replacement']
-              changed = True
+            if kwargs['replacement']:
+                for task in tasks:
+                    if kwargs['field']:
+                        if kwargs['field'] in task['values']:
+                            task['values'][kwargs['replacement']] = task[
+                                'values'][kwargs['field']]
+                            del task['values'][kwargs['field']]
+                            changed = True
+                    else:
+                        if task['tag'] == kwargs['task']:
+                            task['tag'] = kwargs['replacement']
+                            changed = True
 
-      if changed:
-        print('OLD TASK', recipe.tasks)
-        print('NEW TASK', tasks)
-        if kwargs['write']:
-          recipe.set_values(tasks)
-          recipe.save(update_fields=['tasks'])
+            if changed:
+                print('OLD TASK', recipe.tasks)
+                print('NEW TASK', tasks)
+                if kwargs['write']:
+                    recipe.set_values(tasks)
+                    recipe.save(update_fields=['tasks'])

@@ -25,24 +25,24 @@ from starthinker.util.project import get_project
 
 def main():
 
-  parser = argparse.ArgumentParser(
-      formatter_class=argparse.RawDescriptionHelpFormatter,
-      description=textwrap.dedent("""\
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent("""\
       Evaluate the validity of a json file. Helps in debugging recipes.
       Print the line and character position of any errors in the given json file.
 
       Example: python helper.py scripts/say_hello.json
   """))
 
-  parser.add_argument('file', help='A JSON file.')
-  args = parser.parse_args()
+    parser.add_argument('file', help='A JSON file.')
+    args = parser.parse_args()
 
-  try:
-    project = get_project(args.file)
-    print('JSON OK:', args.file)
-  except JSONDecodeError as e:
-    print(str(e))
+    try:
+        project = get_project(args.file)
+        print('JSON OK:', args.file)
+    except JSONDecodeError as e:
+        print(str(e))
 
 
 if __name__ == '__main__':
-  main()
+    main()

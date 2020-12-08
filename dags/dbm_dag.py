@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -82,49 +81,52 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
-  'report': '{}',  # Report body and filters.
-  'delete': False,  # If report exists, delete it before creating a new one.
+    'auth_read': 'user',  # Credentials used for reading data.
+    'report': '{}',  # Report body and filters.
+    'delete': False,  # If report exists, delete it before creating a new one.
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'dbm': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'report': {
-          'field': {
-            'name': 'report',
-            'kind': 'json',
-            'order': 1,
-            'default': '{}',
-            'description': 'Report body and filters.'
-          }
-        },
-        'delete': {
-          'field': {
-            'name': 'delete',
-            'kind': 'boolean',
-            'order': 2,
-            'default': False,
-            'description': 'If report exists, delete it before creating a new one.'
-          }
+    'tasks': [{
+        'dbm': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'report': {
+                'field': {
+                    'name': 'report',
+                    'kind': 'json',
+                    'order': 1,
+                    'default': '{}',
+                    'description': 'Report body and filters.'
+                }
+            },
+            'delete': {
+                'field': {
+                    'name':
+                        'delete',
+                    'kind':
+                        'boolean',
+                    'order':
+                        2,
+                    'default':
+                        False,
+                    'description':
+                        'If report exists, delete it before creating a new one.'
+                }
+            }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('dbm', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

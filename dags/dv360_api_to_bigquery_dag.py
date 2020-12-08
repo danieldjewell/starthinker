@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -46,121 +45,112 @@ Add DV360 advertiser ids for the accounts to pull data from.
 from starthinker_airflow.factory import DAG_Factory
 
 # Add the following credentials to your Airflow configuration.
-USER_CONN_ID = "starthinker_user" # The connection to use for user authentication.
-GCP_CONN_ID = "starthinker_service" # The connection to use for service authentication.
+USER_CONN_ID = "starthinker_user"  # The connection to use for user authentication.
+GCP_CONN_ID = "starthinker_service"  # The connection to use for service authentication.
 
 INPUTS = {
-  'endpoint': '',
-  'auth_read': 'user',  # Credentials used for reading data.
-  'auth_write': 'service',  # Credentials used for writing data.
-  'dataset': '',  # Google BigQuery dataset to create tables in.
-  'partners': [],  # Comma separated partners ids.
-  'advertisers': [],  # Comma separated advertisers ids.
+    'endpoint': '',
+    'auth_read': 'user',  # Credentials used for reading data.
+    'auth_write': 'service',  # Credentials used for writing data.
+    'dataset': '',  # Google BigQuery dataset to create tables in.
+    'partners': [],  # Comma separated partners ids.
+    'advertisers': [],  # Comma separated advertisers ids.
 }
 
-TASKS = [
-  {
+TASKS = [{
     'dv360_api': {
-      'auth': {
-        'field': {
-          'name': 'auth_read',
-          'kind': 'authentication',
-          'order': 1,
-          'default': 'user',
-          'description': 'Credentials used for reading data.'
-        }
-      },
-      'endpoints': {
-        'field': {
-          'name': 'endpoint',
-          'kind': 'choice',
-          'choices': [
-            'advertisers',
-            'advertisers.campaigns',
-            'advertisers.channels',
-            'advertisers.channels.sites',
-            'advertisers.creatives',
-            'advertisers.insertionOrders',
-            'advertisers.lineItems',
-            'advertisers.lineItems.targetingTypes',
-            'advertisers.locationLists',
-            'advertisers.locationLists.assignedLocations',
-            'advertisers.negativeKeywordLists',
-            'advertisers.negativeKeywordLists.negativeKeywords',
-            'advertisers.targetingTypes.assignedTargetingOptions',
-            'combinedAudiences',
-            'customBiddingAlgorithms',
-            'customLists',
-            'firstAndThirdPartyAudiences',
-            'floodlightGroups',
-            'googleAudiences',
-            'inventorySourceGroups',
-            'inventorySourceGroups.assignedInventorySources',
-            'inventorySources',
-            'partners',
-            'partners.channels',
-            'partners.channels.sites',
-            'floodlightActivityGroups',
-            'partners.targetingTypes.assignedTargetingOptions',
-            'targetingTypes.targetingOptions',
-            'users'
-          ],
-          'default': ''
-        }
-      },
-      'partners': {
-        'single_cell': True,
-        'values': {
-          'field': {
-            'name': 'partners',
-            'kind': 'integer_list',
-            'order': 2,
-            'default': [
-            ],
-            'description': 'Comma separated partners ids.'
-          }
-        }
-      },
-      'advertisers': {
-        'single_cell': True,
-        'values': {
-          'field': {
-            'name': 'advertisers',
-            'kind': 'integer_list',
-            'order': 2,
-            'default': [
-            ],
-            'description': 'Comma separated advertisers ids.'
-          }
-        }
-      },
-      'out': {
         'auth': {
-          'field': {
-            'name': 'auth_write',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Credentials used for writing data.'
-          }
+            'field': {
+                'name': 'auth_read',
+                'kind': 'authentication',
+                'order': 1,
+                'default': 'user',
+                'description': 'Credentials used for reading data.'
+            }
         },
-        'dataset': {
-          'field': {
-            'name': 'dataset',
-            'kind': 'string',
-            'order': 1,
-            'default': '',
-            'description': 'Google BigQuery dataset to create tables in.'
-          }
+        'endpoints': {
+            'field': {
+                'name': 'endpoint',
+                'kind': 'choice',
+                'choices': [
+                    'advertisers', 'advertisers.campaigns',
+                    'advertisers.channels', 'advertisers.channels.sites',
+                    'advertisers.creatives', 'advertisers.insertionOrders',
+                    'advertisers.lineItems',
+                    'advertisers.lineItems.targetingTypes',
+                    'advertisers.locationLists',
+                    'advertisers.locationLists.assignedLocations',
+                    'advertisers.negativeKeywordLists',
+                    'advertisers.negativeKeywordLists.negativeKeywords',
+                    'advertisers.targetingTypes.assignedTargetingOptions',
+                    'combinedAudiences', 'customBiddingAlgorithms',
+                    'customLists', 'firstAndThirdPartyAudiences',
+                    'floodlightGroups', 'googleAudiences',
+                    'inventorySourceGroups',
+                    'inventorySourceGroups.assignedInventorySources',
+                    'inventorySources', 'partners', 'partners.channels',
+                    'partners.channels.sites', 'floodlightActivityGroups',
+                    'partners.targetingTypes.assignedTargetingOptions',
+                    'targetingTypes.targetingOptions', 'users'
+                ],
+                'default': ''
+            }
+        },
+        'partners': {
+            'single_cell': True,
+            'values': {
+                'field': {
+                    'name': 'partners',
+                    'kind': 'integer_list',
+                    'order': 2,
+                    'default': [],
+                    'description': 'Comma separated partners ids.'
+                }
+            }
+        },
+        'advertisers': {
+            'single_cell': True,
+            'values': {
+                'field': {
+                    'name': 'advertisers',
+                    'kind': 'integer_list',
+                    'order': 2,
+                    'default': [],
+                    'description': 'Comma separated advertisers ids.'
+                }
+            }
+        },
+        'out': {
+            'auth': {
+                'field': {
+                    'name': 'auth_write',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Credentials used for writing data.'
+                }
+            },
+            'dataset': {
+                'field': {
+                    'name':
+                        'dataset',
+                    'kind':
+                        'string',
+                    'order':
+                        1,
+                    'default':
+                        '',
+                    'description':
+                        'Google BigQuery dataset to create tables in.'
+                }
+            }
         }
-      }
     }
-  }
-]
+}]
 
-DAG_FACTORY = DAG_Factory('dv360_api_to_bigquery', { 'tasks':TASKS }, INPUTS)
+DAG_FACTORY = DAG_Factory('dv360_api_to_bigquery', {'tasks': TASKS}, INPUTS)
 DAG_FACTORY.apply_credentails(USER_CONN_ID, GCP_CONN_ID)
 DAG = DAG_FACTORY.execute()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

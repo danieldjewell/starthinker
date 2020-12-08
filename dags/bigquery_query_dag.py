@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -81,73 +80,71 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_write': 'service',  # Credentials used for writing data.
-  'query': '',  # SQL with newlines and all.
-  'dataset': '',  # Existing BigQuery dataset.
-  'table': '',  # Table to create from this query.
-  'legacy': True,  # Query type must match source tables.
+    'auth_write': 'service',  # Credentials used for writing data.
+    'query': '',  # SQL with newlines and all.
+    'dataset': '',  # Existing BigQuery dataset.
+    'table': '',  # Table to create from this query.
+    'legacy': True,  # Query type must match source tables.
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'bigquery': {
-        'auth': {
-          'field': {
-            'name': 'auth_write',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Credentials used for writing data.'
-          }
-        },
-        'from': {
-          'query': {
-            'field': {
-              'name': 'query',
-              'kind': 'text',
-              'order': 1,
-              'default': '',
-              'description': 'SQL with newlines and all.'
+    'tasks': [{
+        'bigquery': {
+            'auth': {
+                'field': {
+                    'name': 'auth_write',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Credentials used for writing data.'
+                }
+            },
+            'from': {
+                'query': {
+                    'field': {
+                        'name': 'query',
+                        'kind': 'text',
+                        'order': 1,
+                        'default': '',
+                        'description': 'SQL with newlines and all.'
+                    }
+                },
+                'legacy': {
+                    'field': {
+                        'name': 'legacy',
+                        'kind': 'boolean',
+                        'order': 4,
+                        'default': True,
+                        'description': 'Query type must match source tables.'
+                    }
+                }
+            },
+            'to': {
+                'dataset': {
+                    'field': {
+                        'name': 'dataset',
+                        'kind': 'string',
+                        'order': 2,
+                        'default': '',
+                        'description': 'Existing BigQuery dataset.'
+                    }
+                },
+                'table': {
+                    'field': {
+                        'name': 'table',
+                        'kind': 'string',
+                        'order': 3,
+                        'default': '',
+                        'description': 'Table to create from this query.'
+                    }
+                }
             }
-          },
-          'legacy': {
-            'field': {
-              'name': 'legacy',
-              'kind': 'boolean',
-              'order': 4,
-              'default': True,
-              'description': 'Query type must match source tables.'
-            }
-          }
-        },
-        'to': {
-          'dataset': {
-            'field': {
-              'name': 'dataset',
-              'kind': 'string',
-              'order': 2,
-              'default': '',
-              'description': 'Existing BigQuery dataset.'
-            }
-          },
-          'table': {
-            'field': {
-              'name': 'table',
-              'kind': 'string',
-              'order': 3,
-              'default': '',
-              'description': 'Table to create from this query.'
-            }
-          }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('bigquery_query', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

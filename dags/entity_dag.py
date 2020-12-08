@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -81,124 +80,107 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_write': 'service',  # Credentials used for writing data.
-  'auth_read': 'user',  # Credentials used for reading data.
-  'partners': '[]',  # Comma sparated list of DV360 partners.
-  'dataset': '',  # BigQuery dataset to write tables for each entity.
+    'auth_write': 'service',  # Credentials used for writing data.
+    'auth_read': 'user',  # Credentials used for reading data.
+    'partners': '[]',  # Comma sparated list of DV360 partners.
+    'dataset': '',  # BigQuery dataset to write tables for each entity.
 }
 
 RECIPE = {
-  'setup': {
-    'day': [
-      'Mon',
-      'Tue',
-      'Wed',
-      'Thu',
-      'Fri',
-      'Sat',
-      'Sun'
-    ],
-    'hour': [
-      5
-    ]
-  },
-  'tasks': [
-    {
-      'dataset': {
-        'auth': {
-          'field': {
-            'name': 'auth_write',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Credentials used for writing data.'
-          }
-        },
-        'dataset': {
-          'field': {
-            'name': 'dataset',
-            'kind': 'string',
-            'order': 3,
-            'default': '',
-            'description': 'BigQuery dataset to write tables for each entity.'
-          }
-        }
-      }
+    'setup': {
+        'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        'hour': [5]
     },
-    {
-      'entity': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'prefix': 'Entity',
-        'entities': [
-          'Campaign',
-          'LineItem',
-          'Creative',
-          'UserList',
-          'Partner',
-          'Advertiser',
-          'InsertionOrder',
-          'Pixel',
-          'InventorySource',
-          'CustomAffinity',
-          'UniversalChannel',
-          'UniversalSite',
-          'SupportedExchange',
-          'DataPartner',
-          'GeoLocation',
-          'Language',
-          'DeviceCriteria',
-          'Browser',
-          'Isp'
-        ],
-        'partners': {
-          'single_cell': True,
-          'values': {
-            'field': {
-              'name': 'partners',
-              'kind': 'integer_list',
-              'order': 1,
-              'default': '[]',
-              'description': 'Comma sparated list of DV360 partners.'
-            }
-          }
-        },
-        'out': {
-          'bigquery': {
+    'tasks': [{
+        'dataset': {
             'auth': {
-              'field': {
-                'name': 'auth_write',
-                'kind': 'authentication',
-                'order': 1,
-                'default': 'service',
-                'description': 'Credentials used for writing data.'
-              }
+                'field': {
+                    'name': 'auth_write',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Credentials used for writing data.'
+                }
             },
             'dataset': {
-              'field': {
-                'name': 'dataset',
-                'kind': 'string',
-                'order': 3,
-                'default': '',
-                'description': 'BigQuery dataset to write tables for each entity.'
-              }
+                'field': {
+                    'name':
+                        'dataset',
+                    'kind':
+                        'string',
+                    'order':
+                        3,
+                    'default':
+                        '',
+                    'description':
+                        'BigQuery dataset to write tables for each entity.'
+                }
             }
-          }
         }
-      }
-    }
-  ]
+    }, {
+        'entity': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'prefix': 'Entity',
+            'entities': [
+                'Campaign', 'LineItem', 'Creative', 'UserList', 'Partner',
+                'Advertiser', 'InsertionOrder', 'Pixel', 'InventorySource',
+                'CustomAffinity', 'UniversalChannel', 'UniversalSite',
+                'SupportedExchange', 'DataPartner', 'GeoLocation', 'Language',
+                'DeviceCriteria', 'Browser', 'Isp'
+            ],
+            'partners': {
+                'single_cell': True,
+                'values': {
+                    'field': {
+                        'name': 'partners',
+                        'kind': 'integer_list',
+                        'order': 1,
+                        'default': '[]',
+                        'description': 'Comma sparated list of DV360 partners.'
+                    }
+                }
+            },
+            'out': {
+                'bigquery': {
+                    'auth': {
+                        'field': {
+                            'name': 'auth_write',
+                            'kind': 'authentication',
+                            'order': 1,
+                            'default': 'service',
+                            'description': 'Credentials used for writing data.'
+                        }
+                    },
+                    'dataset': {
+                        'field': {
+                            'name':
+                                'dataset',
+                            'kind':
+                                'string',
+                            'order':
+                                3,
+                            'default':
+                                '',
+                            'description':
+                                'BigQuery dataset to write tables for each entity.'
+                        }
+                    }
+                }
+            }
+        }
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('entity', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

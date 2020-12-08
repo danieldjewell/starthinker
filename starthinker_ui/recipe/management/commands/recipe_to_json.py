@@ -25,51 +25,55 @@ from starthinker_ui.recipe.models import Recipe
 
 
 class Command(BaseCommand):
-  help = 'Moves database recipes to json files or pub/sub topic'
+    help = 'Moves database recipes to json files or pub/sub topic'
 
-  def add_arguments(self, parser):
-    parser.add_argument(
-        '--remote',
-        action='store_true',
-        dest='remote',
-        default=False,
-        help='Run jobs remotely using pub sub.',
-    )
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--remote',
+            action='store_true',
+            dest='remote',
+            default=False,
+            help='Run jobs remotely using pub sub.',
+        )
 
-    parser.add_argument(
-        '--recipe',
-        action='store',
-        dest='recipe',
-        default=None,
-        help='Run a specific recipe.',
-    )
+        parser.add_argument(
+            '--recipe',
+            action='store',
+            dest='recipe',
+            default=None,
+            help='Run a specific recipe.',
+        )
 
-    parser.add_argument(
-        '--force',
-        action='store_true',
-        dest='force',
-        default=False,
-        help='Force execution regardless of schedule.',
-    )
+        parser.add_argument(
+            '--force',
+            action='store_true',
+            dest='force',
+            default=False,
+            help='Force execution regardless of schedule.',
+        )
 
-  def handle(self, *args, **kwargs):
+    def handle(self, *args, **kwargs):
 
-    for recipe in (Recipe.objects.filter(pk=kwargs['recipe'])
-                   if kwargs['recipe'] else Recipe.objects.filter(active=True)):
-      try:
-        if kwargs['remote']:
-          print('Dispatch: %s' % recipe.uid())
-          if kwargs['force']:
-            recipe.force()
-        elif settings.UI_CRON:
-          print('Write: %s/recipe_%d.json' % (settings.UI_CRON, recipe.pk))
-          with open(settings.UI_CRON + '/recipe_%d.json' % recipe.pk, 'w') as f:
-            f.write(json.dumps(recipe.get_json()))
-        else:
-          raise Exception('Neither UI_CRON configured nor remote specified.')
+        for recipe in (Recipe.objects.filter(pk=kwargs['recipe'])
+                       if kwargs['recipe'] else Recipe.objects.filter(
+                           active=True)):
+            try:
+                if kwargs['remote']:
+                    print('Dispatch: %s' % recipe.uid())
+                    if kwargs['force']:
+                        recipe.force()
+                elif settings.UI_CRON:
+                    print('Write: %s/recipe_%d.json' %
+                          (settings.UI_CRON, recipe.pk))
+                    with open(settings.UI_CRON + '/recipe_%d.json' % recipe.pk,
+                              'w') as f:
+                        f.write(json.dumps(recipe.get_json()))
+                else:
+                    raise Exception(
+                        'Neither UI_CRON configured nor remote specified.')
 
-      except (KeyboardInterrupt, SystemExit):
-        raise
+            except (KeyboardInterrupt, SystemExit):
+                raise
 
-      except Exception as e:
-        print('DEPLOY ERROR:', str(e))
+            except Exception as e:
+                print('DEPLOY ERROR:', str(e))

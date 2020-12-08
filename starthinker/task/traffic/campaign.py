@@ -25,52 +25,52 @@ from starthinker.task.traffic.class_extensions import StringExtensions
 
 
 class CampaignDAO(BaseDAO):
-  """Campaign data access object.
+    """Campaign data access object.
 
   Inherits from BaseDAO and implements campaign specific logic for creating and
   updating campaigns.
   """
 
-  def __init__(self, auth, profile_id, is_admin):
-    """Initializes CampaignDAO with profile id and authentication scheme."""
-    super(CampaignDAO, self).__init__(auth, profile_id, is_admin)
+    def __init__(self, auth, profile_id, is_admin):
+        """Initializes CampaignDAO with profile id and authentication scheme."""
+        super(CampaignDAO, self).__init__(auth, profile_id, is_admin)
 
-    self.landing_page_dao = LandingPageDAO(auth, profile_id, is_admin)
-    self._id_field = FieldMap.CAMPAIGN_ID
-    self._search_field = FieldMap.CAMPAIGN_NAME
-    self._list_name = 'campaigns'
+        self.landing_page_dao = LandingPageDAO(auth, profile_id, is_admin)
+        self._id_field = FieldMap.CAMPAIGN_ID
+        self._search_field = FieldMap.CAMPAIGN_NAME
+        self._list_name = 'campaigns'
 
-    self._parent_filter_name = None
-    self._parent_filter_field_name = None
+        self._parent_filter_name = None
+        self._parent_filter_field_name = None
 
-    self._entity = 'CAMPAIGN'
+        self._entity = 'CAMPAIGN'
 
-  def _api(self, iterate=False):
-    """Returns an DCM API instance for this DAO."""
-    return super(CampaignDAO, self)._api(iterate).campaigns()
+    def _api(self, iterate=False):
+        """Returns an DCM API instance for this DAO."""
+        return super(CampaignDAO, self)._api(iterate).campaigns()
 
-  def _process_update(self, item, feed_item):
-    """Updates a campaign based on the values from the feed.
+    def _process_update(self, item, feed_item):
+        """Updates a campaign based on the values from the feed.
 
     Args:
       item: Object representing the campaign to be updated, this object is
         updated directly.
       feed_item: Feed item representing campaign values from the Bulkdozer feed.
     """
-    lp = self.landing_page_dao.get(feed_item, required=True)
+        lp = self.landing_page_dao.get(feed_item, required=True)
 
-    feed_item[FieldMap.CAMPAIGN_LANDING_PAGE_ID] = lp['id']
-    feed_item[FieldMap.CAMPAIGN_LANDING_PAGE_NAME] = lp['name']
+        feed_item[FieldMap.CAMPAIGN_LANDING_PAGE_ID] = lp['id']
+        feed_item[FieldMap.CAMPAIGN_LANDING_PAGE_NAME] = lp['name']
 
-    item['startDate'] = StringExtensions.convertDateTimeStrToDateStr(
-        feed_item.get(FieldMap.CAMPAIGN_START_DATE, None))
-    item['endDate'] = StringExtensions.convertDateTimeStrToDateStr(
-        feed_item.get(FieldMap.CAMPAIGN_END_DATE, None))
-    item['name'] = feed_item.get(FieldMap.CAMPAIGN_NAME, None)
-    item['defaultLandingPageId'] = lp['id']
+        item['startDate'] = StringExtensions.convertDateTimeStrToDateStr(
+            feed_item.get(FieldMap.CAMPAIGN_START_DATE, None))
+        item['endDate'] = StringExtensions.convertDateTimeStrToDateStr(
+            feed_item.get(FieldMap.CAMPAIGN_END_DATE, None))
+        item['name'] = feed_item.get(FieldMap.CAMPAIGN_NAME, None)
+        item['defaultLandingPageId'] = lp['id']
 
-  def _process_new(self, feed_item):
-    """Creates a new campaign DCM object from a feed item representing a campaign from the Bulkdozer feed.
+    def _process_new(self, feed_item):
+        """Creates a new campaign DCM object from a feed item representing a campaign from the Bulkdozer feed.
 
     This function simply creates the object to be inserted later by the BaseDAO
     object.
@@ -82,22 +82,22 @@ class CampaignDAO(BaseDAO):
       A campaign object ready to be inserted in DCM through the API.
 
     """
-    lp = self.landing_page_dao.get(feed_item, required=True)
+        lp = self.landing_page_dao.get(feed_item, required=True)
 
-    feed_item[FieldMap.CAMPAIGN_LANDING_PAGE_ID] = lp['id']
-    feed_item[FieldMap.CAMPAIGN_LANDING_PAGE_NAME] = lp['name']
+        feed_item[FieldMap.CAMPAIGN_LANDING_PAGE_ID] = lp['id']
+        feed_item[FieldMap.CAMPAIGN_LANDING_PAGE_NAME] = lp['name']
 
-    return {
-        'advertiserId':
-            feed_item.get(FieldMap.ADVERTISER_ID, None),
-        'name':
-            feed_item.get(FieldMap.CAMPAIGN_NAME, None),
-        'startDate':
-            StringExtensions.convertDateTimeStrToDateStr(
-                feed_item.get(FieldMap.CAMPAIGN_START_DATE, None)),
-        'endDate':
-            StringExtensions.convertDateTimeStrToDateStr(
-                feed_item.get(FieldMap.CAMPAIGN_END_DATE, None)),
-        'defaultLandingPageId':
-            lp['id']
-    }
+        return {
+            'advertiserId':
+                feed_item.get(FieldMap.ADVERTISER_ID, None),
+            'name':
+                feed_item.get(FieldMap.CAMPAIGN_NAME, None),
+            'startDate':
+                StringExtensions.convertDateTimeStrToDateStr(
+                    feed_item.get(FieldMap.CAMPAIGN_START_DATE, None)),
+            'endDate':
+                StringExtensions.convertDateTimeStrToDateStr(
+                    feed_item.get(FieldMap.CAMPAIGN_END_DATE, None)),
+            'defaultLandingPageId':
+                lp['id']
+        }

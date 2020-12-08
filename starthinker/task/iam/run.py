@@ -59,9 +59,9 @@ from starthinker.util.auth import set_iam
 
 @project.from_parameters
 def iam():
-  set_iam(project.task['auth'], project.id, project.task['role'],
-          project.task['email'])
+    set_iam(project.task['auth'], project.id, project.task['role'],
+            project.task['email'])
 
 
 if __name__ == '__main__':
-  iam()
+    iam()

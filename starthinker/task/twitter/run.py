@@ -35,11 +35,12 @@ TWITTER_API = None
 
 
 def get_twitter_api():
-  global TWITTER_API
-  if TWITTER_API is None:
-    TWITTER_API = TwitterAPI(
-        project.task['key'], project.task['secret'], auth_type='oAuth2')
-  return TWITTER_API
+    global TWITTER_API
+    if TWITTER_API is None:
+        TWITTER_API = TwitterAPI(project.task['key'],
+                                 project.task['secret'],
+                                 auth_type='oAuth2')
+    return TWITTER_API
 
 
 TWITTER_TRENDS_PLACE_SCHEMA = [
@@ -72,24 +73,26 @@ TWITTER_TRENDS_PLACE_SCHEMA = [
 
 
 def twitter_trends_places():
-  if project.verbose:
-    print('TWITTER TRENDS PLACE')
-  print('PL',
+    if project.verbose:
+        print('TWITTER TRENDS PLACE')
+    print(
+        'PL',
         list(get_rows(project.task['auth'], project.task['trends']['places'])))
 
-  for place in get_rows(project.task['auth'], project.task['trends']['places']):
-    if project.verbose:
-      print('PLACE', place)
-    results = get_twitter_api().request('trends/place', {'id': int(place)})
-    for r in results:
-      if project.verbose:
-        print('RESULT', r['name'])
-      yield [
-          place, r['name'], r['url'], r['promoted_content'], r['query'],
-          r['tweet_volume']
-      ]
-    print('.', end='')
-    sleep(15 * 60 / 75)  # rate limit ( improve to retry )
+    for place in get_rows(project.task['auth'],
+                          project.task['trends']['places']):
+        if project.verbose:
+            print('PLACE', place)
+        results = get_twitter_api().request('trends/place', {'id': int(place)})
+        for r in results:
+            if project.verbose:
+                print('RESULT', r['name'])
+            yield [
+                place, r['name'], r['url'], r['promoted_content'], r['query'],
+                r['tweet_volume']
+            ]
+        print('.', end='')
+        sleep(15 * 60 / 75)  # rate limit ( improve to retry )
 
 
 TWITTER_TRENDS_CLOSEST_SCHEMA = [
@@ -138,57 +141,61 @@ TWITTER_TRENDS_CLOSEST_SCHEMA = [
 
 
 def twitter_trends_closest():
-  if project.verbose:
-    print('TWITTER TRENDS CLOSEST')
-  for row in get_rows(project.task['auth'], project.task['trends']['closest']):
-    lat, lon = row[0], row[1]
-    results = api.request('trends/closest', {'lat': lat, 'long': lon})
-    for r in results:
-      yield [
-          lat, lon, r['country'], r['countryCode'], r['name'], r['parentid'],
-          r['placeType']['code'], r['placeType']['name'], r['url'], r['woeid']
-      ]
+    if project.verbose:
+        print('TWITTER TRENDS CLOSEST')
+    for row in get_rows(project.task['auth'],
+                        project.task['trends']['closest']):
+        lat, lon = row[0], row[1]
+        results = api.request('trends/closest', {'lat': lat, 'long': lon})
+        for r in results:
+            yield [
+                lat, lon, r['country'], r['countryCode'], r['name'],
+                r['parentid'], r['placeType']['code'], r['placeType']['name'],
+                r['url'], r['woeid']
+            ]
 
 
 TWITTER_TRENDS_AVAILABLE_SCHEMA = TWITTER_TRENDS_CLOSEST_SCHEMA
 
 
 def twitter_trends_available():
-  if project.verbose:
-    print('TWITTER TRENDS AVAILABLE')
-  results = api.request('trends/available', {})
-  for r in results:
-    yield [
-        r['country'], r['countryCode'], r['name'], r['parentid'],
-        r['placeType']['code'], r['placeType']['name'], r['url'], r['woeid']
-    ]
+    if project.verbose:
+        print('TWITTER TRENDS AVAILABLE')
+    results = api.request('trends/available', {})
+    for r in results:
+        yield [
+            r['country'], r['countryCode'], r['name'], r['parentid'],
+            r['placeType']['code'], r['placeType']['name'], r['url'], r['woeid']
+        ]
 
 
 @project.from_parameters
 def twitter():
-  if project.verbose:
-    print('TWITTER')
+    if project.verbose:
+        print('TWITTER')
 
-  rows = None
+    rows = None
 
-  if 'trends' in project.task:
-    if 'places' in project.task['trends']:
-      rows = twitter_trends_places()
-      project.task['out']['bigquery']['schema'] = TWITTER_TRENDS_PLACE_SCHEMA
-      project.task['out']['bigquery']['skip_rows'] = 0
-    elif 'closest' in project.task['trends']:
-      rows = twitter_trends_closest()
-      project.task['out']['bigquery']['schema'] = TWITTER_TRENDS_CLOSEST_SCHEMA
-      project.task['out']['bigquery']['skip_rows'] = 0
-    else:
-      rows = twitter_trends_available()
-      project.task['out']['bigquery'][
-          'schema'] = TWITTER_TRENDS_AVAILABLE_SCHEMA
-      project.task['out']['bigquery']['skip_rows'] = 0
+    if 'trends' in project.task:
+        if 'places' in project.task['trends']:
+            rows = twitter_trends_places()
+            project.task['out']['bigquery'][
+                'schema'] = TWITTER_TRENDS_PLACE_SCHEMA
+            project.task['out']['bigquery']['skip_rows'] = 0
+        elif 'closest' in project.task['trends']:
+            rows = twitter_trends_closest()
+            project.task['out']['bigquery'][
+                'schema'] = TWITTER_TRENDS_CLOSEST_SCHEMA
+            project.task['out']['bigquery']['skip_rows'] = 0
+        else:
+            rows = twitter_trends_available()
+            project.task['out']['bigquery'][
+                'schema'] = TWITTER_TRENDS_AVAILABLE_SCHEMA
+            project.task['out']['bigquery']['skip_rows'] = 0
 
-  if rows:
-    put_rows(project.task['auth'], project.task['out'], rows)
+    if rows:
+        put_rows(project.task['auth'], project.task['out'], rows)
 
 
 if __name__ == '__main__':
-  twitter()
+    twitter()

@@ -23,60 +23,62 @@ from starthinker_ui.recipe.models import Recipe
 
 
 class Command(BaseCommand):
-  help = 'Perform admin operations on recipes'
+    help = 'Perform admin operations on recipes'
 
-  def add_arguments(self, parser):
-    parser.add_argument(
-        '--recipe',
-        action='store',
-        dest='recipe',
-        default=None,
-        help='Run a specific recipe.',
-    )
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--recipe',
+            action='store',
+            dest='recipe',
+            default=None,
+            help='Run a specific recipe.',
+        )
 
-    parser.add_argument(
-        '--activate',
-        action='store_true',
-        dest='activate',
-        default=False,
-        help='Activate specified recipe.',
-    )
+        parser.add_argument(
+            '--activate',
+            action='store_true',
+            dest='activate',
+            default=False,
+            help='Activate specified recipe.',
+        )
 
-    parser.add_argument(
-        '--deactivate',
-        action='store_true',
-        dest='deactivate',
-        default=False,
-        help='Deactivate specified recipe.',
-    )
+        parser.add_argument(
+            '--deactivate',
+            action='store_true',
+            dest='deactivate',
+            default=False,
+            help='Deactivate specified recipe.',
+        )
 
-  def handle(self, *args, **kwargs):
-    for recipe in (Recipe.objects.filter(pk=kwargs['recipe'])
-                   if kwargs['recipe'] else Recipe.objects.filter(active=True)):
-      try:
-        if kwargs['activate'] == kwargs['deactivate']:
-          raise Exception(
-              'Specify one of the supported flags --activate or --deactivate')
-        elif kwargs['activate']:
-          recipe.activate()
-        elif kwargs['deactivate']:
-          recipe.deactivate()
-        else:
-          raise Exception('Unexpected exception')
+    def handle(self, *args, **kwargs):
+        for recipe in (Recipe.objects.filter(pk=kwargs['recipe'])
+                       if kwargs['recipe'] else Recipe.objects.filter(
+                           active=True)):
+            try:
+                if kwargs['activate'] == kwargs['deactivate']:
+                    raise Exception(
+                        'Specify one of the supported flags --activate or --deactivate'
+                    )
+                elif kwargs['activate']:
+                    recipe.activate()
+                elif kwargs['deactivate']:
+                    recipe.deactivate()
+                else:
+                    raise Exception('Unexpected exception')
 
-        print('---------------------------------------')
-        print('Name:', recipe.name)
-        print('Account:', recipe.account.email)
-        print('UUID:', recipe.uid())
-        print('Reference:', recipe.reference)
-        print('Active:', recipe.active)
-        print('Week:', recipe.week)
-        print('Hour:', recipe.hour)
-        print('Timezone:', recipe.timezone)
-        print('---------------------------------------')
+                print('---------------------------------------')
+                print('Name:', recipe.name)
+                print('Account:', recipe.account.email)
+                print('UUID:', recipe.uid())
+                print('Reference:', recipe.reference)
+                print('Active:', recipe.active)
+                print('Week:', recipe.week)
+                print('Hour:', recipe.hour)
+                print('Timezone:', recipe.timezone)
+                print('---------------------------------------')
 
-      except (KeyboardInterrupt, SystemExit):
-        raise
+            except (KeyboardInterrupt, SystemExit):
+                raise
 
-      except Exception as e:
-        print('DEPLOY ERROR:', str(e))
+            except Exception as e:
+                print('DEPLOY ERROR:', str(e))

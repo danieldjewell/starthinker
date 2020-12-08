@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -82,97 +81,95 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
-  'auth_write': 'service',  # Credentials used for writing data.
-  'sheets_url': '',
-  'sheets_tab': '',
-  'sheets_range': '',
-  'dataset': '',
-  'table': '',
-  'sheets_header': True,
+    'auth_read': 'user',  # Credentials used for reading data.
+    'auth_write': 'service',  # Credentials used for writing data.
+    'sheets_url': '',
+    'sheets_tab': '',
+    'sheets_range': '',
+    'dataset': '',
+    'table': '',
+    'sheets_header': True,
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'sheets': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 0,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'sheet': {
-          'field': {
-            'name': 'sheets_url',
-            'kind': 'string',
-            'order': 2,
-            'default': ''
-          }
-        },
-        'tab': {
-          'field': {
-            'name': 'sheets_tab',
-            'kind': 'string',
-            'order': 3,
-            'default': ''
-          }
-        },
-        'range': {
-          'field': {
-            'name': 'sheets_range',
-            'kind': 'string',
-            'order': 4,
-            'default': ''
-          }
-        },
-        'header': {
-          'field': {
-            'name': 'sheets_header',
-            'kind': 'boolean',
-            'order': 9,
-            'default': True
-          }
-        },
-        'out': {
-          'auth': {
-            'field': {
-              'name': 'auth_write',
-              'kind': 'authentication',
-              'order': 1,
-              'default': 'service',
-              'description': 'Credentials used for writing data.'
-            }
-          },
-          'bigquery': {
-            'dataset': {
-              'field': {
-                'name': 'dataset',
-                'kind': 'string',
-                'order': 5,
-                'default': ''
-              }
+    'tasks': [{
+        'sheets': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 0,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
             },
-            'table': {
-              'field': {
-                'name': 'table',
-                'kind': 'string',
-                'order': 6,
-                'default': ''
-              }
+            'sheet': {
+                'field': {
+                    'name': 'sheets_url',
+                    'kind': 'string',
+                    'order': 2,
+                    'default': ''
+                }
+            },
+            'tab': {
+                'field': {
+                    'name': 'sheets_tab',
+                    'kind': 'string',
+                    'order': 3,
+                    'default': ''
+                }
+            },
+            'range': {
+                'field': {
+                    'name': 'sheets_range',
+                    'kind': 'string',
+                    'order': 4,
+                    'default': ''
+                }
+            },
+            'header': {
+                'field': {
+                    'name': 'sheets_header',
+                    'kind': 'boolean',
+                    'order': 9,
+                    'default': True
+                }
+            },
+            'out': {
+                'auth': {
+                    'field': {
+                        'name': 'auth_write',
+                        'kind': 'authentication',
+                        'order': 1,
+                        'default': 'service',
+                        'description': 'Credentials used for writing data.'
+                    }
+                },
+                'bigquery': {
+                    'dataset': {
+                        'field': {
+                            'name': 'dataset',
+                            'kind': 'string',
+                            'order': 5,
+                            'default': ''
+                        }
+                    },
+                    'table': {
+                        'field': {
+                            'name': 'table',
+                            'kind': 'string',
+                            'order': 6,
+                            'default': ''
+                        }
+                    }
+                }
             }
-          }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('sheets_to_bigquery', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

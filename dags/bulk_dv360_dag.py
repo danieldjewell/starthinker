@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -90,156 +89,144 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_dv': 'user',  # Credentials used for dv.
-  'auth_sheet': 'user',  # Credentials used for sheet.
-  'auth_bigquery': 'service',  # Credentials used for bigquery.
-  'recipe_slug': '',  # Name of Google BigQuery dataset to create.
-  'command': '',  # Action to take.
+    'auth_dv': 'user',  # Credentials used for dv.
+    'auth_sheet': 'user',  # Credentials used for sheet.
+    'auth_bigquery': 'service',  # Credentials used for bigquery.
+    'recipe_slug': '',  # Name of Google BigQuery dataset to create.
+    'command': '',  # Action to take.
 }
 
 RECIPE = {
-  'setup': {
-    'day': [
-    ],
-    'hour': [
-    ]
-  },
-  'tasks': [
-    {
-      'dataset': {
-        '__comment__': 'Ensure dataset exists.',
-        'auth': {
-          'field': {
-            'name': 'auth_bigquery',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Credentials used for writing data.'
-          }
-        },
-        'dataset': {
-          'field': {
-            'name': 'recipe_slug',
-            'prefix': 'DV_Sheet_',
-            'kind': 'string',
-            'order': 2,
-            'default': '',
-            'description': 'Name of Google BigQuery dataset to create.'
-          }
-        }
-      }
+    'setup': {
+        'day': [],
+        'hour': []
     },
-    {
-      'drive': {
-        '__comment__': 'Copy the default template to sheet with the recipe name',
-        'auth': {
-          'field': {
-            'name': 'auth_sheet',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'copy': {
-          'source': 'https://docs.google.com/spreadsheets/d/10ByZKMIPZQQOEwJlskzggRhhQqe44on_ebUxkjmZI_w/',
-          'destination': {
-            'field': {
-              'name': 'recipe_slug',
-              'prefix': 'DV Sheet ',
-              'kind': 'string',
-              'order': 3,
-              'default': '',
-              'description': 'Name of Google Sheet to create.'
+    'tasks': [{
+        'dataset': {
+            '__comment__': 'Ensure dataset exists.',
+            'auth': {
+                'field': {
+                    'name': 'auth_bigquery',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Credentials used for writing data.'
+                }
+            },
+            'dataset': {
+                'field': {
+                    'name': 'recipe_slug',
+                    'prefix': 'DV_Sheet_',
+                    'kind': 'string',
+                    'order': 2,
+                    'default': '',
+                    'description': 'Name of Google BigQuery dataset to create.'
+                }
             }
-          }
         }
-      }
-    },
-    {
-      'dv_sheets': {
-        '__comment': 'Depending on users choice, execute a different part of the solution.',
-        'auth_dv': {
-          'field': {
-            'name': 'auth_dv',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for dv.'
-          }
-        },
-        'auth_sheets': {
-          'field': {
-            'name': 'auth_sheet',
-            'kind': 'authentication',
-            'order': 2,
-            'default': 'user',
-            'description': 'Credentials used for sheet.'
-          }
-        },
-        'auth_bigquery': {
-          'field': {
-            'name': 'auth_bigquery',
-            'kind': 'authentication',
-            'order': 3,
-            'default': 'service',
-            'description': 'Credentials used for bigquery.'
-          }
-        },
-        'sheet': {
-          'field': {
-            'name': 'recipe_slug',
-            'prefix': 'DV Sheet ',
-            'kind': 'string',
-            'order': 4,
-            'default': '',
-            'description': 'Name of Google Sheet to create.'
-          }
-        },
-        'dataset': {
-          'field': {
-            'name': 'recipe_slug',
-            'prefix': 'DV_Sheet_',
-            'kind': 'string',
-            'order': 5,
-            'default': '',
-            'description': 'Name of Google BigQuery dataset to create.'
-          }
-        },
-        'command': {
-          'field': {
-            'name': 'command',
-            'kind': 'choice',
-            'choices': [
-              'Clear Partners',
-              'Clear Advertisers',
-              'Clear Campaigns',
-              'Clear Creatives',
-              'Clear Insertion Orders',
-              'Clear Line Items',
-              'Clear Preview',
-              'Clear Patch',
-              'Load Partners',
-              'Load Advertisers',
-              'Load Campaigns',
-              'Load Creatives',
-              'Load Insertion Orders',
-              'Load Line Items',
-              'Preview',
-              'Patch'
-            ],
-            'order': 6,
-            'default': '',
-            'description': 'Action to take.'
-          }
+    }, {
+        'drive': {
+            '__comment__':
+                'Copy the default template to sheet with the recipe name',
+            'auth': {
+                'field': {
+                    'name': 'auth_sheet',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'copy': {
+                'source':
+                    'https://docs.google.com/spreadsheets/d/10ByZKMIPZQQOEwJlskzggRhhQqe44on_ebUxkjmZI_w/',
+                'destination': {
+                    'field': {
+                        'name': 'recipe_slug',
+                        'prefix': 'DV Sheet ',
+                        'kind': 'string',
+                        'order': 3,
+                        'default': '',
+                        'description': 'Name of Google Sheet to create.'
+                    }
+                }
+            }
         }
-      }
-    }
-  ]
+    }, {
+        'dv_sheets': {
+            '__comment':
+                'Depending on users choice, execute a different part of the solution.',
+            'auth_dv': {
+                'field': {
+                    'name': 'auth_dv',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for dv.'
+                }
+            },
+            'auth_sheets': {
+                'field': {
+                    'name': 'auth_sheet',
+                    'kind': 'authentication',
+                    'order': 2,
+                    'default': 'user',
+                    'description': 'Credentials used for sheet.'
+                }
+            },
+            'auth_bigquery': {
+                'field': {
+                    'name': 'auth_bigquery',
+                    'kind': 'authentication',
+                    'order': 3,
+                    'default': 'service',
+                    'description': 'Credentials used for bigquery.'
+                }
+            },
+            'sheet': {
+                'field': {
+                    'name': 'recipe_slug',
+                    'prefix': 'DV Sheet ',
+                    'kind': 'string',
+                    'order': 4,
+                    'default': '',
+                    'description': 'Name of Google Sheet to create.'
+                }
+            },
+            'dataset': {
+                'field': {
+                    'name': 'recipe_slug',
+                    'prefix': 'DV_Sheet_',
+                    'kind': 'string',
+                    'order': 5,
+                    'default': '',
+                    'description': 'Name of Google BigQuery dataset to create.'
+                }
+            },
+            'command': {
+                'field': {
+                    'name': 'command',
+                    'kind': 'choice',
+                    'choices': [
+                        'Clear Partners', 'Clear Advertisers',
+                        'Clear Campaigns', 'Clear Creatives',
+                        'Clear Insertion Orders', 'Clear Line Items',
+                        'Clear Preview', 'Clear Patch', 'Load Partners',
+                        'Load Advertisers', 'Load Campaigns', 'Load Creatives',
+                        'Load Insertion Orders', 'Load Line Items', 'Preview',
+                        'Patch'
+                    ],
+                    'order': 6,
+                    'default': '',
+                    'description': 'Action to take.'
+                }
+            }
+        }
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('bulk_dv360', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

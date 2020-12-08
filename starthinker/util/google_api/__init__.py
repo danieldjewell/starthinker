@@ -38,9 +38,9 @@ from googleapiclient.discovery import Resource
 from ssl import SSLError
 
 try:
-  import httplib
+    import httplib
 except:
-  import http.client as httplib
+    import http.client as httplib
 
 from starthinker.util.auth import get_service
 from starthinker.util.project import project
@@ -54,7 +54,7 @@ RETRIABLE_STATUS_CODES = [500, 502, 503, 504]
 
 
 def API_Retry(job, key=None, retries=3, wait=31):
-  """ API retry that includes back off and some common error handling.
+    """ API retry that includes back off and some common error handling.
 
   CAUTION:  Total timeout cannot exceed 5 minutes or the SSL token expires for
   all future calls.
@@ -84,74 +84,76 @@ def API_Retry(job, key=None, retries=3, wait=31):
 
   """
 
-  try:
-    # try to run the job and return the response
-    data = job.execute()
-    return data if not key else data.get(key, [])
+    try:
+        # try to run the job and return the response
+        data = job.execute()
+        return data if not key else data.get(key, [])
 
-  # API errors
-  except HttpError as e:
-    # errors that can be overcome or re-tried ( 403 is rate limit and others, needs deep dive )
-    if e.resp.status in [403, 409, 429, 500, 503]:
-      content = json.loads(e.content.decode())
-      # already exists ( ignore benign )
-      if content['error']['code'] == 409:
-        return None
-      # permission denied ( won't change on retry so raise )
-      elif content.get(
-          'error', {}).get('status') == 'PERMISSION_DENIED' or content.get(
-              'error', {}).get('errors', [{}])[0].get('reason') == 'forbidden':
-        raise
-      elif retries > 0:
-        if project.verbose:
-          print('API ERROR:', str(e))
-        if project.verbose:
-          print('API RETRY / WAIT:', retries, wait)
-        sleep(wait)
-        return API_Retry(job, key, retries - 1, wait * 2)
-      # if no retries, raise
-      else:
-        raise
-    # raise all other errors that cannot be overcome
-    else:
-      raise
+    # API errors
+    except HttpError as e:
+        # errors that can be overcome or re-tried ( 403 is rate limit and others, needs deep dive )
+        if e.resp.status in [403, 409, 429, 500, 503]:
+            content = json.loads(e.content.decode())
+            # already exists ( ignore benign )
+            if content['error']['code'] == 409:
+                return None
+            # permission denied ( won't change on retry so raise )
+            elif content.get(
+                    'error',
+                {}).get('status') == 'PERMISSION_DENIED' or content.get(
+                    'error', {}).get('errors',
+                                     [{}])[0].get('reason') == 'forbidden':
+                raise
+            elif retries > 0:
+                if project.verbose:
+                    print('API ERROR:', str(e))
+                if project.verbose:
+                    print('API RETRY / WAIT:', retries, wait)
+                sleep(wait)
+                return API_Retry(job, key, retries - 1, wait * 2)
+            # if no retries, raise
+            else:
+                raise
+        # raise all other errors that cannot be overcome
+        else:
+            raise
 
-  # HTTP transport errors
-  except RETRIABLE_EXCEPTIONS as e:
-    if retries > 0:
-      if project.verbose:
-        print('HTTP ERROR:', str(e))
-      if project.verbose:
-        print('HTTP RETRY / WAIT:', retries, wait)
-      sleep(wait)
-      return API_Retry(job, key, retries - 1, wait * 2)
-    else:
-      raise
+    # HTTP transport errors
+    except RETRIABLE_EXCEPTIONS as e:
+        if retries > 0:
+            if project.verbose:
+                print('HTTP ERROR:', str(e))
+            if project.verbose:
+                print('HTTP RETRY / WAIT:', retries, wait)
+            sleep(wait)
+            return API_Retry(job, key, retries - 1, wait * 2)
+        else:
+            raise
 
-  # SSL timeout errors
-  except SSLError as e:
-    # most SSLErrors are not retriable, only timeouts, but
-    # SSLError has no good error type attribute, so we search the message
-    if retries > 0 and 'timed out' in e.message:
-      if project.verbose:
-        print('SSL ERROR:', str(e))
-      if project.verbose:
-        print('SSL RETRY / WAIT:', retries, wait)
-      sleep(wait)
-      return API_Retry(job, key, retries - 1, wait * 2)
-    else:
-      raise
+    # SSL timeout errors
+    except SSLError as e:
+        # most SSLErrors are not retriable, only timeouts, but
+        # SSLError has no good error type attribute, so we search the message
+        if retries > 0 and 'timed out' in e.message:
+            if project.verbose:
+                print('SSL ERROR:', str(e))
+            if project.verbose:
+                print('SSL RETRY / WAIT:', retries, wait)
+            sleep(wait)
+            return API_Retry(job, key, retries - 1, wait * 2)
+        else:
+            raise
 
 
 def API_Iterator(function, kwargs, results=None):
-  """ See below API_Iterator_Instance for documentaion, this is just an iter wrapper.
+    """ See below API_Iterator_Instance for documentaion, this is just an iter wrapper.
 
       Returns:
         iter(API_Iterator_Instance(function, kwargs, results))
   """
 
-  class API_Iterator_Instance():
-    """A helper class that iterates multiple results, automatically called by execute.
+    class API_Iterator_Instance():
+        """A helper class that iterates multiple results, automatically called by execute.
 
       This is a standard python iterator definition, no need to document
       functions.
@@ -183,71 +185,73 @@ def API_Iterator(function, kwargs, results=None):
       Iterator over JSON objects.
     """
 
-    def __init__(self, function, kwargs, results=None):
-      self.function = function
-      self.kwargs = kwargs
-      self.results = results
-      self.position = 0
-      self.iterable = None
-      self.__find_tag__()
+        def __init__(self, function, kwargs, results=None):
+            self.function = function
+            self.kwargs = kwargs
+            self.results = results
+            self.position = 0
+            self.iterable = None
+            self.__find_tag__()
 
-    def __find_tag__(self):
-      # find the only list item for a paginated response, JOSN will only have list type, so ok to be specific
-      if self.results:  # None and {} both excluded
-        for tag in iter(self.results.keys()):
-          if isinstance(self.results[tag], list):
-            self.iterable = tag
-            break
+        def __find_tag__(self):
+            # find the only list item for a paginated response, JOSN will only have list type, so ok to be specific
+            if self.results:  # None and {} both excluded
+                for tag in iter(self.results.keys()):
+                    if isinstance(self.results[tag], list):
+                        self.iterable = tag
+                        break
 
-        # this shouldn't happen but some APIs simply omit the key if no results
-        if self.iterable is None and project.verbose:
-          print('WARNING API RETURNED NO KEYS WITH LISTS:',
-                ', '.join(self.results.keys()))
+                # this shouldn't happen but some APIs simply omit the key if no results
+                if self.iterable is None and project.verbose:
+                    print('WARNING API RETURNED NO KEYS WITH LISTS:',
+                          ', '.join(self.results.keys()))
 
-    def __iter__(self):
-      return self
+        def __iter__(self):
+            return self
 
-    def __next__(self):
-      return self.next()
+        def __next__(self):
+            return self.next()
 
-    def next(self):
+        def next(self):
 
-      # if no initial results, get some, empty results {} different
-      if self.results is None:
-        self.results = API_Retry(self.function(**self.kwargs))
-        self.__find_tag__()
+            # if no initial results, get some, empty results {} different
+            if self.results is None:
+                self.results = API_Retry(self.function(**self.kwargs))
+                self.__find_tag__()
 
-      # if empty results or exhausted page, get next page
-      if self.iterable and self.position >= len(self.results[self.iterable]):
-        page_token = self.results.get('nextPageToken', None)
-        if page_token:
+            # if empty results or exhausted page, get next page
+            if self.iterable and self.position >= len(
+                    self.results[self.iterable]):
+                page_token = self.results.get('nextPageToken', None)
+                if page_token:
 
-          if 'body' in self.kwargs:
-            self.kwargs['body']['pageToken'] = page_token
-          else:
-            self.kwargs['pageToken'] = page_token
+                    if 'body' in self.kwargs:
+                        self.kwargs['body']['pageToken'] = page_token
+                    else:
+                        self.kwargs['pageToken'] = page_token
 
-          self.results = API_Retry(self.function(**self.kwargs))
-          self.position = 0
+                    self.results = API_Retry(self.function(**self.kwargs))
+                    self.position = 0
 
-        else:
-          raise StopIteration
+                else:
+                    raise StopIteration
 
-      # if results remain, return them
-      if self.iterable and self.position < len(self.results[self.iterable]):
-        value = self.results[self.iterable][self.position]
-        self.position += 1
-        return value
+            # if results remain, return them
+            if self.iterable and self.position < len(
+                    self.results[self.iterable]):
+                value = self.results[self.iterable][self.position]
+                self.position += 1
+                return value
 
-      # if pages and results exhausted, stop
-      else:
-        raise StopIteration
+            # if pages and results exhausted, stop
+            else:
+                raise StopIteration
 
-  return iter(API_Iterator_Instance(function, kwargs, results))
+    return iter(API_Iterator_Instance(function, kwargs, results))
 
 
 class API():
-  """A wrapper around Google API with built in helpers for StarThinker.
+    """A wrapper around Google API with built in helpers for StarThinker.
 
     The wrapper mimics function calls, storing the m in a stack, until it
     encounters
@@ -277,363 +281,367 @@ class API():
       Otherwise: returns API response
   """
 
-  def __init__(self, configuration):
-    self.api = configuration['api']
-    self.version = configuration['version']
-    self.auth = configuration['auth']
-    self.uri = configuration.get('uri', None)
-    self.key = configuration.get('key', None)
-    self.function_stack = list(
-        filter(None,
-               configuration.get('function', '').split('.')))
-    self.function_kwargs = configuration.get('kwargs', {})
-    self.iterate = configuration.get('iterate', False)
-    self.headers = configuration.get('headers', {})
+    def __init__(self, configuration):
+        self.api = configuration['api']
+        self.version = configuration['version']
+        self.auth = configuration['auth']
+        self.uri = configuration.get('uri', None)
+        self.key = configuration.get('key', None)
+        self.function_stack = list(
+            filter(None,
+                   configuration.get('function', '').split('.')))
+        self.function_kwargs = configuration.get('kwargs', {})
+        self.iterate = configuration.get('iterate', False)
+        self.headers = configuration.get('headers', {})
 
-    self.function = None
-    self.job = None
-    self.response = None
+        self.function = None
+        self.job = None
+        self.response = None
 
-  # for debug purposes
-  def __str__(self):
-    return '%s.%s.%s' % (self.api, self.version, '.'.join(self.function_stack))
+    # for debug purposes
+    def __str__(self):
+        return '%s.%s.%s' % (self.api, self.version, '.'.join(
+            self.function_stack))
 
-  # builds API function stack
-  def __getattr__(self, function_name):
-    self.function_stack.append(function_name)
+    # builds API function stack
+    def __getattr__(self, function_name):
+        self.function_stack.append(function_name)
 
-    def function_call(**kwargs):
-      self.function_kwargs = kwargs
-      return self
+        def function_call(**kwargs):
+            self.function_kwargs = kwargs
+            return self
 
-    return function_call
+        return function_call
 
-  # for calling function via string ( chain using dot notation )
-  def call(self, function_chain):
-    for function_name in function_chain.split('.'):
-      self.function_stack.append(function_name)
-    return self
+    # for calling function via string ( chain using dot notation )
+    def call(self, function_chain):
+        for function_name in function_chain.split('.'):
+            self.function_stack.append(function_name)
+        return self
 
-  # matches API execute with built in iteration and retry handlers
-  def execute(self, run=True, iterate=True):
-    # start building call sequence with service object
-    self.function = get_service(
-        api=self.api,
-        version=self.version,
-        auth=self.auth,
-        headers=self.headers,
-        key=self.key,
-        uri_file=self.uri)
+    # matches API execute with built in iteration and retry handlers
+    def execute(self, run=True, iterate=True):
+        # start building call sequence with service object
+        self.function = get_service(api=self.api,
+                                    version=self.version,
+                                    auth=self.auth,
+                                    headers=self.headers,
+                                    key=self.key,
+                                    uri_file=self.uri)
 
-    # build calls along stack
-    # do not call functions, as the abstract is necessary for iterator page next calls
-    for f_n in self.function_stack:
-      #print(type(self.function), isinstance(self.function, Resource))
-      self.function = getattr(
-          self.function
-          if isinstance(self.function, Resource) else self.function(), f_n)
+        # build calls along stack
+        # do not call functions, as the abstract is necessary for iterator page next calls
+        for f_n in self.function_stack:
+            #print(type(self.function), isinstance(self.function, Resource))
+            self.function = getattr(
+                self.function if isinstance(self.function, Resource) else
+                self.function(), f_n)
 
-    # for cases where job is handled manually, save the job
-    self.job = self.function(**self.function_kwargs)
+        # for cases where job is handled manually, save the job
+        self.job = self.function(**self.function_kwargs)
 
-    if run:
-      self.response = API_Retry(self.job)
+        if run:
+            self.response = API_Retry(self.job)
 
-      # if paginated, automatically iterate
-      if (iterate and (self.iterate or (isinstance(self.response, dict) and
-                                        'nextPageToken' in self.response))):
-        return API_Iterator(self.function, self.function_kwargs, self.response)
+            # if paginated, automatically iterate
+            if (iterate and (self.iterate or
+                             (isinstance(self.response, dict) and
+                              'nextPageToken' in self.response))):
+                return API_Iterator(self.function, self.function_kwargs,
+                                    self.response)
 
-      # if not paginated, return object as is
-      else:
-        return self.response
+            # if not paginated, return object as is
+            else:
+                return self.response
 
-    # if not run, just return job object ( for chunked upload for example )
-    else:
-      return self.job
-
-  def upload(self, retries=5, wait=61):
-    job = self.execute(run=False)
-    response = None
-
-    while response is None:
-      error = None
-
-      try:
-        print('Uploading file...')
-        status, response = job.next_chunk()
-        if 'id' in response:
-          print("Object id '%s' was successfully uploaded." % response['id'])
+        # if not run, just return job object ( for chunked upload for example )
         else:
-          exit('The upload failed with an unexpected response: %s' % response)
+            return self.job
 
-      except HttpError as e:
-        if retries > 0 and e.resp.status in RETRIABLE_STATUS_CODES:
-          error = 'A retriable HTTP error %d occurred:\n%s' % (
-              e.resp.status, e.content.decode())
-        else:
-          raise
+    def upload(self, retries=5, wait=61):
+        job = self.execute(run=False)
+        response = None
 
-      except RETRIABLE_EXCEPTIONS as e:
-        if retries > 0:
-          error = 'A retriable error occurred: %s' % e
-        else:
-          raise
+        while response is None:
+            error = None
 
-      if error is not None:
-        print(error)
-        retries -= 1
-        wait = wait * 2
-        print('Sleeping %d seconds and then retrying...' % wait)
-        time.sleep(wait)
+            try:
+                print('Uploading file...')
+                status, response = job.next_chunk()
+                if 'id' in response:
+                    print("Object id '%s' was successfully uploaded." %
+                          response['id'])
+                else:
+                    exit('The upload failed with an unexpected response: %s' %
+                         response)
+
+            except HttpError as e:
+                if retries > 0 and e.resp.status in RETRIABLE_STATUS_CODES:
+                    error = 'A retriable HTTP error %d occurred:\n%s' % (
+                        e.resp.status, e.content.decode())
+                else:
+                    raise
+
+            except RETRIABLE_EXCEPTIONS as e:
+                if retries > 0:
+                    error = 'A retriable error occurred: %s' % e
+                else:
+                    raise
+
+            if error is not None:
+                print(error)
+                retries -= 1
+                wait = wait * 2
+                print('Sleeping %d seconds and then retrying...' % wait)
+                time.sleep(wait)
 
 
 def API_BigQuery(auth, iterate=False):
-  """BigQuery helper configuration for Google API.
+    """BigQuery helper configuration for Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'bigquery',
-      'version': 'v2',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'bigquery',
+        'version': 'v2',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_DBM(auth, iterate=False):
-  """DBM helper configuration for Google API.
+    """DBM helper configuration for Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'doubleclickbidmanager',
-      'version': 'v1.1',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'doubleclickbidmanager',
+        'version': 'v1.1',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_Sheets(auth, iterate=False):
-  """DBM helper configuration for Google API.
+    """DBM helper configuration for Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'sheets',
-      'version': 'v4',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'sheets',
+        'version': 'v4',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_DCM(auth, iterate=False, internal=False):
-  """DCM helper configuration for Google API.
+    """DCM helper configuration for Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'dfareporting',
-      'version': 'v3.4',
-      'auth': auth,
-      'iterate': iterate
-  }
+    configuration = {
+        'api': 'dfareporting',
+        'version': 'v3.4',
+        'auth': auth,
+        'iterate': iterate
+    }
 
-  if internal:
-    from starthinker.util.dcm.internalv33_uri import URI as DCM_URI
-    configuration['version'] = 'internalv3.3'
-    configuration['uri'] = DCM_URI
+    if internal:
+        from starthinker.util.dcm.internalv33_uri import URI as DCM_URI
+        configuration['version'] = 'internalv3.3'
+        configuration['uri'] = DCM_URI
 
-  return API(configuration)
+    return API(configuration)
 
 
 def API_SNIPPETS(auth, iterate=False):
-  """Snippets helper configuration for Google API.
+    """Snippets helper configuration for Google API.
 
   Defines agreed upon version.
   """
 
-  from starthinker.util.snippets.snippets_v1 import URI as SNIPPETS_URI
+    from starthinker.util.snippets.snippets_v1 import URI as SNIPPETS_URI
 
-  # fetch discovery uri using: wget https://snippets-hrdb.googleplex.com/_ah/api/discovery/v1/apis/snippets/v1/rest
-  configuration = {
-      'api': 'snippets',
-      'version': 'v1',
-      'auth': auth,
-      'iterate': iterate,
-      'uri': SNIPPETS_URI
-  }
+    # fetch discovery uri using: wget https://snippets-hrdb.googleplex.com/_ah/api/discovery/v1/apis/snippets/v1/rest
+    configuration = {
+        'api': 'snippets',
+        'version': 'v1',
+        'auth': auth,
+        'iterate': iterate,
+        'uri': SNIPPETS_URI
+    }
 
-  return API(configuration)
+    return API(configuration)
 
 
 def API_Datastore(auth, iterate=False):
-  """Datastore helper configuration for Google API.
+    """Datastore helper configuration for Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'datastore',
-      'version': 'v1',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'datastore',
+        'version': 'v1',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_StackDriver(auth, iterate=False):
-  """StackDriver helper configuration for Google API.
+    """StackDriver helper configuration for Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'logging',
-      'version': 'v2',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'logging',
+        'version': 'v2',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_PubSub(auth, iterate=False):
-  """PubSub helper configuration for Google API.
+    """PubSub helper configuration for Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'pubsub',
-      'version': 'v1',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'pubsub',
+        'version': 'v1',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_Analytics(auth, iterate=False):
-  """Analytics helper configuration Google API.
+    """Analytics helper configuration Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'analytics',
-      'version': 'v3',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'analytics',
+        'version': 'v3',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_YouTube(auth, iterate=False):
-  """YouTube helper configuration Google API.
+    """YouTube helper configuration Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'youtube',
-      'version': 'v3',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'youtube',
+        'version': 'v3',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_Drive(auth, iterate=False):
-  """Drive helper configuration Google API.
+    """Drive helper configuration Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'drive',
-      'version': 'v3',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'drive',
+        'version': 'v3',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_Cloud(auth, iterate=False):
-  """Cloud project helper configuration Google API.
+    """Cloud project helper configuration Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'cloudresourcemanager',
-      'version': 'v1',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'cloudresourcemanager',
+        'version': 'v1',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_DV360(auth, iterate=False):
-  """Cloud project helper configuration Google API.
+    """Cloud project helper configuration Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'displayvideo',
-      'version': 'v1',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'displayvideo',
+        'version': 'v1',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_Storage(auth, iterate=False):
-  """Cloud storage helper configuration Google API.
+    """Cloud storage helper configuration Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'storage',
-      'version': 'v1',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'storage',
+        'version': 'v1',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_Gmail(auth, iterate=False):
-  """Gmail helper configuration Google API.
+    """Gmail helper configuration Google API.
 
   Defines agreed upon version.
   """
 
-  configuration = {
-      'api': 'gmail',
-      'version': 'v1',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'gmail',
+        'version': 'v1',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)
 
 
 def API_Compute(auth, iterate=False):
-  """Compute helper configuration Google API.
+    """Compute helper configuration Google API.
 
      https://cloud.google.com/compute/docs/reference/rest/v1/
   """
 
-  configuration = {
-      'api': 'compute',
-      'version': 'v1',
-      'auth': auth,
-      'iterate': iterate
-  }
-  return API(configuration)
+    configuration = {
+        'api': 'compute',
+        'version': 'v1',
+        'auth': auth,
+        'iterate': iterate
+    }
+    return API(configuration)

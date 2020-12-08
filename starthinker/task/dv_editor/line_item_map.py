@@ -30,49 +30,48 @@ from starthinker.task.dv_editor.patch import patch_preview
 
 
 def line_item_map_clear():
-  sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Line Items Map',
-               'A2:Z')
+    sheets_clear(project.task['auth_sheets'], project.task['sheet'],
+                 'Line Items Map', 'A2:Z')
 
 
 def line_item_map_load():
-  pass
+    pass
 
 
 def line_item_map_audit():
-  rows = get_rows(
-      project.task['auth_sheets'], {
-          'sheets': {
-              'sheet': project.task['sheet'],
-              'tab': 'Line Items Map',
-              'range': 'A2:Z'
-          }
-      })
+    rows = get_rows(
+        project.task['auth_sheets'], {
+            'sheets': {
+                'sheet': project.task['sheet'],
+                'tab': 'Line Items Map',
+                'range': 'A2:Z'
+            }
+        })
 
-  put_rows(
-      project.task['auth_bigquery'], {
-          'bigquery': {
-              'dataset': project.task['dataset'],
-              'table': 'SHEET_LineItemMaps',
-              'schema': [{
-                  'name': 'Action',
-                  'type': 'STRING'
-              }, {
-                  'name': 'Line_Item',
-                  'type': 'STRING'
-              }, {
-                  'name': 'Creative',
-                  'type': 'STRING'
-              }],
-              'format': 'CSV'
-          }
-      }, rows)
+    put_rows(
+        project.task['auth_bigquery'], {
+            'bigquery': {
+                'dataset': project.task['dataset'],
+                'table': 'SHEET_LineItemMaps',
+                'schema': [{
+                    'name': 'Action',
+                    'type': 'STRING'
+                }, {
+                    'name': 'Line_Item',
+                    'type': 'STRING'
+                }, {
+                    'name': 'Creative',
+                    'type': 'STRING'
+                }],
+                'format': 'CSV'
+            }
+        }, rows)
 
-  query_to_view(
-      project.task['auth_bigquery'],
-      project.id,
-      project.task['dataset'],
-      'AUDIT_LineItemMaps',
-      """WITH
+    query_to_view(project.task['auth_bigquery'],
+                  project.id,
+                  project.task['dataset'],
+                  'AUDIT_LineItemMaps',
+                  """WITH
       LINEITEM_ERRORS AS (
       SELECT
         'Line Items Map' AS Operation,
@@ -106,78 +105,78 @@ def line_item_map_audit():
       SELECT * FROM CREATIVE_ERRORS
       ;
     """.format(**project.task),
-      legacy=False)
+                  legacy=False)
 
 
 def line_item_map_patch(commit=False):
-  patches = {}
-  changed = set()
+    patches = {}
+    changed = set()
 
-  rows = get_rows(
-      project.task['auth_bigquery'], {
-          'bigquery': {
-              'dataset':
-                  project.task['dataset'],
-              'query':
-                  """SELECT advertiserId, lineItemId, creativeIds FROM `{dataset}.DV_LineItems`
+    rows = get_rows(
+        project.task['auth_bigquery'], {
+            'bigquery': {
+                'dataset':
+                    project.task['dataset'],
+                'query':
+                    """SELECT advertiserId, lineItemId, creativeIds FROM `{dataset}.DV_LineItems`
       """.format(**project.task),
-              'as_object':
-                  True,
-              'legacy':
-                  False
-          }
-      })
+                'as_object':
+                    True,
+                'legacy':
+                    False
+            }
+        })
 
-  for row in rows:
-    patches[str(row['lineItemId'])] = {
-        'operation': 'Line Items Map',
-        'action': 'PATCH',
-        'parameters': {
-            'advertiserId': str(row['advertiserId']),
-            'lineItemId': str(row['lineItemId']),
-            'body': {
-                'creativeIds': [str(c) for c in row['creativeIds']]
+    for row in rows:
+        patches[str(row['lineItemId'])] = {
+            'operation': 'Line Items Map',
+            'action': 'PATCH',
+            'parameters': {
+                'advertiserId': str(row['advertiserId']),
+                'lineItemId': str(row['lineItemId']),
+                'body': {
+                    'creativeIds': [str(c) for c in row['creativeIds']]
+                }
             }
         }
-    }
 
-  rows = get_rows(
-      project.task['auth_sheets'], {
-          'sheets': {
-              'sheet': project.task['sheet'],
-              'tab': 'Line Items Map',
-              'range': 'A2:Z'
-          }
-      })
+    rows = get_rows(
+        project.task['auth_sheets'], {
+            'sheets': {
+                'sheet': project.task['sheet'],
+                'tab': 'Line Items Map',
+                'range': 'A2:Z'
+            }
+        })
 
-  rows = rows_pad(rows, 3, '')
+    rows = rows_pad(rows, 3, '')
 
-  for row in rows:
-    lineitem_id = lookup_id(row[1])
-    creative_id = lookup_id(row[2])
-    if lineitem_id in patches:
-      if row[0] == 'ADD' and creative_id not in patches[lineitem_id][
-          'parameters']['body']['creativeIds']:
-        patches[lineitem_id]['line_item'] = row[1]
-        patches[lineitem_id]['parameters']['body']['creativeIds'].append(
-            creative_id)
-        changed.add(lineitem_id)
-      if row[0] == 'REMOVE' and creative_id in patches[lineitem_id][
-          'parameters']['body']['creativeIds']:
-        patches[lineitem_id]['line_item'] = row[1]
-        patches[lineitem_id]['parameters']['body']['creativeIds'].remove(
-            creative_id)
-        changed.add(lineitem_id)
+    for row in rows:
+        lineitem_id = lookup_id(row[1])
+        creative_id = lookup_id(row[2])
+        if lineitem_id in patches:
+            if row[0] == 'ADD' and creative_id not in patches[lineitem_id][
+                    'parameters']['body']['creativeIds']:
+                patches[lineitem_id]['line_item'] = row[1]
+                patches[lineitem_id]['parameters']['body'][
+                    'creativeIds'].append(creative_id)
+                changed.add(lineitem_id)
+            if row[0] == 'REMOVE' and creative_id in patches[lineitem_id][
+                    'parameters']['body']['creativeIds']:
+                patches[lineitem_id]['line_item'] = row[1]
+                patches[lineitem_id]['parameters']['body'][
+                    'creativeIds'].remove(creative_id)
+                changed.add(lineitem_id)
 
-  # Remove any patches where creatives have not changed
-  for li in list(patches.keys()):
-    if li not in changed:
-      del patches[li]
-  patches = list(patches.values())
+    # Remove any patches where creatives have not changed
+    for li in list(patches.keys()):
+        if li not in changed:
+            del patches[li]
+    patches = list(patches.values())
 
-  patch_masks(patches)
+    patch_masks(patches)
 
-  if commit:
-    line_item_commit(patches)
-  else:
-    patch_preview(patches)
+    if commit:
+        line_item_commit(patches)
+    else:
+        patch_preview(patches)

@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -81,92 +80,59 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
+    'auth_read': 'user',  # Credentials used for reading data.
 }
 
 RECIPE = {
-  'setup': {
-    'week': [
-      'Mon',
-      'Tue',
-      'Wed',
-      'Thu',
-      'Fri',
-      'Sat',
-      'Sun'
-    ],
-    'hour': [
-      0,
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18,
-      19,
-      20,
-      21,
-      22,
-      23
-    ]
-  },
-  'tasks': [
-    {
-      'airflow': {
-        '__comment__': 'Calls a native Airflow operator.',
-        'operators': {
-          'bash_operator': {
-            'BashOperator': {
-              'bash_command': 'date'
-            }
-          }
-        }
-      }
+    'setup': {
+        'week': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        'hour': [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+            19, 20, 21, 22, 23
+        ]
     },
-    {
-      'starthinker.airflow': {
-        '__comment__': 'Calls an custom operator, requires import of library.',
-        'operators': {
-          'hello': {
-            'Hello': {
-              'say': 'Hi, there!'
+    'tasks': [{
+        'airflow': {
+            '__comment__': 'Calls a native Airflow operator.',
+            'operators': {
+                'bash_operator': {
+                    'BashOperator': {
+                        'bash_command': 'date'
+                    }
+                }
             }
-          }
         }
-      }
-    },
-    {
-      'hello': {
-        '__comment__': 'Calls a StarThinker task.',
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'say': 'Hello World'
-      }
-    }
-  ]
+    }, {
+        'starthinker.airflow': {
+            '__comment__':
+                'Calls an custom operator, requires import of library.',
+            'operators': {
+                'hello': {
+                    'Hello': {
+                        'say': 'Hi, there!'
+                    }
+                }
+            }
+        }
+    }, {
+        'hello': {
+            '__comment__': 'Calls a StarThinker task.',
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'say': 'Hello World'
+        }
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('airflow', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

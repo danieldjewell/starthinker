@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -81,85 +80,83 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
-  'id_dataset': '',
-  'id_query': 'SELECT * FROM `Dataset.Table`;',
-  'id_legacy': False,
-  'destination_dataset': '',
-  'destination_table': '',
+    'auth_read': 'user',  # Credentials used for reading data.
+    'id_dataset': '',
+    'id_query': 'SELECT * FROM `Dataset.Table`;',
+    'id_legacy': False,
+    'destination_dataset': '',
+    'destination_table': '',
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'lineitem': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'read': {
-          'line_items': {
-            'single_cell': True,
-            'bigquery': {
-              'dataset': {
+    'tasks': [{
+        'lineitem': {
+            'auth': {
                 'field': {
-                  'name': 'id_dataset',
-                  'kind': 'string',
-                  'order': 1,
-                  'default': ''
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
                 }
-              },
-              'query': {
-                'field': {
-                  'name': 'id_query',
-                  'kind': 'string',
-                  'order': 2,
-                  'default': 'SELECT * FROM `Dataset.Table`;'
+            },
+            'read': {
+                'line_items': {
+                    'single_cell': True,
+                    'bigquery': {
+                        'dataset': {
+                            'field': {
+                                'name': 'id_dataset',
+                                'kind': 'string',
+                                'order': 1,
+                                'default': ''
+                            }
+                        },
+                        'query': {
+                            'field': {
+                                'name': 'id_query',
+                                'kind': 'string',
+                                'order': 2,
+                                'default': 'SELECT * FROM `Dataset.Table`;'
+                            }
+                        },
+                        'legacy': {
+                            'field': {
+                                'name': 'id_legacy',
+                                'kind': 'boolean',
+                                'order': 3,
+                                'default': False
+                            }
+                        }
+                    }
+                },
+                'out': {
+                    'bigquery': {
+                        'dataset': {
+                            'field': {
+                                'name': 'destination_dataset',
+                                'kind': 'string',
+                                'order': 4,
+                                'default': ''
+                            }
+                        },
+                        'table': {
+                            'field': {
+                                'name': 'destination_table',
+                                'kind': 'string',
+                                'order': 5,
+                                'default': ''
+                            }
+                        }
+                    }
                 }
-              },
-              'legacy': {
-                'field': {
-                  'name': 'id_legacy',
-                  'kind': 'boolean',
-                  'order': 3,
-                  'default': False
-                }
-              }
             }
-          },
-          'out': {
-            'bigquery': {
-              'dataset': {
-                'field': {
-                  'name': 'destination_dataset',
-                  'kind': 'string',
-                  'order': 4,
-                  'default': ''
-                }
-              },
-              'table': {
-                'field': {
-                  'name': 'destination_table',
-                  'kind': 'string',
-                  'order': 5,
-                  'default': ''
-                }
-              }
-            }
-          }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('lineitem_read_to_bigquery_via_query', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

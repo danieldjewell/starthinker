@@ -22,18 +22,17 @@ from starthinker.util.storage import bucket_create, bucket_access
 
 @project.from_parameters
 def bucket():
-  if project.verbose:
-    print('BUCKET', project.task['bucket'])
+    if project.verbose:
+        print('BUCKET', project.task['bucket'])
 
-  # create bucket
-  bucket_create(project.task['auth'], project.id, project.task['bucket'])
-  bucket_access(
-      project.task['auth'],
-      project.id,
-      project.task['bucket'],
-      emails=project.task.get('emails', []),
-      groups=project.task.get('groups', []))
+    # create bucket
+    bucket_create(project.task['auth'], project.id, project.task['bucket'])
+    bucket_access(project.task['auth'],
+                  project.id,
+                  project.task['bucket'],
+                  emails=project.task.get('emails', []),
+                  groups=project.task.get('groups', []))
 
 
 if __name__ == '__main__':
-  bucket()
+    bucket()

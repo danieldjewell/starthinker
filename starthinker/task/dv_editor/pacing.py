@@ -30,19 +30,20 @@ from starthinker.task.dv_editor.patch import patch_preview
 
 
 def pacing_clear():
-  sheets_clear(project.task["auth_sheets"], project.task["sheet"], "Pacing", "A2:Z")
+    sheets_clear(project.task["auth_sheets"], project.task["sheet"], "Pacing",
+                 "A2:Z")
 
 
 def pacing_load():
 
-  # write pacings to sheet
-  rows = get_rows(
-      project.task["auth_bigquery"], {
-          "bigquery": {
-              "dataset":
-                  project.task["dataset"],
-              "query":
-                  """SELECT
+    # write pacings to sheet
+    rows = get_rows(
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset":
+                    project.task["dataset"],
+                "query":
+                    """SELECT
          CONCAT(P.displayName, ' - ', P.partnerId),
          CONCAT(A.displayName, ' - ', A.advertiserId),
          CONCAT(C.displayName, ' - ', C.campaignId),
@@ -88,59 +89,98 @@ def pacing_load():
        LEFT JOIN `{dataset}.DV_Partners` AS P
        ON A.partnerId=P.partnerId
        """.format(**project.task),
-              "legacy":
-                  False
-          }
-      })
+                "legacy":
+                    False
+            }
+        })
 
-  put_rows(project.task["auth_sheets"], {
-      "sheets": {
-          "sheet": project.task["sheet"],
-          "tab": "Pacing",
-          "range": "A2"
-      }
-  }, rows)
+    put_rows(project.task["auth_sheets"], {
+        "sheets": {
+            "sheet": project.task["sheet"],
+            "tab": "Pacing",
+            "range": "A2"
+        }
+    }, rows)
 
 
 def pacing_audit():
-  rows = get_rows(project.task["auth_sheets"], {
-      "sheets": {
-          "sheet": project.task["sheet"],
-          "tab": "Pacing",
-          "range": "A2:Z"
-      }
-  })
+    rows = get_rows(
+        project.task["auth_sheets"], {
+            "sheets": {
+                "sheet": project.task["sheet"],
+                "tab": "Pacing",
+                "range": "A2:Z"
+            }
+        })
 
-  put_rows(
-      project.task["auth_bigquery"], {
-          "bigquery": {
-              "dataset": project.task["dataset"],
-              "table": "SHEET_Pacing",
-              "schema": [
-                  { "name": "Partner", "type": "STRING" },
-                  { "name": "Advertiser", "type": "STRING" },
-                  { "name": "Campaign", "type": "STRING" },
-                  { "name": "Insertion_Order", "type": "STRING" },
-                  { "name": "Line_Item", "type": "STRING" },
-                  { "name": "Period", "type": "STRING" },
-                  { "name": "Period_Edit", "type": "STRING" },
-                  { "name": "Type", "type": "STRING" },
-                  { "name": "Type_Edit", "type": "STRING" },
-                  { "name": "Daily_Budget", "type": "FLOAT" },
-                  { "name": "Daily_Budget_Edit", "type": "FLOAT" },
-                  { "name": "Daily_Impressions", "type": "INTEGER" },
-                  { "name": "Daily_Impressions_Edit", "type": "INTEGER" },
-              ],
-              "format": "CSV"
-          }
-      }, rows)
+    put_rows(
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset": project.task["dataset"],
+                "table": "SHEET_Pacing",
+                "schema": [
+                    {
+                        "name": "Partner",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Advertiser",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Campaign",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Insertion_Order",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Line_Item",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Period",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Period_Edit",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Type",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Type_Edit",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Daily_Budget",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Daily_Budget_Edit",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Daily_Impressions",
+                        "type": "INTEGER"
+                    },
+                    {
+                        "name": "Daily_Impressions_Edit",
+                        "type": "INTEGER"
+                    },
+                ],
+                "format": "CSV"
+            }
+        }, rows)
 
-  query_to_view(
-      project.task["auth_bigquery"],
-      project.id,
-      project.task["dataset"],
-      "AUDIT_Pacing",
-      """WITH
+    query_to_view(project.task["auth_bigquery"],
+                  project.id,
+                  project.task["dataset"],
+                  "AUDIT_Pacing",
+                  """WITH
       /* Check if sheet values are set */
       INPUT_ERRORS AS (
         SELECT
@@ -166,14 +206,13 @@ def pacing_audit():
       SELECT * FROM INPUT_ERRORS
       ;
     """.format(**project.task),
-      legacy=False)
+                  legacy=False)
 
-  query_to_view(
-    project.task["auth_bigquery"],
-    project.id,
-    project.task["dataset"],
-    "PATCH_Pacing",
-    """SELECT *
+    query_to_view(project.task["auth_bigquery"],
+                  project.id,
+                  project.task["dataset"],
+                  "PATCH_Pacing",
+                  """SELECT *
       FROM `{dataset}.SHEET_Pacing`
       WHERE (
         REGEXP_CONTAINS(Insertion_Order, r" - (\d+)$")
@@ -182,69 +221,70 @@ def pacing_audit():
       AND Line_Item NOT IN (SELECT Id FROM `{dataset}.AUDIT_Pacing` WHERE Severity='ERROR')
       AND Insertion_Order NOT IN (SELECT Id FROM `{dataset}.AUDIT_Pacing` WHERE Severity='ERROR')
     """.format(**project.task),
-    legacy=False
-  )
+                  legacy=False)
 
 
 def pacing_patch(commit=False):
 
-  patches = []
+    patches = []
 
-  rows = get_rows(
-    project.task["auth_bigquery"],
-    { "bigquery": {
-      "dataset": project.task["dataset"],
-      "table":"PATCH_Pacing",
-    }},
-    as_object=True
-  )
+    rows = get_rows(project.task["auth_bigquery"], {
+        "bigquery": {
+            "dataset": project.task["dataset"],
+            "table": "PATCH_Pacing",
+        }
+    },
+                    as_object=True)
 
-  for row in rows:
+    for row in rows:
 
-    pacing = {}
+        pacing = {}
 
-    if row['Period'] != row['Period_Edit']:
-      pacing.setdefault("pacing", {})
-      pacing["pacing"]["pacingPeriod"] = row['Period_Edit']
+        if row['Period'] != row['Period_Edit']:
+            pacing.setdefault("pacing", {})
+            pacing["pacing"]["pacingPeriod"] = row['Period_Edit']
 
-    if row['Type'] != row['Type_Edit']:
-      pacing.setdefault("pacing", {})
-      pacing["pacing"]["pacingType"] = row['Type_Edit']
+        if row['Type'] != row['Type_Edit']:
+            pacing.setdefault("pacing", {})
+            pacing["pacing"]["pacingType"] = row['Type_Edit']
 
-    if row['Daily_Budget'] != row['Daily_Budget_Edit']:
-      pacing.setdefault("pacing", {})
-      pacing["pacing"]["dailyMaxMicros"] = int(float(row['Daily_Budget_Edit']) * 100000)
+        if row['Daily_Budget'] != row['Daily_Budget_Edit']:
+            pacing.setdefault("pacing", {})
+            pacing["pacing"]["dailyMaxMicros"] = int(
+                float(row['Daily_Budget_Edit']) * 100000)
 
-    if row['Daily_Impressions'] != row['Daily_Impressions_Edit']:
-      pacing.setdefault("pacing", {})
-      pacing["pacing"]["dailyMaxImpressions"] = row['Daily_Impressions_Edit']
+        if row['Daily_Impressions'] != row['Daily_Impressions_Edit']:
+            pacing.setdefault("pacing", {})
+            pacing["pacing"]["dailyMaxImpressions"] = row[
+                'Daily_Impressions_Edit']
 
-    if pacing:
-      patch = {
-          "operation": "Pacing",
-          "action": "PATCH",
-          "partner": row['Partner'],
-          "advertiser": row['Advertiser'],
-          "campaign": row['Campaign'],
-          "parameters": {
-              "advertiserId": lookup_id(row['Advertiser']),
-              "body": pacing
-          }
-      }
+        if pacing:
+            patch = {
+                "operation": "Pacing",
+                "action": "PATCH",
+                "partner": row['Partner'],
+                "advertiser": row['Advertiser'],
+                "campaign": row['Campaign'],
+                "parameters": {
+                    "advertiserId": lookup_id(row['Advertiser']),
+                    "body": pacing
+                }
+            }
 
-      if row['Line_Item']:
-        patch["line_item"] = row['Line_Item']
-        patch["parameters"]["lineItemId"] = lookup_id(row['Line_Item'])
-      else:
-        patch["insertion_order"] = row['Insertion_Order']
-        patch["parameters"]["insertionOrderId"] = lookup_id(row['Insertion_Order'])
+            if row['Line_Item']:
+                patch["line_item"] = row['Line_Item']
+                patch["parameters"]["lineItemId"] = lookup_id(row['Line_Item'])
+            else:
+                patch["insertion_order"] = row['Insertion_Order']
+                patch["parameters"]["insertionOrderId"] = lookup_id(
+                    row['Insertion_Order'])
 
-      patches.append(patch)
+            patches.append(patch)
 
-  patch_masks(patches)
+    patch_masks(patches)
 
-  if commit:
-    insertion_order_commit(patches)
-    line_item_commit(patches)
-  else:
-    patch_preview(patches)
+    if commit:
+        insertion_order_commit(patches)
+        line_item_commit(patches)
+    else:
+        patch_preview(patches)

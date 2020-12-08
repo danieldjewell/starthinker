@@ -27,9 +27,9 @@ from starthinker.util.csv import rows_to_csv
 
 def main():
 
-  parser = argparse.ArgumentParser(
-      formatter_class=argparse.RawDescriptionHelpFormatter,
-      description=textwrap.dedent("""\
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent("""\
     Command line to transform excel sheets into csv files.
 
     Prints to STDOUT, user is expected to pipe output into file.
@@ -41,21 +41,21 @@ def main():
 
   """))
 
-  parser.add_argument('workbook', help='name of file to pull the rows.')
-  parser.add_argument('--sheet', help='Sheet to pull the rows.', default=None)
-  parser.add_argument('--list', help='List reports.', action='store_true')
+    parser.add_argument('workbook', help='name of file to pull the rows.')
+    parser.add_argument('--sheet', help='Sheet to pull the rows.', default=None)
+    parser.add_argument('--list', help='List reports.', action='store_true')
 
-  # initialize project ( not really used but consistent with all helpers )
-  project.from_commandline(parser=parser, arguments=('-v',))
+    # initialize project ( not really used but consistent with all helpers )
+    project.from_commandline(parser=parser, arguments=('-v',))
 
-  with open(project.args.workbook, 'rb') as excel_file:
-    if project.args.list:
-      for sheet in excel_to_sheets(excel_file):
-        print(sheet)
-    elif project.args.sheet:
-      for sheet, row in excel_to_rows(excel_file, project.args.sheet):
-        print(rows_to_csv(row).read())
+    with open(project.args.workbook, 'rb') as excel_file:
+        if project.args.list:
+            for sheet in excel_to_sheets(excel_file):
+                print(sheet)
+        elif project.args.sheet:
+            for sheet, row in excel_to_rows(excel_file, project.args.sheet):
+                print(rows_to_csv(row).read())
 
 
 if __name__ == '__main__':
-  main()
+    main()

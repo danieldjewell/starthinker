@@ -29,9 +29,9 @@ from starthinker.util.csv import rows_to_type, rows_print
 
 def main():
 
-  parser = argparse.ArgumentParser(
-      formatter_class=argparse.RawDescriptionHelpFormatter,
-      description=textwrap.dedent("""\
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent("""\
       Command line to help debug DV360 reports and build reporting tools.
 
       Examples:
@@ -42,47 +42,51 @@ def main():
 
   """))
 
-  # create parameters
-  parser.add_argument(
-      '--report', help='report ID to pull json definition', default=None)
-  parser.add_argument(
-      '--schema', help='report ID to pull schema format', default=None)
-  parser.add_argument(
-      '--sample', help='report ID to pull sample data', default=None)
-  parser.add_argument('--list', help='list reports', action='store_true')
+    # create parameters
+    parser.add_argument('--report',
+                        help='report ID to pull json definition',
+                        default=None)
+    parser.add_argument('--schema',
+                        help='report ID to pull schema format',
+                        default=None)
+    parser.add_argument('--sample',
+                        help='report ID to pull sample data',
+                        default=None)
+    parser.add_argument('--list', help='list reports', action='store_true')
 
-  # initialize project
-  project.from_commandline(parser=parser, arguments=('-u', '-c', '-s', '-v'))
-  auth = 'service' if project.args.service else 'user'
+    # initialize project
+    project.from_commandline(parser=parser, arguments=('-u', '-c', '-s', '-v'))
+    auth = 'service' if project.args.service else 'user'
 
-  # get report
-  if project.args.report:
-    report = API_DBM(auth).queries().getquery(
-        queryId=project.args.report).execute()
-    print(json.dumps(report, indent=2, sort_keys=True))
+    # get report
+    if project.args.report:
+        report = API_DBM(auth).queries().getquery(
+            queryId=project.args.report).execute()
+        print(json.dumps(report, indent=2, sort_keys=True))
 
-  # get schema
-  elif project.args.schema:
-    filename, report = report_file(auth, project.args.schema, None, 10)
-    rows = report_to_rows(report)
-    rows = report_clean(rows)
-    rows = rows_to_type(rows)
-    print(json.dumps(get_schema(rows)[1], indent=2, sort_keys=True))
+    # get schema
+    elif project.args.schema:
+        filename, report = report_file(auth, project.args.schema, None, 10)
+        rows = report_to_rows(report)
+        rows = report_clean(rows)
+        rows = rows_to_type(rows)
+        print(json.dumps(get_schema(rows)[1], indent=2, sort_keys=True))
 
-  # get sample
-  elif project.args.sample:
-    filename, report = report_file(auth, project.args.sample, None, 10)
-    rows = report_to_rows(report)
-    rows = report_clean(rows)
-    rows = rows_to_type(rows)
-    for r in rows_print(rows, row_min=0, row_max=20):
-      pass
+    # get sample
+    elif project.args.sample:
+        filename, report = report_file(auth, project.args.sample, None, 10)
+        rows = report_to_rows(report)
+        rows = report_clean(rows)
+        rows = rows_to_type(rows)
+        for r in rows_print(rows, row_min=0, row_max=20):
+            pass
 
-  # get list
-  else:
-    for report in API_DBM(auth, iterate=True).queries().listqueries().execute():
-      print(json.dumps(report, indent=2, sort_keys=True))
+    # get list
+    else:
+        for report in API_DBM(auth,
+                              iterate=True).queries().listqueries().execute():
+            print(json.dumps(report, indent=2, sort_keys=True))
 
 
 if __name__ == '__main__':
-  main()
+    main()

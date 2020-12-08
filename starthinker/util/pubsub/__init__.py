@@ -22,41 +22,42 @@ from starthinker.util.google_api import API_PubSub
 
 
 def topic_create(suth, project_id, topic):
-  api = API_PubSub(auth).projects().topics().create(
-      topic='projects/%s/topics/%s' % (project_id, topic), body={}).execute()
+    api = API_PubSub(auth).projects().topics().create(
+        topic='projects/%s/topics/%s' % (project_id, topic), body={}).execute()
 
 
 def subscription_create(auth, project_id, topic, subscription):
-  body = {
-      'topic': 'projects/%s/topics/%s' % (project_id, topic),
-      'pushConfig': {},
-      'ackDeadlineSeconds': 600,
-      'messageRetentionDuration': '86400s',  # 24 hours
-      'retainAckedMessages': False,
-  }
+    body = {
+        'topic': 'projects/%s/topics/%s' % (project_id, topic),
+        'pushConfig': {},
+        'ackDeadlineSeconds': 600,
+        'messageRetentionDuration': '86400s',  # 24 hours
+        'retainAckedMessages': False,
+    }
 
-  api = API_PubSub(auth).projects().subscriptions().create(
-      name='projects/%s/subscriptions/%s' % (project_id, subscription),
-      body=body).execute()
+    api = API_PubSub(auth).projects().subscriptions().create(
+        name='projects/%s/subscriptions/%s' % (project_id, subscription),
+        body=body).execute()
 
 
 def topic_publish(auth, project_id, topic, data):
-  body = {'messages': [{'data': base64.b64encode(data)}]}
-  api = API_PubSub(auth).projects().topics().publish(
-      topic='projects/%s/topics/%s' % (project_id, topic), body=body).execute()
-  return api['messageIds'][0]
+    body = {'messages': [{'data': base64.b64encode(data)}]}
+    api = API_PubSub(auth).projects().topics().publish(
+        topic='projects/%s/topics/%s' % (project_id, topic),
+        body=body).execute()
+    return api['messageIds'][0]
 
 
 def subscription_acknowledge(auth, project_id, subscription, ack_id):
-  if isinstance(ack_id, str):
-    ack_id = [ack_id] if ack_id else []
+    if isinstance(ack_id, str):
+        ack_id = [ack_id] if ack_id else []
 
-  if ack_id:
-    body = {'ackIds': ack_id}
-    API_PubSub(auth).projects().subscriptions().acknowledge(
-        subscription='projects/%s/subscriptions/%s' %
-        (project_id, subscription),
-        body=body).execute()
+    if ack_id:
+        body = {'ackIds': ack_id}
+        API_PubSub(auth).projects().subscriptions().acknowledge(
+            subscription='projects/%s/subscriptions/%s' %
+            (project_id, subscription),
+            body=body).execute()
 
 
 def subscription_pull(auth,
@@ -65,28 +66,28 @@ def subscription_pull(auth,
                       immediate=True,
                       maximum=1,
                       acknowledge=False):
-  messages = []
+    messages = []
 
-  if maximum <= 0:
-    return messages
+    if maximum <= 0:
+        return messages
 
-  body = {'returnImmediately': immediate, 'maxMessages': maximum}
+    body = {'returnImmediately': immediate, 'maxMessages': maximum}
 
-  for message in API_PubSub(
-      auth, iterate=True).projects().subscriptions().pull(
-          subscription='projects/%s/subscriptions/%s' %
-          (project_id, subscription),
-          body=body).execute():
-    messages.append({
-        'ackId': message['ackId'],
-        'data': base64.b64decode(message['message']['data'])
-    })
+    for message in API_PubSub(auth,
+                              iterate=True).projects().subscriptions().pull(
+                                  subscription='projects/%s/subscriptions/%s' %
+                                  (project_id, subscription),
+                                  body=body).execute():
+        messages.append({
+            'ackId': message['ackId'],
+            'data': base64.b64decode(message['message']['data'])
+        })
 
-  # if acknowledge, then acknowledge all messages and return only data
-  if acknowledge:
-    subscription_acknowledge(auth, project_id, subscription,
-                             [m['ackId'] for m in messages])
-    return [m['data'] for m in messages]
-  # or return ack and data as a dictionary
-  else:
-    return messages
+    # if acknowledge, then acknowledge all messages and return only data
+    if acknowledge:
+        subscription_acknowledge(auth, project_id, subscription,
+                                 [m['ackId'] for m in messages])
+        return [m['data'] for m in messages]
+    # or return ack and data as a dictionary
+    else:
+        return messages

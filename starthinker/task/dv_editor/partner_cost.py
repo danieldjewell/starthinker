@@ -32,20 +32,20 @@ from starthinker.task.dv_editor.patch import patch_preview
 
 
 def partner_cost_clear():
-  sheets_clear(project.task["auth_sheets"], project.task["sheet"], "Partner Costs",
-               "A2:Z")
+    sheets_clear(project.task["auth_sheets"], project.task["sheet"],
+                 "Partner Costs", "A2:Z")
 
 
 def partner_cost_load():
 
-  # write partner_costs to sheet
-  rows = get_rows(
-      project.task["auth_bigquery"], {
-          "bigquery": {
-              "dataset":
-                  project.task["dataset"],
-              "query":
-                  """SELECT
+    # write partner_costs to sheet
+    rows = get_rows(
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset":
+                    project.task["dataset"],
+                "query":
+                    """SELECT
          CONCAT(P.displayName, ' - ', P.partnerId),
          CONCAT(A.displayName, ' - ', A.advertiserId),
          CONCAT(C.displayName, ' - ', C.campaignId),
@@ -95,63 +95,107 @@ def partner_cost_load():
        LEFT JOIN `{dataset}.DV_Partners` AS P
        ON A.partnerId=P.partnerId
        """.format(**project.task),
-              "legacy":
-                  False
-          }
-      })
+                "legacy":
+                    False
+            }
+        })
 
-  put_rows(
-      project.task["auth_sheets"], {
-          "sheets": {
-              "sheet": project.task["sheet"],
-              "tab": "Partner Costs",
-              "range": "A2"
-          }
-      }, rows)
+    put_rows(
+        project.task["auth_sheets"], {
+            "sheets": {
+                "sheet": project.task["sheet"],
+                "tab": "Partner Costs",
+                "range": "A2"
+            }
+        }, rows)
 
 
 def partner_cost_audit():
-  rows = get_rows(
-      project.task["auth_sheets"], {
-          "sheets": {
-              "sheet": project.task["sheet"],
-              "tab": "Partner Costs",
-              "range": "A2:Z"
-          }
-      })
+    rows = get_rows(
+        project.task["auth_sheets"], {
+            "sheets": {
+                "sheet": project.task["sheet"],
+                "tab": "Partner Costs",
+                "range": "A2:Z"
+            }
+        })
 
-  put_rows(
-      project.task["auth_bigquery"], {
-          "bigquery": {
-              "dataset": project.task["dataset"],
-              "table": "SHEET_PartnerCosts",
-              "schema": [
-                  { "name": "Partner", "type": "STRING" },
-                  { "name": "Advertiser", "type": "STRING" },
-                  { "name": "Campaign", "type": "STRING" },
-                  { "name": "Insertion_Order", "type": "STRING" },
-                  { "name": "Line_Item", "type": "STRING" },
-                  { "name": "Cost_Type", "type": "STRING" },
-                  { "name": "Cost_Type_Edit", "type": "STRING" },
-                  { "name": "Fee_Type", "type": "STRING" },
-                  { "name": "Fee_Type_Edit", "type": "STRING" },
-                  { "name": "Invoice_Type", "type": "STRING" },
-                  { "name": "Invoice_Type_Edit", "type": "STRING" },
-                  { "name": "Fee_Amount", "type": "FLOAT" },
-                  { "name": "Fee_Amount_Edit", "type": "FLOAT" },
-                  { "name": "Fee_Percent", "type": "FLOAT" },
-                  { "name": "Fee_Percent_Edit", "type": "FLOAT" },
-              ],
-              "format": "CSV"
-          }
-      }, rows)
+    put_rows(
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset": project.task["dataset"],
+                "table": "SHEET_PartnerCosts",
+                "schema": [
+                    {
+                        "name": "Partner",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Advertiser",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Campaign",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Insertion_Order",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Line_Item",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Cost_Type",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Cost_Type_Edit",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Fee_Type",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Fee_Type_Edit",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Invoice_Type",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Invoice_Type_Edit",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Fee_Amount",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Fee_Amount_Edit",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Fee_Percent",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Fee_Percent_Edit",
+                        "type": "FLOAT"
+                    },
+                ],
+                "format": "CSV"
+            }
+        }, rows)
 
-  query_to_view(
-      project.task["auth_bigquery"],
-      project.id,
-      project.task["dataset"],
-      "AUDIT_PartnerCosts",
-      """WITH
+    query_to_view(project.task["auth_bigquery"],
+                  project.id,
+                  project.task["dataset"],
+                  "AUDIT_PartnerCosts",
+                  """WITH
       /* Check if sheet values are set */
       INPUT_ERRORS AS (
         SELECT
@@ -180,14 +224,13 @@ def partner_cost_audit():
       SELECT * FROM INPUT_ERRORS
       ;
     """.format(**project.task),
-      legacy=False)
+                  legacy=False)
 
-  query_to_view(
-    project.task["auth_bigquery"],
-    project.id,
-    project.task["dataset"],
-    "PATCH_PartnerCosts",
-    """SELECT *
+    query_to_view(project.task["auth_bigquery"],
+                  project.id,
+                  project.task["dataset"],
+                  "PATCH_PartnerCosts",
+                  """SELECT *
       FROM `{dataset}.SHEET_PartnerCosts`
       WHERE (
         REGEXP_CONTAINS(Insertion_Order, r" - (\d+)$")
@@ -196,74 +239,81 @@ def partner_cost_audit():
       AND Line_Item NOT IN (SELECT Id FROM `{dataset}.AUDIT_PartnerCosts` WHERE Severity='ERROR')
       AND Insertion_Order NOT IN (SELECT Id FROM `{dataset}.AUDIT_PartnerCosts` WHERE Severity='ERROR')
     """.format(**project.task),
-    legacy=False
-  )
+                  legacy=False)
 
 
 def partner_cost_patch(commit=False):
-  patches = {}
-  changed = set()
+    patches = {}
+    changed = set()
 
-  rows = get_rows(
-    project.task["auth_bigquery"],
-    { "bigquery": {
-      "dataset": project.task["dataset"],
-      "table":"PATCH_PartnerCosts",
-    }},
-    as_object=True
-  )
+    rows = get_rows(project.task["auth_bigquery"], {
+        "bigquery": {
+            "dataset": project.task["dataset"],
+            "table": "PATCH_PartnerCosts",
+        }
+    },
+                    as_object=True)
 
-  for row in rows:
+    for row in rows:
 
-    lookup = row['Line_Item'] or row['Insertion_Order']
+        lookup = row['Line_Item'] or row['Insertion_Order']
 
-    patches.setdefault(
-        lookup, {
-            "operation": "Partner Costs",
-            "action": "PATCH",
-            "partner": row['Partner'],
-            "advertiser": row['Advertiser'],
-            "campaign": row['Campaign'],
-            "parameters": {
-                "advertiserId": lookup_id(row['Advertiser']),
-                "body": {
-                    "partnerCosts": []
+        patches.setdefault(
+            lookup, {
+                "operation": "Partner Costs",
+                "action": "PATCH",
+                "partner": row['Partner'],
+                "advertiser": row['Advertiser'],
+                "campaign": row['Campaign'],
+                "parameters": {
+                    "advertiserId": lookup_id(row['Advertiser']),
+                    "body": {
+                        "partnerCosts": []
+                    }
                 }
-            }
+            })
+
+        if row['Line_Item']:
+            patches[lookup]["line_item"] = row['Line_Item']
+            patches[lookup]["parameters"]["lineItemId"] = lookup_id(
+                row['Line_Item'])
+        else:
+            patches[lookup]["insertion_order"] = row['Insertion_Order']
+            patches[lookup]["parameters"]["insertionOrderId"] = lookup_id(
+                row['Insertion_Order'])
+
+        patches[lookup]["parameters"]["body"]["partnerCosts"].append({
+            "costType":
+                row['Cost_Type_Edit'],
+            "feeType":
+                row['Fee_Type_Edit'],
+            "invoiceType":
+                row['Invoice_Type_Edit'],
+            "feeAmount":
+                int(float(row['Fee_Amount_Edit']) *
+                    100000) if row['Fee_Amount_Edit'] else None,
+            "feePercentageMillis":
+                int(float(row['Fee_Percent_Edit']) *
+                    1000) if row['Fee_Percent_Edit'] else None
         })
 
-    if row['Line_Item']:
-      patches[lookup]["line_item"] = row['Line_Item']
-      patches[lookup]["parameters"]["lineItemId"] = lookup_id(row['Line_Item'])
+        if row['Cost_Type'] != row['Cost_Type_Edit'] \
+          or row['Fee_Type'] != row['Fee_Type_Edit'] \
+          or row['Invoice_Type'] != row['Invoice_Type_Edit'] \
+          or row['Fee_Amount'] != row['Fee_Amount_Edit'] \
+          or row['Fee_Percent'] != row['Fee_Percent_Edit']:
+            changed.add(lookup)
+
+    # Remove any patches where partner costs have not changed
+    for pc in list(patches.keys()):
+        if pc not in changed:
+            del patches[pc]
+    patches = list(patches.values())
+
+    patch_masks(patches)
+
+    if commit:
+        insertion_order_commit(patches)
+        line_item_commit(patches)
     else:
-      patches[lookup]["insertion_order"] = row['Insertion_Order']
-      patches[lookup]["parameters"]["insertionOrderId"] = lookup_id(row['Insertion_Order'])
-
-    patches[lookup]["parameters"]["body"]["partnerCosts"].append({
-        "costType": row['Cost_Type_Edit'],
-        "feeType": row['Fee_Type_Edit'],
-        "invoiceType": row['Invoice_Type_Edit'],
-        "feeAmount": int(float(row['Fee_Amount_Edit']) * 100000) if row['Fee_Amount_Edit'] else None,
-        "feePercentageMillis": int(float(row['Fee_Percent_Edit']) * 1000) if row['Fee_Percent_Edit'] else None
-    })
-
-    if row['Cost_Type'] != row['Cost_Type_Edit'] \
-      or row['Fee_Type'] != row['Fee_Type_Edit'] \
-      or row['Invoice_Type'] != row['Invoice_Type_Edit'] \
-      or row['Fee_Amount'] != row['Fee_Amount_Edit'] \
-      or row['Fee_Percent'] != row['Fee_Percent_Edit']:
-      changed.add(lookup)
-
-  # Remove any patches where partner costs have not changed
-  for pc in list(patches.keys()):
-    if pc not in changed:
-      del patches[pc]
-  patches = list(patches.values())
-
-  patch_masks(patches)
-
-  if commit:
-    insertion_order_commit(patches)
-    line_item_commit(patches)
-  else:
-    patch_preview(patches)
+        patch_preview(patches)

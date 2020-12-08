@@ -29,10 +29,11 @@ USER_LOCATION = settings.UI_ZONE.rsplit('-',
 
 
 class AccountConfig(AppConfig):
-  name = 'starthinker_ui.account'
+    name = 'starthinker_ui.account'
 
-  def ready(self):
-    print('CHECKING IF USER BUCKET EXISTS:', USER_BUCKET, USER_LOCATION)
-    project.initialize(
-        _project=settings.UI_PROJECT, _service=settings.UI_SERVICE)
-    bucket_create('service', settings.UI_PROJECT, USER_BUCKET, USER_LOCATION)
+    def ready(self):
+        print('CHECKING IF USER BUCKET EXISTS:', USER_BUCKET, USER_LOCATION)
+        project.initialize(_project=settings.UI_PROJECT,
+                           _service=settings.UI_SERVICE)
+        bucket_create('service', settings.UI_PROJECT, USER_BUCKET,
+                      USER_LOCATION)

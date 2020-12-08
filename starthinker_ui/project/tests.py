@@ -31,75 +31,73 @@ from starthinker_ui.project.models import Project
 
 def project_create(share=''):
 
-  with open(
-      os.environ.get('STARTHINKER_SERVICE', 'MISSING RUN deploy.sh TO SET'),
-      'r') as f:
-    service = f.read()
+    with open(
+            os.environ.get('STARTHINKER_SERVICE',
+                           'MISSING RUN deploy.sh TO SET'), 'r') as f:
+        service = f.read()
 
-  key = os.environ.get('STARTHINKER_API_KEY', 'MISSING RUN deploy.sh TO SET'),
+    key = os.environ.get('STARTHINKER_API_KEY', 'MISSING RUN deploy.sh TO SET'),
 
-  project = Project.objects.create(
-      account=account_create(),
-      service=service,
-      key=key,
-      share=share
-  )
+    project = Project.objects.create(account=account_create(),
+                                     service=service,
+                                     key=key,
+                                     share=share)
 
-  return project
+    return project
 
 
 class ProjectTest(TestCase):
 
-  def setUp(self):
-    self.account = account_create()
+    def setUp(self):
+        self.account = account_create()
 
-    self.project_user = project_create()
-    self.project_domain = project_create('domain')
-    self.project_global = project_create('global')
+        self.project_user = project_create()
+        self.project_domain = project_create('domain')
+        self.project_global = project_create('global')
 
-  def test_ui_project(self):
+    def test_ui_project(self):
 
-    # not logged in ( blank )
-    resp = self.client.get('/project/')
-    self.assertEqual(resp.status_code, 200)
+        # not logged in ( blank )
+        resp = self.client.get('/project/')
+        self.assertEqual(resp.status_code, 200)
 
-    self.client.force_login(
-        self.account, backend=settings.AUTHENTICATION_BACKENDS[0])
+        self.client.force_login(self.account,
+                                backend=settings.AUTHENTICATION_BACKENDS[0])
 
-    # logged in
-    resp = self.client.get('/project/')
-    self.assertEqual(resp.status_code, 200)
+        # logged in
+        resp = self.client.get('/project/')
+        self.assertEqual(resp.status_code, 200)
 
-    self.assertContains(resp, self.project_user.identifier)
-    self.assertContains(resp, self.project_domain.identifier)
-    self.assertContains(resp, self.project_global.identifier)
-    self.assertContains(resp, self.project_domain.share.upper())
-    self.assertContains(resp, self.project_global.share.upper())
+        self.assertContains(resp, self.project_user.identifier)
+        self.assertContains(resp, self.project_domain.identifier)
+        self.assertContains(resp, self.project_global.identifier)
+        self.assertContains(resp, self.project_domain.share.upper())
+        self.assertContains(resp, self.project_global.share.upper())
 
-  def test_ui_project_edit(self):
+    def test_ui_project_edit(self):
 
-    # not logged in ( blank )
-    resp = self.client.get('/project/')
-    self.assertEqual(resp.status_code, 200)
+        # not logged in ( blank )
+        resp = self.client.get('/project/')
+        self.assertEqual(resp.status_code, 200)
 
-    self.client.force_login(self.account)
+        self.client.force_login(self.account)
 
-    # logged in
-    resp = self.client.get('/project/edit/')
-    self.assertEqual(resp.status_code, 200)
+        # logged in
+        resp = self.client.get('/project/edit/')
+        self.assertEqual(resp.status_code, 200)
 
-  def test_ui_recipe_edit(self):
+    def test_ui_recipe_edit(self):
 
-    # not logged in ( redirect )
-    resp = self.client.get('/recipe/edit/')
-    self.assertEqual(resp.status_code, 302)
+        # not logged in ( redirect )
+        resp = self.client.get('/recipe/edit/')
+        self.assertEqual(resp.status_code, 302)
 
-    self.client.force_login(
-        self.account, backend=settings.AUTHENTICATION_BACKENDS[0])
+        self.client.force_login(self.account,
+                                backend=settings.AUTHENTICATION_BACKENDS[0])
 
-    # logged in ( projects in form )
-    resp = self.client.get('/recipe/edit/')
-    self.assertEqual(resp.status_code, 200)
-    self.assertContains(resp, self.project_user)
-    self.assertContains(resp, self.project_domain)
-    self.assertContains(resp, self.project_global)
+        # logged in ( projects in form )
+        resp = self.client.get('/recipe/edit/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, self.project_user)
+        self.assertContains(resp, self.project_domain)
+        self.assertContains(resp, self.project_global)

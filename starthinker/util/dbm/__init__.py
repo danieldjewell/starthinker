@@ -43,7 +43,7 @@ RE_FILENAME = re.compile(r'.*/(.*)\?GoogleAccess')
 
 
 def report_get(auth, report_id=None, name=None):
-  """ Returns the DBM JSON definition of a report based on name or ID.
+    """ Returns the DBM JSON definition of a report based on name or ID.
 
   Bulletproofing: https://developers.google.com/bid-manager/v1/queries/getquery
 
@@ -57,16 +57,17 @@ def report_get(auth, report_id=None, name=None):
 
   """
 
-  if name:
-    for query in API_DBM(auth, iterate=True).queries().listqueries().execute():
-      if query['metadata']['title'] == name:
-        return query
-  else:
-    return API_DBM(auth).queries().getquery(queryId=report_id).execute()
+    if name:
+        for query in API_DBM(auth,
+                             iterate=True).queries().listqueries().execute():
+            if query['metadata']['title'] == name:
+                return query
+    else:
+        return API_DBM(auth).queries().getquery(queryId=report_id).execute()
 
 
 def report_filter(auth, body, filters):
-  """ Adds filters to a report body
+    """ Adds filters to a report body
 
   Filters cannot be easily added to the reports without templateing, this allows
   filters to be passed as lists.
@@ -96,20 +97,20 @@ def report_filter(auth, body, filters):
     * body: ( json ) modified report body
   """
 
-  new_body = body.copy()
+    new_body = body.copy()
 
-  for f, d in filters.items():
-    for v in get_rows(project.task['auth'], d):
-      new_body['params'].setdefault('filters', []).append({
-          'type': f,
-          'value': v
-      })
+    for f, d in filters.items():
+        for v in get_rows(project.task['auth'], d):
+            new_body['params'].setdefault('filters', []).append({
+                'type': f,
+                'value': v
+            })
 
-  return new_body
+    return new_body
 
 
 def report_build(auth, body):
-  """ Creates a DBM report given a JSON definition.
+    """ Creates a DBM report given a JSON definition.
 
   Bulletproofing:
   https://developers.google.com/bid-manager/v1/queries/createquery
@@ -129,41 +130,42 @@ def report_build(auth, body):
 
   """
 
-  report = report_get(auth, name=body['metadata']['title'])
+    report = report_get(auth, name=body['metadata']['title'])
 
-  if not report:
+    if not report:
 
-    # add default daily schedule if it does not exist ( convenience )
-    body.setdefault('schedule', {})
-    body['schedule'].setdefault('nextRunTimezoneCode', body['timezoneCode'])
-    body['schedule'].setdefault('frequency', 'DAILY')
-    if body['schedule']['frequency'] != 'ONE_TIME':
-      body['schedule'].setdefault('nextRunMinuteOfDay', 4 * 60)
-      body['schedule'].setdefault('endTimeMs',
-                                  int((time.time() + (365 * 24 * 60 * 60)) *
-                                      1000))  # 1 year in future
+        # add default daily schedule if it does not exist ( convenience )
+        body.setdefault('schedule', {})
+        body['schedule'].setdefault('nextRunTimezoneCode', body['timezoneCode'])
+        body['schedule'].setdefault('frequency', 'DAILY')
+        if body['schedule']['frequency'] != 'ONE_TIME':
+            body['schedule'].setdefault('nextRunMinuteOfDay', 4 * 60)
+            body['schedule'].setdefault('endTimeMs',
+                                        int((time.time() +
+                                             (365 * 24 * 60 * 60)) *
+                                            1000))  # 1 year in future
 
-    # build report
-    #pprint.PrettyPrinter().pprint(body)
-    report = API_DBM(auth).queries().createquery(body=body).execute()
+        # build report
+        #pprint.PrettyPrinter().pprint(body)
+        report = API_DBM(auth).queries().createquery(body=body).execute()
 
-    # run report first time
-    body = {
-        'dataRange': report['metadata']['dataRange'],
-        'timezoneCode': body['timezoneCode']
-    }
-    API_DBM(auth).queries().runquery(
-        queryId=report['queryId'], body=body).execute()
+        # run report first time
+        body = {
+            'dataRange': report['metadata']['dataRange'],
+            'timezoneCode': body['timezoneCode']
+        }
+        API_DBM(auth).queries().runquery(queryId=report['queryId'],
+                                         body=body).execute()
 
-  else:
-    if project.verbose:
-      print('DBM Report Exists:', body['metadata']['title'])
+    else:
+        if project.verbose:
+            print('DBM Report Exists:', body['metadata']['title'])
 
-  return report
+    return report
 
 
 def report_fetch(auth, report_id=None, name=None, timeout=60):
-  """ Retrieves most recent DBM file JSON by name or ID, if in progress, waits for it to complete.
+    """ Retrieves most recent DBM file JSON by name or ID, if in progress, waits for it to complete.
 
   Bulletproofing: https://developers.google.com/bid-manager/v1/queries/getquery
 
@@ -183,38 +185,39 @@ def report_fetch(auth, report_id=None, name=None, timeout=60):
 
   """
 
-  if project.verbose:
-    print('DBM Report Download ( timeout ):', report_id or name, timeout)
+    if project.verbose:
+        print('DBM Report Download ( timeout ):', report_id or name, timeout)
 
-  while timeout >= 0:  # allow zero to execute at least once
-    # advance timeout first ( if = 0 then exit condition met but already in loop, if > 0 then will run into sleep )
-    timeout -= 1
+    while timeout >= 0:  # allow zero to execute at least once
+        # advance timeout first ( if = 0 then exit condition met but already in loop, if > 0 then will run into sleep )
+        timeout -= 1
 
-    report = report_get(auth, report_id, name)
-    #pprint.PrettyPrinter().pprint(report)
-    if report:
-      # report is running ( return only if timeout is exhausted )
-      if report['metadata'].get('googleCloudStoragePathForLatestReport',
-                                '') == '':
-        if project.verbose:
-          print('DBM Still Running')
-        if timeout < 0:
-          return True
-      # file exists ( return it success )
-      else:
-        return report['metadata']['googleCloudStoragePathForLatestReport']
+        report = report_get(auth, report_id, name)
+        #pprint.PrettyPrinter().pprint(report)
+        if report:
+            # report is running ( return only if timeout is exhausted )
+            if report['metadata'].get('googleCloudStoragePathForLatestReport',
+                                      '') == '':
+                if project.verbose:
+                    print('DBM Still Running')
+                if timeout < 0:
+                    return True
+            # file exists ( return it success )
+            else:
+                return report['metadata'][
+                    'googleCloudStoragePathForLatestReport']
 
-    # no report ( break out of loop it will never finish )
-    else:
-      if project.verbose:
-        print('DBM No Report')
-      return False
+        # no report ( break out of loop it will never finish )
+        else:
+            if project.verbose:
+                print('DBM No Report')
+            return False
 
-    # sleep a minute
-    if timeout > 0:
-      if project.verbose:
-        print('WAITING MINUTES', timeout)
-      time.sleep(60)
+        # sleep a minute
+        if timeout > 0:
+            if project.verbose:
+                print('WAITING MINUTES', timeout)
+            time.sleep(60)
 
 
 def report_file(auth,
@@ -222,7 +225,7 @@ def report_file(auth,
                 name=None,
                 timeout=60,
                 chunksize=DBM_CHUNKSIZE):
-  """ Retrieves most recent DBM file by name or ID, if in progress, waits for it to complete.
+    """ Retrieves most recent DBM file by name or ID, if in progress, waits for it to complete.
 
   Bulletproofing: https://developers.google.com/bid-manager/v1/queries/getquery
 
@@ -246,30 +249,31 @@ def report_file(auth,
 
   """
 
-  storage_path = report_fetch(auth, report_id, name, timeout)
+    storage_path = report_fetch(auth, report_id, name, timeout)
 
-  if storage_path == False:
-    return None, None
-  elif storage_path == True:
-    return 'report_running.csv', None
-  else:
-    filename = RE_FILENAME.search(storage_path).groups(0)[0]
-
-    # streaming
-    if chunksize:
-      if project.verbose:
-        print('REPORT FILE STREAM:', storage_path)
-      return filename, response_utf8_stream(urlopen(storage_path), chunksize)
-
-    # single object
+    if storage_path == False:
+        return None, None
+    elif storage_path == True:
+        return 'report_running.csv', None
     else:
-      if project.verbose:
-        print('REPORT FILE SINGLE:', storage_path)
-      return filename, urlopen(storage_path).read().decode('UTF-8')
+        filename = RE_FILENAME.search(storage_path).groups(0)[0]
+
+        # streaming
+        if chunksize:
+            if project.verbose:
+                print('REPORT FILE STREAM:', storage_path)
+            return filename, response_utf8_stream(urlopen(storage_path),
+                                                  chunksize)
+
+        # single object
+        else:
+            if project.verbose:
+                print('REPORT FILE SINGLE:', storage_path)
+            return filename, urlopen(storage_path).read().decode('UTF-8')
 
 
 def report_delete(auth, report_id=None, name=None):
-  """ Deletes a DBM report based on name or ID.
+    """ Deletes a DBM report based on name or ID.
 
   Bulletproofing:
   https://developers.google.com/bid-manager/v1/queries/deletequery
@@ -284,18 +288,18 @@ def report_delete(auth, report_id=None, name=None):
 
   """
 
-  if project.verbose:
-    print('DBM DELETE:', report_id or name)
-  report = report_get(auth, report_id, name)
-  if report:
-    API_DBM(auth).queries().deletequery(queryId=report['queryId']).execute()
-  else:
     if project.verbose:
-      print('DBM DELETE: No Report')
+        print('DBM DELETE:', report_id or name)
+    report = report_get(auth, report_id, name)
+    if report:
+        API_DBM(auth).queries().deletequery(queryId=report['queryId']).execute()
+    else:
+        if project.verbose:
+            print('DBM DELETE: No Report')
 
 
 def report_list(auth):
-  """ Lists all the DBM report configurations for the current credentials.
+    """ Lists all the DBM report configurations for the current credentials.
 
   Bulletproofing:
   https://developers.google.com/bid-manager/v1/queries/listqueries
@@ -308,8 +312,8 @@ def report_list(auth):
 
   """
 
-  for query in API_DBM(auth, iterate=True).queries().listqueries().execute():
-    yield query
+    for query in API_DBM(auth, iterate=True).queries().listqueries().execute():
+        yield query
 
 
 """ Get a DV360 report as a list
@@ -323,22 +327,22 @@ Returns:
 
 
 def report_to_list(auth, report_id):
-  filename, report = report_file(
-      auth,
-      report_id,
-      None,  #name
-      10,  #timeout
-      DBM_CHUNKSIZE)
+    filename, report = report_file(
+        auth,
+        report_id,
+        None,  #name
+        10,  #timeout
+        DBM_CHUNKSIZE)
 
-  if report:
-    rows = report_to_rows(report)
-    rows = report_clean(rows)
+    if report:
+        rows = report_to_rows(report)
+        rows = report_clean(rows)
 
-  return list(rows)
+    return list(rows)
 
 
 def report_to_rows(report):
-  """ Helper to convert DBM files into iterator of rows, memory efficient.
+    """ Helper to convert DBM files into iterator of rows, memory efficient.
 
   Usage example:
 
@@ -356,23 +360,23 @@ def report_to_rows(report):
 
   """
 
-  # if reading from stream
-  if type(report) is GeneratorType:
-    leftovers = ''
-    for chunk in report:
-      data, extra = chunk.rsplit('\n', 1)
-      for row in csv_to_rows(leftovers + data):
-        yield row
-      leftovers = extra
+    # if reading from stream
+    if type(report) is GeneratorType:
+        leftovers = ''
+        for chunk in report:
+            data, extra = chunk.rsplit('\n', 1)
+            for row in csv_to_rows(leftovers + data):
+                yield row
+            leftovers = extra
 
-  # if reading from buffer
-  else:
-    for row in csv_to_rows(report):
-      yield row
+    # if reading from buffer
+    else:
+        for row in csv_to_rows(report):
+            yield row
 
 
 def report_clean(rows):
-  """ Helper to fix DBM report issues for BigQuery and ensure schema compliance.
+    """ Helper to fix DBM report issues for BigQuery and ensure schema compliance.
 
   Memory efficiently cleans each row by fixing:
   * Strips header and footer to preserve only data rows.
@@ -397,56 +401,56 @@ def report_clean(rows):
 
   """
 
-  if project.verbose:
-    print('DBM Report Clean')
+    if project.verbose:
+        print('DBM Report Clean')
 
-  first = True
-  last = False
-  date = None
-  for row in rows:
-    # stop if no data returned
-    if row == ['No data returned by the reporting service.']:
-      break
+    first = True
+    last = False
+    date = None
+    for row in rows:
+        # stop if no data returned
+        if row == ['No data returned by the reporting service.']:
+            break
 
-    # stop at blank row ( including sum row )
-    if not row or row[0] is None or row[0] == '':
-      break
+        # stop at blank row ( including sum row )
+        if not row or row[0] is None or row[0] == '':
+            break
 
-    # sanitizie header row
-    if first:
-      try:
-        date_column = row.index('Date')
-        row[date_column] = 'Report_Day'
-      except ValueError:
-        pass
-      row = [column_header_sanitize(cell) for cell in row]
+        # sanitizie header row
+        if first:
+            try:
+                date_column = row.index('Date')
+                row[date_column] = 'Report_Day'
+            except ValueError:
+                pass
+            row = [column_header_sanitize(cell) for cell in row]
 
-    # for all data rows clean up cells
-    else:
-      # check if data studio formatting is applied reformat the dates
-      row = [
-          cell.replace('/', '-') if isinstance(cell, str) and len(cell) == 4 +
-          1 + 2 + 1 + 2 and cell[4] == '/' and cell[7] == '/' else cell
-          for cell in row
-      ]  # 5x faster than regexp
+        # for all data rows clean up cells
+        else:
+            # check if data studio formatting is applied reformat the dates
+            row = [
+                cell.replace('/', '-')
+                if isinstance(cell, str) and len(cell) == 4 + 1 + 2 + 1 + 2 and
+                cell[4] == '/' and cell[7] == '/' else cell for cell in row
+            ]  # 5x faster than regexp
 
-    # remove unknown columns ( which throw off schema on import types )
-    row = [
-        '' if cell.strip() in (
-            'Unknown',
-            '-',
-        ) else ('1000' if cell == '< 1000' else cell) for cell in row
-    ]
+        # remove unknown columns ( which throw off schema on import types )
+        row = [
+            '' if cell.strip() in (
+                'Unknown',
+                '-',
+            ) else ('1000' if cell == '< 1000' else cell) for cell in row
+        ]
 
-    # return the row
-    yield row
+        # return the row
+        yield row
 
-    # not first row anymore
-    first = False
+        # not first row anymore
+        first = False
 
 
 def lineitem_patch_v1(auth, patch, li):
-  """Patches a DV360 Line Item
+    """Patches a DV360 Line Item
 
   Args:
     auth: StarThinker authentication scheme
@@ -454,15 +458,15 @@ def lineitem_patch_v1(auth, patch, li):
     li: Line item with updates to push
   Returns: Updated Line Item
   """
-  return API_DV360(auth).advertisers().lineItems().patch(
-      advertiserId=li['advertiserId'],
-      lineItemId=li['lineItemId'],
-      updateMask=patch,
-      body=li).execute()
+    return API_DV360(auth).advertisers().lineItems().patch(
+        advertiserId=li['advertiserId'],
+        lineItemId=li['lineItemId'],
+        updateMask=patch,
+        body=li).execute()
 
 
 def lineitem_get_v1(auth, advertiser_id, lineitem_id):
-  """Gets a DV360 Line Item
+    """Gets a DV360 Line Item
 
   Args:
     auth: StarThinker authentication scheme
@@ -470,12 +474,12 @@ def lineitem_get_v1(auth, advertiser_id, lineitem_id):
     lineitem_id: ID of the line item
   Returns: Line Item from the DV360 API
   """
-  return API_DV360(auth).advertisers().lineItems().get(
-      advertiserId=advertiser_id, lineItemId=lineitem_id).execute()
+    return API_DV360(auth).advertisers().lineItems().get(
+        advertiserId=advertiser_id, lineItemId=lineitem_id).execute()
 
 
 def lineitem_read(auth, advertisers=[], insertion_orders=[], lineitems=[]):
-  """ Reads line item configurations from DBM.
+    """ Reads line item configurations from DBM.
 
   Bulletproofing:
   https://developers.google.com/bid-manager/v1/lineitems/downloadlineitems
@@ -493,46 +497,48 @@ def lineitem_read(auth, advertisers=[], insertion_orders=[], lineitems=[]):
 
   """
 
-  body = {'format': 'CSV', 'fileSpec': 'EWF'}
+    body = {'format': 'CSV', 'fileSpec': 'EWF'}
 
-  if advertisers:
-    body['filterType'] = 'ADVERTISER_ID'
-    body['filterIds'] = list(advertisers)  # in case its a generator
+    if advertisers:
+        body['filterType'] = 'ADVERTISER_ID'
+        body['filterIds'] = list(advertisers)  # in case its a generator
 
-  elif insertion_orders:
-    body['filterType'] = 'INSERTION_ORDER_ID'
-    body['filterIds'] = list(insertion_orders)  # in case its a generator
+    elif insertion_orders:
+        body['filterType'] = 'INSERTION_ORDER_ID'
+        body['filterIds'] = list(insertion_orders)  # in case its a generator
 
-  elif lineitems:
-    body['filterType'] = 'LINE_ITEM_ID'
-    body['filterIds'] = list(lineitems)  # in case its a generator
+    elif lineitems:
+        body['filterType'] = 'LINE_ITEM_ID'
+        body['filterIds'] = list(lineitems)  # in case its a generator
 
-  #print(body)
+    #print(body)
 
-  result = API_DBM(auth).lineitems().downloadlineitems(body=body).execute()
+    result = API_DBM(auth).lineitems().downloadlineitems(body=body).execute()
 
-  for count, row in enumerate(csv_to_rows(result.get('lineItems', ''))):
-    if count == 0:
-      continue  # skip header
-    row[0] = int(row[0] or 0)  # LineItem ID
-    row[2] = int(row[2] or 0)  # Partner ID
-    row[11] = float(row[11] or 0)  # IO Budget Amount
-    row[18] = float(row[18] or 0)  # LineItem Budget Amount
-    row[21] = float(row[21] or 0)  # LineItem Pacing Amount
-    row[23] = int(row[23] or 0)  # LineItem Frequency Exposures
-    row[25] = int(row[25] or 0)  # LineItem Frequency Amount
-    row[26] = float(row[26] or 0)  # Bid Price (CPM)
-    row[28] = float(row[28] or 0)  # Partner Revenue Amount
-    yield row
+    for count, row in enumerate(csv_to_rows(result.get('lineItems', ''))):
+        if count == 0:
+            continue  # skip header
+        row[0] = int(row[0] or 0)  # LineItem ID
+        row[2] = int(row[2] or 0)  # Partner ID
+        row[11] = float(row[11] or 0)  # IO Budget Amount
+        row[18] = float(row[18] or 0)  # LineItem Budget Amount
+        row[21] = float(row[21] or 0)  # LineItem Pacing Amount
+        row[23] = int(row[23] or 0)  # LineItem Frequency Exposures
+        row[25] = int(row[25] or 0)  # LineItem Frequency Amount
+        row[26] = float(row[26] or 0)  # Bid Price (CPM)
+        row[28] = float(row[28] or 0)  # Partner Revenue Amount
+        yield row
 
 
 def lineitem_edit(row, column_name, value):
-  lineitem_lookup = {k['name']: v for v, k in enumerate(LineItem_Write_Schema)}
-  row[lineitem_lookup[column_name]] = value
+    lineitem_lookup = {
+        k['name']: v for v, k in enumerate(LineItem_Write_Schema)
+    }
+    row[lineitem_lookup[column_name]] = value
 
 
 def lineitem_write(auth, rows, dry_run=True):
-  """ Writes a list of lineitem configurations to DBM.
+    """ Writes a list of lineitem configurations to DBM.
 
   Bulletproofing:
   https://developers.google.com/bid-manager/v1/lineitems/uploadlineitems
@@ -549,22 +555,22 @@ def lineitem_write(auth, rows, dry_run=True):
 
   """
 
-  header = [s['name'] for s in LineItem_Write_Schema]
+    header = [s['name'] for s in LineItem_Write_Schema]
 
-  body = {
-      'lineItems': '%s\n%s' % (','.join(header),
-                               rows_to_csv(rows).read()),  # add header row
-      'format': 'CSV',
-      'dryRun': dry_run
-  }
+    body = {
+        'lineItems': '%s\n%s' % (','.join(header),
+                                 rows_to_csv(rows).read()),  # add header row
+        'format': 'CSV',
+        'dryRun': dry_run
+    }
 
-  result = API_DBM(auth).lineitems().uploadlineitems(body=body).execute()
-  #print(result)
-  return (result)
+    result = API_DBM(auth).lineitems().uploadlineitems(body=body).execute()
+    #print(result)
+    return (result)
 
 
 def sdf_read(auth, file_types, filter_type, filter_ids, version='3.1'):
-  """ Read sdf file from DV360 api
+    """ Read sdf file from DV360 api
 
   https://developers.google.com/bid-manager/v1/sdf/download
 
@@ -579,46 +585,46 @@ def sdf_read(auth, file_types, filter_type, filter_ids, version='3.1'):
 
   """
 
-  body = {
-      'fileTypes': file_types,
-      'filterType': filter_type,
-      'filterIds': filter_ids,
-      'version': version
-  }
+    body = {
+        'fileTypes': file_types,
+        'filterType': filter_type,
+        'filterIds': filter_ids,
+        'version': version
+    }
 
-  result = API_DBM(auth).sdf().download(body=body).execute()
+    result = API_DBM(auth).sdf().download(body=body).execute()
 
-  # Clean the date field in each row
-  for key in result.keys():
-    date_idx_list = []
-    for count, row in enumerate(csv_to_rows(result.get(key, ''))):
-      # Get date fields from header
-      if count == 0:
-        date_idx_list = _get_idx_sdf_date_fields(row)
-        yield row
-      # Clean and yield data rows
-      else:
-        yield _clean_sdf_row(row, date_idx_list)
+    # Clean the date field in each row
+    for key in result.keys():
+        date_idx_list = []
+        for count, row in enumerate(csv_to_rows(result.get(key, ''))):
+            # Get date fields from header
+            if count == 0:
+                date_idx_list = _get_idx_sdf_date_fields(row)
+                yield row
+            # Clean and yield data rows
+            else:
+                yield _clean_sdf_row(row, date_idx_list)
 
 
 def _get_idx_sdf_date_fields(header):
-  date_idx_list = []
+    date_idx_list = []
 
-  for idx, header in enumerate(header):
-    if 'date' in header or 'Date' in header:
-      date_idx_list.append(idx)
+    for idx, header in enumerate(header):
+        if 'date' in header or 'Date' in header:
+            date_idx_list.append(idx)
 
-  return date_idx_list
+    return date_idx_list
 
 
 def _clean_sdf_row(row, date_idx_list):
-  # fix format: MM/DD/YYYY HH:MM   =>   YYYY-MM-DD HH:MM
-  for idx in date_idx_list:
-    row[idx] = _convert_sdf_date(row[idx])
+    # fix format: MM/DD/YYYY HH:MM   =>   YYYY-MM-DD HH:MM
+    for idx in date_idx_list:
+        row[idx] = _convert_sdf_date(row[idx])
 
-  return row
+    return row
 
 
 def _convert_sdf_date(date_string):
-  return date_string[6:9] + '-' + date_string[:1] + '-' + date_string[
-      3:4] + ' ' + date_string[11:12] + ':' + date_string[14:15]
+    return date_string[6:9] + '-' + date_string[:1] + '-' + date_string[
+        3:4] + ' ' + date_string[11:12] + ':' + date_string[14:15]

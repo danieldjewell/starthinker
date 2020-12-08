@@ -32,20 +32,20 @@ from starthinker.task.dv_editor.patch import patch_preview
 
 
 def bid_strategy_clear():
-  sheets_clear(project.task["auth_sheets"], project.task["sheet"], "Bid Strategy",
-               "A2:Z")
+    sheets_clear(project.task["auth_sheets"], project.task["sheet"],
+                 "Bid Strategy", "A2:Z")
 
 
 def bid_strategy_load():
 
-  # write bid_strategy to sheet
-  rows = get_rows(
-      project.task["auth_bigquery"], {
-          "bigquery": {
-              "dataset":
-                  project.task["dataset"],
-              "query":
-                  """SELECT
+    # write bid_strategy to sheet
+    rows = get_rows(
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset":
+                    project.task["dataset"],
+                "query":
+                    """SELECT
          CONCAT(P.displayName, ' - ', P.partnerId),
          CONCAT(A.displayName, ' - ', A.advertiserId),
          CONCAT(C.displayName, ' - ', C.campaignId),
@@ -107,69 +107,131 @@ def bid_strategy_load():
        LEFT JOIN `{dataset}.DV_Partners` AS P
        ON A.partnerId=P.partnerId
        """.format(**project.task),
-              "legacy":
-                  False
-          }
-      })
+                "legacy":
+                    False
+            }
+        })
 
-  put_rows(
-      project.task["auth_sheets"], {
-          "sheets": {
-              "sheet": project.task["sheet"],
-              "tab": "Bid Strategy",
-              "range": "A2"
-          }
-      }, rows)
+    put_rows(
+        project.task["auth_sheets"], {
+            "sheets": {
+                "sheet": project.task["sheet"],
+                "tab": "Bid Strategy",
+                "range": "A2"
+            }
+        }, rows)
 
 
 def bid_strategy_audit():
-  rows = get_rows(
-      project.task["auth_sheets"], {
-          "sheets": {
-              "sheet": project.task["sheet"],
-              "tab": "Bid Strategy",
-              "range": "A2:Z"
-          }
-      })
+    rows = get_rows(
+        project.task["auth_sheets"], {
+            "sheets": {
+                "sheet": project.task["sheet"],
+                "tab": "Bid Strategy",
+                "range": "A2:Z"
+            }
+        })
 
-  put_rows(
-      project.task["auth_bigquery"], {
-          "bigquery": {
-              "dataset": project.task["dataset"],
-              "table": "SHEET_BidStrategy",
-              "schema": [
-                  { "name": "Partner", "type": "STRING" },
-                  { "name": "Advertiser", "type": "STRING" },
-                  { "name": "Campaign", "type": "STRING" },
-                  { "name": "Insertion_Order", "type": "STRING" },
-                  { "name": "Line_Item", "type": "STRING" },
-                  { "name": "Fixed_Bid", "type": "FLOAT" },
-                  { "name": "Fixed_Bid_Edit", "type": "FLOAT" },
-                  { "name": "Auto_Bid_Goal", "type": "STRING" },
-                  { "name": "Auto_Bid_Goal_Edit", "type": "STRING" },
-                  { "name": "Auto_Bid_Amount", "type": "FLOAT" },
-                  { "name": "Auto_Bid_Amount_Edit", "type": "FLOAT" },
-                  { "name": "Auto_Bid_Algorithm", "type": "STRING" },
-                  { "name": "Auto_Bid_Algorithm_Edit", "type": "STRING" },
-                  { "name": "Performance_Goal_Type", "type": "STRING" },
-                  { "name": "Performance_Goal_Type_Edit", "type": "STRING" },
-                  { "name": "Performance_Goal_Amount", "type": "FLOAT" },
-                  { "name": "Performance_Goal_Amount_Edit", "type": "FLOAT" },
-                  { "name": "Performance_Goal_Average_CPM_Bid", "type": "FLOAT" },
-                  { "name": "Performance_Goal_Average_CPM_Bid_Edit", "type": "FLOAT" },
-                  { "name": "Performance_Goal_Algorithm", "type": "STRING" },
-                  { "name": "Performance_Goal_Algorithm_Edit", "type": "STRING" },
-              ],
-              "format": "CSV"
-          }
-      }, rows)
+    put_rows(
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset": project.task["dataset"],
+                "table": "SHEET_BidStrategy",
+                "schema": [
+                    {
+                        "name": "Partner",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Advertiser",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Campaign",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Insertion_Order",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Line_Item",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Fixed_Bid",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Fixed_Bid_Edit",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Auto_Bid_Goal",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Auto_Bid_Goal_Edit",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Auto_Bid_Amount",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Auto_Bid_Amount_Edit",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Auto_Bid_Algorithm",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Auto_Bid_Algorithm_Edit",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Performance_Goal_Type",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Performance_Goal_Type_Edit",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Performance_Goal_Amount",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Performance_Goal_Amount_Edit",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Performance_Goal_Average_CPM_Bid",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Performance_Goal_Average_CPM_Bid_Edit",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "Performance_Goal_Algorithm",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "Performance_Goal_Algorithm_Edit",
+                        "type": "STRING"
+                    },
+                ],
+                "format": "CSV"
+            }
+        }, rows)
 
-  query_to_view(
-      project.task["auth_bigquery"],
-      project.id,
-      project.task["dataset"],
-      "AUDIT_BidStrategy",
-      """WITH
+    query_to_view(project.task["auth_bigquery"],
+                  project.id,
+                  project.task["dataset"],
+                  "AUDIT_BidStrategy",
+                  """WITH
       /* Check if sheet values are set */
       INPUT_ERRORS AS (
         SELECT
@@ -196,14 +258,13 @@ def bid_strategy_audit():
       SELECT * FROM INPUT_ERRORS
       ;
     """.format(**project.task),
-      legacy=False)
+                  legacy=False)
 
-  query_to_view(
-    project.task["auth_bigquery"],
-    project.id,
-    project.task["dataset"],
-    "PATCH_BidStrategy",
-    """SELECT *
+    query_to_view(project.task["auth_bigquery"],
+                  project.id,
+                  project.task["dataset"],
+                  "PATCH_BidStrategy",
+                  """SELECT *
       FROM `{dataset}.SHEET_BidStrategy`
       WHERE (
         REGEXP_CONTAINS(Insertion_Order, r" - (\d+)$")
@@ -212,93 +273,102 @@ def bid_strategy_audit():
       AND Line_Item NOT IN (SELECT Id FROM `{dataset}.AUDIT_BidStrategy` WHERE Severity='ERROR')
       AND Insertion_Order NOT IN (SELECT Id FROM `{dataset}.AUDIT_BidStrategy` WHERE Severity='ERROR')
     """.format(**project.task),
-    legacy=False
-  )
+                  legacy=False)
 
 
 def bid_strategy_patch(commit=False):
-  patches = []
+    patches = []
 
-  rows = get_rows(
-    project.task["auth_bigquery"],
-    { "bigquery": {
-      "dataset": project.task["dataset"],
-      "table":"PATCH_BidStrategy",
-    }},
-    as_object=True
-  )
+    rows = get_rows(project.task["auth_bigquery"], {
+        "bigquery": {
+            "dataset": project.task["dataset"],
+            "table": "PATCH_BidStrategy",
+        }
+    },
+                    as_object=True)
 
-  for row in rows:
+    for row in rows:
 
-    bid_strategy = {}
+        bid_strategy = {}
 
-    if row['Fixed_Bid'] != row['Fixed_Bid_Edit']:
-      bid_strategy.setdefault("bidStrategy", {"fixedBid": {}})
-      bid_strategy["bidStrategy"]["fixedBid"]["bidAmountMicros"] = int(
-        float(row['Fixed_Bid_Edit']) * 100000
-      )
+        if row['Fixed_Bid'] != row['Fixed_Bid_Edit']:
+            bid_strategy.setdefault("bidStrategy", {"fixedBid": {}})
+            bid_strategy["bidStrategy"]["fixedBid"]["bidAmountMicros"] = int(
+                float(row['Fixed_Bid_Edit']) * 100000)
 
-    if row['Auto_Bid_Goal'] != row['Auto_Bid_Goal_Edit']:
-      bid_strategy.setdefault("bidStrategy", {"maximizeSpendAutoBid": {}})
-      bid_strategy["bidStrategy"]["maximizeSpendAutoBid"][
-       "performanceGoalType"] = row['Auto_Bid_Goal_Edit']
+        if row['Auto_Bid_Goal'] != row['Auto_Bid_Goal_Edit']:
+            bid_strategy.setdefault("bidStrategy", {"maximizeSpendAutoBid": {}})
+            bid_strategy["bidStrategy"]["maximizeSpendAutoBid"][
+                "performanceGoalType"] = row['Auto_Bid_Goal_Edit']
 
-    if row['Auto_Bid_Amount'] != row['Auto_Bid_Amount_Edit']:
-      bid_strategy.setdefault("bidStrategy", {"maximizeSpendAutoBid": {}})
-      bid_strategy["bidStrategy"]["maximizeSpendAutoBid"][
-        "maxAverageCpmBidAmountMicros"] = int(float(row['Auto_Bid_Amount_Edit']) * 100000)
+        if row['Auto_Bid_Amount'] != row['Auto_Bid_Amount_Edit']:
+            bid_strategy.setdefault("bidStrategy", {"maximizeSpendAutoBid": {}})
+            bid_strategy["bidStrategy"]["maximizeSpendAutoBid"][
+                "maxAverageCpmBidAmountMicros"] = int(
+                    float(row['Auto_Bid_Amount_Edit']) * 100000)
 
-    if row['Auto_Bid_Algorithm'] != row['Auto_Bid_Algorithm_Edit']:
-      bid_strategy.setdefault("bidStrategy", {"maximizeSpendAutoBid": {}})
-      bid_strategy["bidStrategy"]["maximizeSpendAutoBid"][
-        "customBiddingAlgorithmId"] = row['Auto_Bid_Algorithm_Edit']
+        if row['Auto_Bid_Algorithm'] != row['Auto_Bid_Algorithm_Edit']:
+            bid_strategy.setdefault("bidStrategy", {"maximizeSpendAutoBid": {}})
+            bid_strategy["bidStrategy"]["maximizeSpendAutoBid"][
+                "customBiddingAlgorithmId"] = row['Auto_Bid_Algorithm_Edit']
 
-    if row['Performance_Goal_Type'] != row['Performance_Goal_Type_Edit']:
-      bid_strategy.setdefault("bidStrategy", {"performanceGoalAutoBid": {}})
-      bid_strategy["bidStrategy"]["performanceGoalAutoBid"][
-          "performanceGoalType"] = row['Performance_Goal_Type_Edit']
+        if row['Performance_Goal_Type'] != row['Performance_Goal_Type_Edit']:
+            bid_strategy.setdefault("bidStrategy",
+                                    {"performanceGoalAutoBid": {}})
+            bid_strategy["bidStrategy"]["performanceGoalAutoBid"][
+                "performanceGoalType"] = row['Performance_Goal_Type_Edit']
 
-    if row['Performance_Goal_Amount'] != row['Performance_Goal_Amount_Edit']:
-      bid_strategy.setdefault("bidStrategy", {"performanceGoalAutoBid": {}})
-      bid_strategy["bidStrategy"]["performanceGoalAutoBid"][
-          "performanceGoalAmountMicros"] = int(float(row['Performance_Goal_Amount_Edit']) * 100000)
+        if row['Performance_Goal_Amount'] != row['Performance_Goal_Amount_Edit']:
+            bid_strategy.setdefault("bidStrategy",
+                                    {"performanceGoalAutoBid": {}})
+            bid_strategy["bidStrategy"]["performanceGoalAutoBid"][
+                "performanceGoalAmountMicros"] = int(
+                    float(row['Performance_Goal_Amount_Edit']) * 100000)
 
-    if row['Performance_Goal_Average_CPM_Bid'] != row['Performance_Goal_Average_CPM_Bid_Edit']:
-      bid_strategy.setdefault("bidStrategy", {"performanceGoalAutoBid": {}})
-      bid_strategy["bidStrategy"]["performanceGoalAutoBid"][
-          "maxAverageCpmBidAmountMicros"] = int(float(row['Performance_Goal_Average_CPM_Bid_Edit']) * 100000)
+        if row['Performance_Goal_Average_CPM_Bid'] != row[
+                'Performance_Goal_Average_CPM_Bid_Edit']:
+            bid_strategy.setdefault("bidStrategy",
+                                    {"performanceGoalAutoBid": {}})
+            bid_strategy["bidStrategy"]["performanceGoalAutoBid"][
+                "maxAverageCpmBidAmountMicros"] = int(
+                    float(row['Performance_Goal_Average_CPM_Bid_Edit']) *
+                    100000)
 
-    if row['Performance_Goal_Algorithm'] != row['Performance_Goal_Algorithm_Edit']:
-      bid_strategy.setdefault("bidStrategy", {"performanceGoalAutoBid": {}})
-      bid_strategy["bidStrategy"]["performanceGoalAutoBid"][
-          "customBiddingAlgorithmId"] = row['Performance_Goal_Algorithm_Edit']
+        if row['Performance_Goal_Algorithm'] != row[
+                'Performance_Goal_Algorithm_Edit']:
+            bid_strategy.setdefault("bidStrategy",
+                                    {"performanceGoalAutoBid": {}})
+            bid_strategy["bidStrategy"]["performanceGoalAutoBid"][
+                "customBiddingAlgorithmId"] = row[
+                    'Performance_Goal_Algorithm_Edit']
 
-    if bid_strategy:
-      patch = {
-          "operation": "Bid Strategy",
-          "action": "PATCH",
-          "partner": row['Partner'],
-          "advertiser": row['Advertiser'],
-          "campaign": row['Campaign'],
-          "parameters": {
-              "advertiserId": lookup_id(row['Advertiser']),
-              "body": bid_strategy
-          }
-      }
+        if bid_strategy:
+            patch = {
+                "operation": "Bid Strategy",
+                "action": "PATCH",
+                "partner": row['Partner'],
+                "advertiser": row['Advertiser'],
+                "campaign": row['Campaign'],
+                "parameters": {
+                    "advertiserId": lookup_id(row['Advertiser']),
+                    "body": bid_strategy
+                }
+            }
 
-      if row['Line_Item']:
-        patch["line_item"] = row['Line_Item']
-        patch["parameters"]["lineItemId"] = lookup_id(row['Line_Item'])
-      else:
-        patch["insertion_order"] = row['Insertion_Order']
-        patch["parameters"]["insertionOrderId"] = lookup_id(row['Insertion_Order'])
+            if row['Line_Item']:
+                patch["line_item"] = row['Line_Item']
+                patch["parameters"]["lineItemId"] = lookup_id(row['Line_Item'])
+            else:
+                patch["insertion_order"] = row['Insertion_Order']
+                patch["parameters"]["insertionOrderId"] = lookup_id(
+                    row['Insertion_Order'])
 
-      patches.append(patch)
+            patches.append(patch)
 
-  patch_masks(patches)
+    patch_masks(patches)
 
-  if commit:
-    insertion_order_commit(patches)
-    line_item_commit(patches)
-  else:
-    patch_preview(patches)
+    if commit:
+        insertion_order_commit(patches)
+        line_item_commit(patches)
+    else:
+        patch_preview(patches)

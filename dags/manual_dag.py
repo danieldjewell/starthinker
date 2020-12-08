@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -80,39 +79,34 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
+    'auth_read': 'user',  # Credentials used for reading data.
 }
 
 RECIPE = {
-  'setup': {
-    'day': [
-    ],
-    'hour': [
-    ]
-  },
-  'tasks': [
-    {
-      'hello': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'hour': [
-        ],
-        'say': 'Hello Manual',
-        'sleep': 0
-      }
-    }
-  ]
+    'setup': {
+        'day': [],
+        'hour': []
+    },
+    'tasks': [{
+        'hello': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'hour': [],
+            'say': 'Hello Manual',
+            'sleep': 0
+        }
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('manual', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

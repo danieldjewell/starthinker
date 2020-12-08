@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -81,42 +80,38 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'recipe_name': '',  # Name of document to deploy to.
+    'recipe_name': '',  # Name of document to deploy to.
 }
 
 RECIPE = {
-  'setup': {
-    'day': [
-    ],
-    'hour': [
-    ]
-  },
-  'tasks': [
-    {
-      'drive': {
-        'auth': 'user',
-        'hour': [
-        ],
-        'copy': {
-          'source': 'https://docs.google.com/spreadsheets/d/19Sxy4BDtK9ocq_INKTiZ-rZHgqhfpiiokXOTsYzmah0/',
-          'destination': {
-            'field': {
-              'name': 'recipe_name',
-              'prefix': 'Key Value Uploader For ',
-              'kind': 'string',
-              'order': 1,
-              'description': 'Name of document to deploy to.',
-              'default': ''
+    'setup': {
+        'day': [],
+        'hour': []
+    },
+    'tasks': [{
+        'drive': {
+            'auth': 'user',
+            'hour': [],
+            'copy': {
+                'source':
+                    'https://docs.google.com/spreadsheets/d/19Sxy4BDtK9ocq_INKTiZ-rZHgqhfpiiokXOTsYzmah0/',
+                'destination': {
+                    'field': {
+                        'name': 'recipe_name',
+                        'prefix': 'Key Value Uploader For ',
+                        'kind': 'string',
+                        'order': 1,
+                        'description': 'Name of document to deploy to.',
+                        'default': ''
+                    }
+                }
             }
-          }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('kv_uploader', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

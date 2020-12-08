@@ -38,196 +38,194 @@ STRING_IDS = {}
 
 
 def anonymize_string(cell, column):
-  global STRING_IDS
-  STRING_IDS.setdefault(column, {})
-  STRING_IDS[column].setdefault(cell, len(STRING_IDS[column]) + 1)
+    global STRING_IDS
+    STRING_IDS.setdefault(column, {})
+    STRING_IDS[column].setdefault(cell, len(STRING_IDS[column]) + 1)
 
-  # email
-  if RE_EMAIL.match(cell):
-    return '%s_%d@email.com' % (column.rsplit('.',
-                                              1)[-1], STRING_IDS[column][cell])
-  # any string
-  else:
-    return '%s_%d' % (column.rsplit('.', 1)[-1], STRING_IDS[column][cell])
+    # email
+    if RE_EMAIL.match(cell):
+        return '%s_%d@email.com' % (column.rsplit(
+            '.', 1)[-1], STRING_IDS[column][cell])
+    # any string
+    else:
+        return '%s_%d' % (column.rsplit('.', 1)[-1], STRING_IDS[column][cell])
 
 
 def anonymize_integer(cell, column):
-  # possible date ( legacy Data Studio format )
-  if len(str(cell)) == 4 + 2 + 2:
-    return cell
-  else:
-    # integer
-    return (cell * INTEGER_MULTIPLY) + INTEGER_OFFSET
+    # possible date ( legacy Data Studio format )
+    if len(str(cell)) == 4 + 2 + 2:
+        return cell
+    else:
+        # integer
+        return (cell * INTEGER_MULTIPLY) + INTEGER_OFFSET
 
 
 def anonymize_float(cell, column):
-  # replace integers randonly within float to preserve semaintics ( in case 0 - 1 range is percent )
-  return float(''.join([
-      '.' if char == '.' else str(random.randint(0, 9))
-      for char in str(cell).lstrip('0')
-  ]))
+    # replace integers randonly within float to preserve semaintics ( in case 0 - 1 range is percent )
+    return float(''.join([
+        '.' if char == '.' else str(random.randint(0, 9))
+        for char in str(cell).lstrip('0')
+    ]))
 
 
 def anonymize_date(cell, column):
-  # shift date back in time to prevent future dates
-  # convert to string because its being written back to BigQuery
-  return str(cell - DATE_OFFSET)
+    # shift date back in time to prevent future dates
+    # convert to string because its being written back to BigQuery
+    return str(cell - DATE_OFFSET)
 
 
 def anonymize_value(value, column):
-  if isinstance(value, int):
-    return anonymize_integer(value, column)
-  elif isinstance(value, str):
-    return anonymize_string(value, column)
-  elif isinstance(value, float):
-    return anonymize_float(value, column)
-  elif isinstance(value, date):
-    return anonymize_date(value, column)
-  elif isinstance(value, datetime):
-    return anonymize_date(value, column)
+    if isinstance(value, int):
+        return anonymize_integer(value, column)
+    elif isinstance(value, str):
+        return anonymize_string(value, column)
+    elif isinstance(value, float):
+        return anonymize_float(value, column)
+    elif isinstance(value, date):
+        return anonymize_date(value, column)
+    elif isinstance(value, datetime):
+        return anonymize_date(value, column)
 
 
 def anonymize_json(struct, parent=None):
-  if isinstance(struct, dict):
-    for key, value in struct.items():
-      if isinstance(value, (dict, list)):
-        anonymize_json(value, '.'.join((parent, key)) if parent else key)
-      else:
-        struct[key] = anonymize_value(
-            value, '.'.join((parent, key)) if parent else key)
-  elif isinstance(struct, list):
-    for index, value in enumerate(struct):
-      if isinstance(value, (dict, list)):
-        anonymize_json(value, parent)
-      else:
-        struct[index] = anonymize_value(value, parent)
+    if isinstance(struct, dict):
+        for key, value in struct.items():
+            if isinstance(value, (dict, list)):
+                anonymize_json(value, '.'.join(
+                    (parent, key)) if parent else key)
+            else:
+                struct[key] = anonymize_value(
+                    value, '.'.join((parent, key)) if parent else key)
+    elif isinstance(struct, list):
+        for index, value in enumerate(struct):
+            if isinstance(value, (dict, list)):
+                anonymize_json(value, parent)
+            else:
+                struct[index] = anonymize_value(value, parent)
 
-  return struct
+    return struct
 
 
 def anonymize_csv(row, schema):
-  for index, cell in enumerate(row):
-    if cell is not None:
-      if schema[index]['type'] == 'STRING':
-        row[index] = anonymize_string(cell, schema[index]['name'])
-      elif schema[index]['type'] in ('INTEGER', 'INT64', 'NUMERIC'):
-        row[index] = anonymize_integer(cell, schema[index]['name'])
-      elif schema[index]['type'] in ('FLOAT', 'FLOAT64'):
-        row[index] = anonymize_float(cell, schema[index]['name'])
-      elif schema[index]['type'] in ('DATE', 'DATETIME'):
-        row[index] = anonymize_date(cell, schema[index]['name'])
-  return row
+    for index, cell in enumerate(row):
+        if cell is not None:
+            if schema[index]['type'] == 'STRING':
+                row[index] = anonymize_string(cell, schema[index]['name'])
+            elif schema[index]['type'] in ('INTEGER', 'INT64', 'NUMERIC'):
+                row[index] = anonymize_integer(cell, schema[index]['name'])
+            elif schema[index]['type'] in ('FLOAT', 'FLOAT64'):
+                row[index] = anonymize_float(cell, schema[index]['name'])
+            elif schema[index]['type'] in ('DATE', 'DATETIME'):
+                row[index] = anonymize_date(cell, schema[index]['name'])
+    return row
 
 
 def anonymize_rows(rows, schema, is_object):
-  for row in rows:
-    if is_object:
-      yield anonymize_json(row)
-    else:
-      yield anonymize_csv(row, schema)
+    for row in rows:
+        if is_object:
+            yield anonymize_json(row)
+        else:
+            yield anonymize_csv(row, schema)
 
 
 def anonymize_table(table_id):
 
-  if project.verbose:
-    print('ANONYMIZE TABLE', project.task['bigquery']['to']['dataset'],
-          table_id)
+    if project.verbose:
+        print('ANONYMIZE TABLE', project.task['bigquery']['to']['dataset'],
+              table_id)
 
-  schema = API_BigQuery(project.task['auth']).tables().get(
-      projectId=project.task['bigquery']['from']['project'],
-      datasetId=project.task['bigquery']['from']['dataset'],
-      tableId=table_id).execute()['schema']['fields']
+    schema = API_BigQuery(project.task['auth']).tables().get(
+        projectId=project.task['bigquery']['from']['project'],
+        datasetId=project.task['bigquery']['from']['dataset'],
+        tableId=table_id).execute()['schema']['fields']
 
-  is_object = any([s['type'] == 'RECORD' for s in schema])
+    is_object = any([s['type'] == 'RECORD' for s in schema])
 
-  rows = table_to_rows(
-      project.task['auth'],
-      project.task['bigquery']['from']['project'],
-      project.task['bigquery']['from']['dataset'],
-      table_id,
-      as_object=is_object)
+    rows = table_to_rows(project.task['auth'],
+                         project.task['bigquery']['from']['project'],
+                         project.task['bigquery']['from']['dataset'],
+                         table_id,
+                         as_object=is_object)
 
-  rows = anonymize_rows(rows, schema, is_object)
+    rows = anonymize_rows(rows, schema, is_object)
 
-  if is_object:
-    json_to_table(
-        project.task['auth'],
-        project.task['bigquery']['to']['project'],
-        project.task['bigquery']['to']['dataset'],
-        table_id,
-        rows,
-        schema,
-        disposition='WRITE_TRUNCATE')
-  else:
-    rows_to_table(
-        project.task['auth'],
-        project.task['bigquery']['to']['project'],
-        project.task['bigquery']['to']['dataset'],
-        table_id,
-        rows,
-        schema,
-        skip_rows=0,
-        disposition='WRITE_TRUNCATE')
+    if is_object:
+        json_to_table(project.task['auth'],
+                      project.task['bigquery']['to']['project'],
+                      project.task['bigquery']['to']['dataset'],
+                      table_id,
+                      rows,
+                      schema,
+                      disposition='WRITE_TRUNCATE')
+    else:
+        rows_to_table(project.task['auth'],
+                      project.task['bigquery']['to']['project'],
+                      project.task['bigquery']['to']['dataset'],
+                      table_id,
+                      rows,
+                      schema,
+                      skip_rows=0,
+                      disposition='WRITE_TRUNCATE')
 
 
 def copy_view(view_id):
-  if project.verbose:
-    print('ANONYMIZE VIEW', project.task['bigquery']['to']['dataset'], view_id)
+    if project.verbose:
+        print('ANONYMIZE VIEW', project.task['bigquery']['to']['dataset'],
+              view_id)
 
-  view = API_BigQuery(project.task['auth']).tables().get(
-      projectId=project.task['bigquery']['from']['project'],
-      datasetId=project.task['bigquery']['from']['dataset'],
-      tableId=view_id).execute()['view']
+    view = API_BigQuery(project.task['auth']).tables().get(
+        projectId=project.task['bigquery']['from']['project'],
+        datasetId=project.task['bigquery']['from']['dataset'],
+        tableId=view_id).execute()['view']
 
-  project_dataset_template = '[%s:%s.' if view['useLegacySql'] else '`%s.%s.'
+    project_dataset_template = '[%s:%s.' if view['useLegacySql'] else '`%s.%s.'
 
-  query = view['query'].replace(
-      project_dataset_template % (project.task['bigquery']['from']['project'],
-                                  project.task['bigquery']['from']['dataset']),
-      project_dataset_template % (project.task['bigquery']['to']['project'],
-                                  project.task['bigquery']['to']['dataset']))
+    query = view['query'].replace(
+        project_dataset_template %
+        (project.task['bigquery']['from']['project'],
+         project.task['bigquery']['from']['dataset']),
+        project_dataset_template % (project.task['bigquery']['to']['project'],
+                                    project.task['bigquery']['to']['dataset']))
 
-  query_to_view(
-      project.task['auth'],
-      project.task['bigquery']['to']['project'],
-      project.task['bigquery']['to']['dataset'],
-      view_id,
-      query,
-      legacy=view['useLegacySql'],
-      replace=True)
+    query_to_view(project.task['auth'],
+                  project.task['bigquery']['to']['project'],
+                  project.task['bigquery']['to']['dataset'],
+                  view_id,
+                  query,
+                  legacy=view['useLegacySql'],
+                  replace=True)
 
 
 @project.from_parameters
 def anonymize():
 
-  views = []
+    views = []
 
-  for table in API_BigQuery(
-      project.task['auth'], iterate=True).tables().list(
-          projectId=project.task['bigquery']['from']['project'],
-          datasetId=project.task['bigquery']['from']['dataset']).execute():
-    if table['type'] == 'VIEW':
-      views.append(table['tableReference']['tableId'])
-    else:
-      anonymize_table(table['tableReference']['tableId'])
-
-  # views have dependencies, loop through all and create until no more errors or no change in view list
-  last_copy = True
-  while last_copy:
-    retry_views = []
-    last_copy = False
-    while views:
-      view = views.pop()
-      try:
-        copy_view(view)
-        last_copy = True
-      except HttpError as e:
-        if e.resp.status == 404:
-          retry_views.append(view)
+    for table in API_BigQuery(project.task['auth'], iterate=True).tables().list(
+            projectId=project.task['bigquery']['from']['project'],
+            datasetId=project.task['bigquery']['from']['dataset']).execute():
+        if table['type'] == 'VIEW':
+            views.append(table['tableReference']['tableId'])
         else:
-          raise e
-    views = retry_views
+            anonymize_table(table['tableReference']['tableId'])
+
+    # views have dependencies, loop through all and create until no more errors or no change in view list
+    last_copy = True
+    while last_copy:
+        retry_views = []
+        last_copy = False
+        while views:
+            view = views.pop()
+            try:
+                copy_view(view)
+                last_copy = True
+            except HttpError as e:
+                if e.resp.status == 404:
+                    retry_views.append(view)
+                else:
+                    raise e
+        views = retry_views
 
 
 if __name__ == '__main__':
-  anonymize()
+    anonymize()

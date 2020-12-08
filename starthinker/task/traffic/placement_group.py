@@ -23,7 +23,7 @@ from starthinker.task.traffic.feed import FieldMap
 
 
 class PlacementGroupDAO(BaseDAO):
-  """Placement group data access object.
+    """Placement group data access object.
 
   Inherits from BaseDAO and implements placement group specific logic for
   creating
@@ -31,28 +31,28 @@ class PlacementGroupDAO(BaseDAO):
   updating placement group.
   """
 
-  def __init__(self, auth, profile_id, is_admin):
-    """Initializes PlacementGroupDAO with profile id and authentication scheme."""
+    def __init__(self, auth, profile_id, is_admin):
+        """Initializes PlacementGroupDAO with profile id and authentication scheme."""
 
-    super(PlacementGroupDAO, self).__init__(auth, profile_id, is_admin)
+        super(PlacementGroupDAO, self).__init__(auth, profile_id, is_admin)
 
-    self.campaign_dao = CampaignDAO(auth, profile_id, is_admin)
+        self.campaign_dao = CampaignDAO(auth, profile_id, is_admin)
 
-    self._id_field = FieldMap.PLACEMENT_GROUP_ID
-    self._search_field = FieldMap.PLACEMENT_GROUP_NAME
-    self._list_name = 'placementGroups'
-    self._entity = 'PLACEMENT_GROUP'
+        self._id_field = FieldMap.PLACEMENT_GROUP_ID
+        self._search_field = FieldMap.PLACEMENT_GROUP_NAME
+        self._list_name = 'placementGroups'
+        self._entity = 'PLACEMENT_GROUP'
 
-    self._parent_filter_name = 'campaignIds'
-    self._parent_filter_field_name = FieldMap.CAMPAIGN_ID
-    self._parent_dao = self.campaign_dao
+        self._parent_filter_name = 'campaignIds'
+        self._parent_filter_field_name = FieldMap.CAMPAIGN_ID
+        self._parent_dao = self.campaign_dao
 
-  def _api(self, iterate=False):
-    """Returns an DCM API instance for this DAO."""
-    return super(PlacementGroupDAO, self)._api(iterate).placementGroups()
+    def _api(self, iterate=False):
+        """Returns an DCM API instance for this DAO."""
+        return super(PlacementGroupDAO, self)._api(iterate).placementGroups()
 
-  def _process_update(self, item, feed_item):
-    """Updates a placement group based on the values from the feed.
+    def _process_update(self, item, feed_item):
+        """Updates a placement group based on the values from the feed.
 
     Args:
       item: Object representing the placement group to be updated, this object
@@ -60,23 +60,23 @@ class PlacementGroupDAO(BaseDAO):
       feed_item: Feed item representing placement group values from the
         Bulkdozer feed.
     """
-    campaign = self.campaign_dao.get(feed_item, required=True)
+        campaign = self.campaign_dao.get(feed_item, required=True)
 
-    feed_item[FieldMap.CAMPAIGN_ID] = campaign['id']
-    feed_item[FieldMap.CAMPAIGN_NAME] = campaign['name']
+        feed_item[FieldMap.CAMPAIGN_ID] = campaign['id']
+        feed_item[FieldMap.CAMPAIGN_NAME] = campaign['name']
 
-    item['name'] = feed_item.get(FieldMap.PLACEMENT_GROUP_NAME, None)
-    item['placementGroupType'] = feed_item.get(FieldMap.PLACEMENT_GROUP_TYPE,
-                                               None)
-    item['pricingSchedule']['startDate'] = feed_item.get(
-        FieldMap.PLACEMENT_GROUP_START_DATE, None)
-    item['pricingSchedule']['endDate'] = feed_item.get(
-        FieldMap.PLACEMENT_GROUP_END_DATE, None)
-    item['pricingSchedule']['pricingType'] = feed_item.get(
-        FieldMap.PLACEMENT_GROUP_PRICING_TYPE, None)
+        item['name'] = feed_item.get(FieldMap.PLACEMENT_GROUP_NAME, None)
+        item['placementGroupType'] = feed_item.get(
+            FieldMap.PLACEMENT_GROUP_TYPE, None)
+        item['pricingSchedule']['startDate'] = feed_item.get(
+            FieldMap.PLACEMENT_GROUP_START_DATE, None)
+        item['pricingSchedule']['endDate'] = feed_item.get(
+            FieldMap.PLACEMENT_GROUP_END_DATE, None)
+        item['pricingSchedule']['pricingType'] = feed_item.get(
+            FieldMap.PLACEMENT_GROUP_PRICING_TYPE, None)
 
-  def _process_new(self, feed_item):
-    """Creates a new placement group DCM object from a feed item representing a placement group from the Bulkdozer feed.
+    def _process_new(self, feed_item):
+        """Creates a new placement group DCM object from a feed item representing a placement group from the Bulkdozer feed.
 
     This function simply creates the object to be inserted later by the BaseDAO
     object.
@@ -89,28 +89,28 @@ class PlacementGroupDAO(BaseDAO):
       A placement group object ready to be inserted in DCM through the API.
 
     """
-    campaign = self.campaign_dao.get(feed_item, required=True)
+        campaign = self.campaign_dao.get(feed_item, required=True)
 
-    feed_item[FieldMap.CAMPAIGN_ID] = campaign['id']
-    feed_item[FieldMap.CAMPAIGN_NAME] = campaign['name']
+        feed_item[FieldMap.CAMPAIGN_ID] = campaign['id']
+        feed_item[FieldMap.CAMPAIGN_NAME] = campaign['name']
 
-    return {
-        'advertiserId':
-            feed_item.get(FieldMap.ADVERTISER_ID, None),
-        'campaignId':
-            campaign['id'] if campaign else None,
-        'siteId':
-            feed_item.get(FieldMap.SITE_ID, None),
-        'name':
-            feed_item.get(FieldMap.PLACEMENT_GROUP_NAME, None),
-        'placementGroupType':
-            feed_item.get(FieldMap.PLACEMENT_GROUP_TYPE, None),
-        'pricingSchedule': {
-            'startDate':
-                feed_item.get(FieldMap.PLACEMENT_GROUP_START_DATE, None),
-            'endDate':
-                feed_item.get(FieldMap.PLACEMENT_GROUP_END_DATE, None),
-            'pricingType':
-                feed_item.get(FieldMap.PLACEMENT_GROUP_PRICING_TYPE, None)
+        return {
+            'advertiserId':
+                feed_item.get(FieldMap.ADVERTISER_ID, None),
+            'campaignId':
+                campaign['id'] if campaign else None,
+            'siteId':
+                feed_item.get(FieldMap.SITE_ID, None),
+            'name':
+                feed_item.get(FieldMap.PLACEMENT_GROUP_NAME, None),
+            'placementGroupType':
+                feed_item.get(FieldMap.PLACEMENT_GROUP_TYPE, None),
+            'pricingSchedule': {
+                'startDate':
+                    feed_item.get(FieldMap.PLACEMENT_GROUP_START_DATE, None),
+                'endDate':
+                    feed_item.get(FieldMap.PLACEMENT_GROUP_END_DATE, None),
+                'pricingType':
+                    feed_item.get(FieldMap.PLACEMENT_GROUP_PRICING_TYPE, None)
+            }
         }
-    }

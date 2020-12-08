@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -81,78 +80,74 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'service',  # Credentials used for reading data.
-  'from_project': '',  # Original project to copy from.
-  'from_dataset': '',  # Original dataset to copy from.
-  'to_project': None,  # Anonymous data will be writen to.
-  'to_dataset': '',  # Anonymous data will be writen to.
+    'auth_read': 'service',  # Credentials used for reading data.
+    'from_project': '',  # Original project to copy from.
+    'from_dataset': '',  # Original dataset to copy from.
+    'to_project': None,  # Anonymous data will be writen to.
+    'to_dataset': '',  # Anonymous data will be writen to.
 }
 
 RECIPE = {
-  'setup': {
-    'day': [
-    ],
-    'hour': [
-    ]
-  },
-  'tasks': [
-    {
-      'anonymize': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'bigquery': {
-          'from': {
-            'project': {
-              'field': {
-                'name': 'from_project',
-                'kind': 'string',
-                'order': 1,
-                'description': 'Original project to copy from.'
-              }
+    'setup': {
+        'day': [],
+        'hour': []
+    },
+    'tasks': [{
+        'anonymize': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Credentials used for reading data.'
+                }
             },
-            'dataset': {
-              'field': {
-                'name': 'from_dataset',
-                'kind': 'string',
-                'order': 2,
-                'description': 'Original dataset to copy from.'
-              }
+            'bigquery': {
+                'from': {
+                    'project': {
+                        'field': {
+                            'name': 'from_project',
+                            'kind': 'string',
+                            'order': 1,
+                            'description': 'Original project to copy from.'
+                        }
+                    },
+                    'dataset': {
+                        'field': {
+                            'name': 'from_dataset',
+                            'kind': 'string',
+                            'order': 2,
+                            'description': 'Original dataset to copy from.'
+                        }
+                    }
+                },
+                'to': {
+                    'project': {
+                        'field': {
+                            'name': 'to_project',
+                            'kind': 'string',
+                            'order': 3,
+                            'default': None,
+                            'description': 'Anonymous data will be writen to.'
+                        }
+                    },
+                    'dataset': {
+                        'field': {
+                            'name': 'to_dataset',
+                            'kind': 'string',
+                            'order': 4,
+                            'description': 'Anonymous data will be writen to.'
+                        }
+                    }
+                }
             }
-          },
-          'to': {
-            'project': {
-              'field': {
-                'name': 'to_project',
-                'kind': 'string',
-                'order': 3,
-                'default': None,
-                'description': 'Anonymous data will be writen to.'
-              }
-            },
-            'dataset': {
-              'field': {
-                'name': 'to_dataset',
-                'kind': 'string',
-                'order': 4,
-                'description': 'Anonymous data will be writen to.'
-              }
-            }
-          }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('anonymize', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

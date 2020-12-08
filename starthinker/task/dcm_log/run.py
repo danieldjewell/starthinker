@@ -79,66 +79,67 @@ CHANGELOGS_SCHEMA = [
 
 def get_changelogs(accounts, start):
 
-  if project.verbose:
-    print('CM CHANGE LOGS', accounts)
+    if project.verbose:
+        print('CM CHANGE LOGS', accounts)
 
-  for account_id in accounts:
+    for account_id in accounts:
 
-    is_superuser, profile_id = get_profile_for_api(project.task['auth'],
-                                                   account_id)
-    kwargs = {'profileId': profile_id, 'minChangeTime': start}
-    if is_superuser:
-      kwargs['accountId'] = account_id
+        is_superuser, profile_id = get_profile_for_api(project.task['auth'],
+                                                       account_id)
+        kwargs = {'profileId': profile_id, 'minChangeTime': start}
+        if is_superuser:
+            kwargs['accountId'] = account_id
 
-    for changelog in API_DCM(
-        'user', iterate=True,
-        internal=is_superuser).changeLogs().list(**kwargs).execute():
-      yield [
-          changelog.get('userProfileId'),
-          changelog['accountId'],
-          changelog.get('subaccountId'),
-          changelog['id'],
-          changelog['transactionId'],
-          changelog['objectType'],
-          changelog['objectId'],
-          changelog['action'],
-          changelog.get('fieldName'),
-          changelog['changeTime'],
-          changelog.get('oldValue'),
-          changelog.get('newValue'),
-      ]
+        for changelog in API_DCM(
+                'user', iterate=True,
+                internal=is_superuser).changeLogs().list(**kwargs).execute():
+            yield [
+                changelog.get('userProfileId'),
+                changelog['accountId'],
+                changelog.get('subaccountId'),
+                changelog['id'],
+                changelog['transactionId'],
+                changelog['objectType'],
+                changelog['objectId'],
+                changelog['action'],
+                changelog.get('fieldName'),
+                changelog['changeTime'],
+                changelog.get('oldValue'),
+                changelog.get('newValue'),
+            ]
 
 
 @project.from_parameters
 def dcm_log():
-  if project.verbose:
-    print('DCM LOG')
+    if project.verbose:
+        print('DCM LOG')
 
-  accounts = list(get_rows('user', project.task['accounts']))
+    accounts = list(get_rows('user', project.task['accounts']))
 
-  # determine start log date
-  if table_exists(project.task['out']['auth'], project.task['out']['project'],
-                  project.task['out']['dataset'], CHANGELOGS_TABLE):
-    start = next(
-        query_to_rows(
-            project.task['out']['auth'], project.task['out']['project'],
-            project.task['out']['dataset'],
-            'SELECT FORMAT_TIMESTAMP("%%Y-%%m-%%dT%%H:%%M:%%S-00:00", MAX(changeTime), "UTC") FROM `%s`'
-            % CHANGELOGS_TABLE, 1, False))[0]
-    disposition = 'WRITE_APPEND'
+    # determine start log date
+    if table_exists(project.task['out']['auth'], project.task['out']['project'],
+                    project.task['out']['dataset'], CHANGELOGS_TABLE):
+        start = next(
+            query_to_rows(
+                project.task['out']['auth'], project.task['out']['project'],
+                project.task['out']['dataset'],
+                'SELECT FORMAT_TIMESTAMP("%%Y-%%m-%%dT%%H:%%M:%%S-00:00", MAX(changeTime), "UTC") FROM `%s`'
+                % CHANGELOGS_TABLE, 1, False))[0]
+        disposition = 'WRITE_APPEND'
 
-  else:
-    start = (datetime.utcnow() - timedelta(days=int(project.task['days']))
-            ).strftime('%Y-%m-%dT%H:%M:%S-00:00')
-    disposition = 'WRITE_TRUNCATE'
+    else:
+        start = (datetime.utcnow() - timedelta(days=int(project.task['days']))
+                ).strftime('%Y-%m-%dT%H:%M:%S-00:00')
+        disposition = 'WRITE_TRUNCATE'
 
-  # load new logs
-  rows = get_changelogs(accounts, start)
-  if rows:
-    rows_to_table(project.task['out']['auth'], project.task['out']['project'],
-                  project.task['out']['dataset'], CHANGELOGS_TABLE, rows,
-                  CHANGELOGS_SCHEMA, 0, disposition)
+    # load new logs
+    rows = get_changelogs(accounts, start)
+    if rows:
+        rows_to_table(project.task['out']['auth'],
+                      project.task['out']['project'],
+                      project.task['out']['dataset'], CHANGELOGS_TABLE, rows,
+                      CHANGELOGS_SCHEMA, 0, disposition)
 
 
 if __name__ == '__main__':
-  dcm_log()
+    dcm_log()

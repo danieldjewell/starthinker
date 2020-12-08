@@ -18,7 +18,7 @@
 
 
 def pearson_significance_test():
-  return """
+    return """
   CREATE FUNCTION IF NOT EXISTS pearson_significance_test(correlation FLOAT64, population INT64, percent FLOAT64, threshold FLOAT64)
     RETURNS INT64
     LANGUAGE js AS

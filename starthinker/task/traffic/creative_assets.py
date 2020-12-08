@@ -33,42 +33,42 @@ CHUNKSIZE = int(200 * 1024000 *
 
 
 class CreativeAssetDAO(BaseDAO):
-  """Creative asset data access object.
+    """Creative asset data access object.
 
   Inherits from BaseDAO and implements ad specific logic for creating and
   updating ads.
   """
 
-  def __init__(self, auth, profile_id, is_admin, gc_project):
-    """Initializes CreativeAssetDAO with profile id and authentication scheme."""
-    super(CreativeAssetDAO, self).__init__(auth, profile_id, is_admin)
+    def __init__(self, auth, profile_id, is_admin, gc_project):
+        """Initializes CreativeAssetDAO with profile id and authentication scheme."""
+        super(CreativeAssetDAO, self).__init__(auth, profile_id, is_admin)
 
-    self._entity = 'CREATIVE_ASSET'
-    self.gc_project = gc_project
-    self._list_name = ''
-    self._id_field = FieldMap.CREATIVE_ASSET_ID
-    self._search_field = None
-    self.auth = auth
+        self._entity = 'CREATIVE_ASSET'
+        self.gc_project = gc_project
+        self._list_name = ''
+        self._id_field = FieldMap.CREATIVE_ASSET_ID
+        self._search_field = None
+        self.auth = auth
 
-    self._parent_filter_name = None
-    self._parent_filter_field_name = None
+        self._parent_filter_name = None
+        self._parent_filter_field_name = None
 
-  def _api(self, iterate=False):
-    """Returns an DCM API instance for this DAO."""
-    return super(CreativeAssetDAO, self)._api(iterate).creativeAssets()
+    def _api(self, iterate=False):
+        """Returns an DCM API instance for this DAO."""
+        return super(CreativeAssetDAO, self)._api(iterate).creativeAssets()
 
-  def pre_fetch(self, feed):
-    """Pre-fetches all required items to be update into the cache.
+    def pre_fetch(self, feed):
+        """Pre-fetches all required items to be update into the cache.
 
     This increases performance for update operations.
 
     Args:
       feed: List of feed items to retrieve
     """
-    pass
+        pass
 
-  def _process_update(self, item, feed_item):
-    """Handles updates to the creative asset object.
+    def _process_update(self, item, feed_item):
+        """Handles updates to the creative asset object.
 
     Since creative assets are read only in DCM, there is nothing to do here,
     this method is mandatory as it is invoked by the BaseDAO class.
@@ -78,10 +78,10 @@ class CreativeAssetDAO(BaseDAO):
       feed_item: The feed item representing the creative asset from the
         Bulkdozer feed.
     """
-    pass
+        pass
 
-  def _insert(self, new_item, feed_item):
-    """Handles the upload of creative assets to DCM and the creation of the associated entity.
+    def _insert(self, new_item, feed_item):
+        """Handles the upload of creative assets to DCM and the creation of the associated entity.
 
     This method makes a call to the DCM API to create a new entity.
 
@@ -93,30 +93,29 @@ class CreativeAssetDAO(BaseDAO):
     Returns:
       The newly created item in DCM.
     """
-    filename = feed_item.get(FieldMap.CREATIVE_ASSET_FILE_NAME, None)
+        filename = feed_item.get(FieldMap.CREATIVE_ASSET_FILE_NAME, None)
 
-    file_buffer = object_get(
-        'user', '%s:%s' %
-        (feed_item.get(FieldMap.CREATIVE_ASSET_BUCKET_NAME, None), filename))
+        file_buffer = object_get(
+            'user', '%s:%s' % (feed_item.get(
+                FieldMap.CREATIVE_ASSET_BUCKET_NAME, None), filename))
 
-    file_mime = mimetypes.guess_type(filename, strict=False)[0]
+        file_mime = mimetypes.guess_type(filename, strict=False)[0]
 
-    media = MediaIoBaseUpload(
-        BytesIO(file_buffer),
-        mimetype=file_mime,
-        chunksize=CHUNKSIZE,
-        resumable=True)
+        media = MediaIoBaseUpload(BytesIO(file_buffer),
+                                  mimetype=file_mime,
+                                  chunksize=CHUNKSIZE,
+                                  resumable=True)
 
-    result = self._api().insert(
-        profileId=self.profile_id,
-        advertiserId=feed_item.get(FieldMap.ADVERTISER_ID, None),
-        media_body=media,
-        body=new_item).execute()
+        result = self._api().insert(profileId=self.profile_id,
+                                    advertiserId=feed_item.get(
+                                        FieldMap.ADVERTISER_ID, None),
+                                    media_body=media,
+                                    body=new_item).execute()
 
-    return result
+        return result
 
-  def _get(self, feed_item):
-    """Retrieves an item from DCM or the local cache.
+    def _get(self, feed_item):
+        """Retrieves an item from DCM or the local cache.
 
     Args:
       feed_item: The feed item representing the creative asset from the
@@ -125,25 +124,25 @@ class CreativeAssetDAO(BaseDAO):
     Returns:
       Instance of the DCM object either from the API or from the local cache.
     """
-    result = store.get(self._entity,
-                       feed_item.get(FieldMap.CREATIVE_ASSET_ID, None))
+        result = store.get(self._entity,
+                           feed_item.get(FieldMap.CREATIVE_ASSET_ID, None))
 
-    if not result:
-      result = {
-          'id': feed_item.get(FieldMap.CREATIVE_ASSET_ID, None),
-          'assetIdentifier': {
-              'name': feed_item.get(FieldMap.CREATIVE_ASSET_NAME, None),
-              'type': feed_item.get(FieldMap.CREATIVE_TYPE, None)
-          }
-      }
+        if not result:
+            result = {
+                'id': feed_item.get(FieldMap.CREATIVE_ASSET_ID, None),
+                'assetIdentifier': {
+                    'name': feed_item.get(FieldMap.CREATIVE_ASSET_NAME, None),
+                    'type': feed_item.get(FieldMap.CREATIVE_TYPE, None)
+                }
+            }
 
-      store.set(self._entity, [feed_item.get(FieldMap.CREATIVE_ASSET_ID, None)],
-                result)
+            store.set(self._entity,
+                      [feed_item.get(FieldMap.CREATIVE_ASSET_ID, None)], result)
 
-    return result
+        return result
 
-  def _update(self, item, feed_item):
-    """Performs an update in DCM.
+    def _update(self, item, feed_item):
+        """Performs an update in DCM.
 
     Since this method is not allowed for creative assets because those cannot be
     updated, this method reimplements _update from BaseDAO but doesn't do
@@ -154,10 +153,10 @@ class CreativeAssetDAO(BaseDAO):
       feed_item: The feed item representing the creative asset in the Bulkdozer
         feed.
     """
-    pass
+        pass
 
-  def _process_new(self, feed_item):
-    """Creates a new creative asset DCM object from a feed item representing a creative asset from the Bulkdozer feed.
+    def _process_new(self, feed_item):
+        """Creates a new creative asset DCM object from a feed item representing a creative asset from the Bulkdozer feed.
 
     This function simply creates the object to be inserted later by the BaseDAO
     object.
@@ -170,15 +169,15 @@ class CreativeAssetDAO(BaseDAO):
       A creative asset object ready to be inserted in DCM through the API.
 
     """
-    return {
-        'assetIdentifier': {
-            'name': feed_item.get(FieldMap.CREATIVE_ASSET_FILE_NAME, None),
-            'type': feed_item.get(FieldMap.CREATIVE_TYPE, None)
+        return {
+            'assetIdentifier': {
+                'name': feed_item.get(FieldMap.CREATIVE_ASSET_FILE_NAME, None),
+                'type': feed_item.get(FieldMap.CREATIVE_TYPE, None)
+            }
         }
-    }
 
-  def _post_process(self, feed_item, item):
-    """Maps ids and names of related entities so they can be updated in the Bulkdozer feed.
+    def _post_process(self, feed_item, item):
+        """Maps ids and names of related entities so they can be updated in the Bulkdozer feed.
 
     When Bulkdozer is done processing an item, it writes back the updated names
     and ids of related objects, this method makes sure those are updated in the
@@ -189,37 +188,42 @@ class CreativeAssetDAO(BaseDAO):
         feed.
       item: The DCM creative asset being updated or created.
     """
-    if item['assetIdentifier']['name']:
-      feed_item[FieldMap.CREATIVE_ASSET_NAME] = item['assetIdentifier']['name']
+        if item['assetIdentifier']['name']:
+            feed_item[
+                FieldMap.CREATIVE_ASSET_NAME] = item['assetIdentifier']['name']
 
-  def get_identifier(self, association, feed):
-    asset_ids = (association.get(FieldMap.CREATIVE_ASSET_ID, None),
-                 store.translate(self._entity,
-                                 association[FieldMap.CREATIVE_ASSET_ID]))
+    def get_identifier(self, association, feed):
+        asset_ids = (association.get(FieldMap.CREATIVE_ASSET_ID, None),
+                     store.translate(self._entity,
+                                     association[FieldMap.CREATIVE_ASSET_ID]))
 
-    for creative_asset in feed.feed:
-      if creative_asset[FieldMap.CREATIVE_ASSET_ID] in asset_ids or str(
-          creative_asset[FieldMap.CREATIVE_ASSET_ID]) in asset_ids:
-        return {
-            'name': creative_asset.get(FieldMap.CREATIVE_ASSET_NAME, None),
-            'type': creative_asset.get(FieldMap.CREATIVE_TYPE, None)
-        }
+        for creative_asset in feed.feed:
+            if creative_asset[FieldMap.CREATIVE_ASSET_ID] in asset_ids or str(
+                    creative_asset[FieldMap.CREATIVE_ASSET_ID]) in asset_ids:
+                return {
+                    'name':
+                        creative_asset.get(FieldMap.CREATIVE_ASSET_NAME, None),
+                    'type':
+                        creative_asset.get(FieldMap.CREATIVE_TYPE, None)
+                }
 
-    return None
+        return None
 
-  def get_backup_identifier(self, association, feed):
+    def get_backup_identifier(self, association, feed):
 
-    asset_ids = (association.get(FieldMap.CREATIVE_BACKUP_ASSET_ID, None),
-                 store.translate(
-                     self._entity,
-                     association[FieldMap.CREATIVE_BACKUP_ASSET_ID]))
+        asset_ids = (association.get(FieldMap.CREATIVE_BACKUP_ASSET_ID, None),
+                     store.translate(
+                         self._entity,
+                         association[FieldMap.CREATIVE_BACKUP_ASSET_ID]))
 
-    for creative_asset in feed.feed:
-      if creative_asset[FieldMap.CREATIVE_ASSET_ID] in asset_ids or str(
-          creative_asset[FieldMap.CREATIVE_ASSET_ID]) in asset_ids:
-        return {
-            'name': creative_asset.get(FieldMap.CREATIVE_ASSET_NAME, None),
-            'type': creative_asset.get(FieldMap.CREATIVE_TYPE, None)
-        }
+        for creative_asset in feed.feed:
+            if creative_asset[FieldMap.CREATIVE_ASSET_ID] in asset_ids or str(
+                    creative_asset[FieldMap.CREATIVE_ASSET_ID]) in asset_ids:
+                return {
+                    'name':
+                        creative_asset.get(FieldMap.CREATIVE_ASSET_NAME, None),
+                    'type':
+                        creative_asset.get(FieldMap.CREATIVE_TYPE, None)
+                }
 
-    return None
+        return None

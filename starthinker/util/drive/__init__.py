@@ -45,85 +45,86 @@ CHUNKSIZE = int(200 * 1024000 *
 
 
 def about(auth, fields='importFormats'):
-  response = API_Drive(auth).about().get(fields=fields).execute()
-  return response
+    response = API_Drive(auth).about().get(fields=fields).execute()
+    return response
 
 
 def file_id(auth, url_or_name):
 
-  if url_or_name.startswith('https://drive.google.com/open?id='):
-    return url_or_name.split('?id=', 1)[-1]
+    if url_or_name.startswith('https://drive.google.com/open?id='):
+        return url_or_name.split('?id=', 1)[-1]
 
-  elif url_or_name.startswith('https://docs.google.com/'):
-    m = re.search(
-        '^(?:https:\/\/docs.google.com\/\w+\/d\/)([a-zA-Z0-9-_]+)(?:\/.*)?$',
-        url_or_name)
-    if m:
-      return m.group(1)
+    elif url_or_name.startswith('https://docs.google.com/'):
+        m = re.search(
+            '^(?:https:\/\/docs.google.com\/\w+\/d\/)([a-zA-Z0-9-_]+)(?:\/.*)?$',
+            url_or_name)
+        if m:
+            return m.group(1)
 
-  elif url_or_name.startswith('https://datastudio.google.com/'):
-    m = re.search(
-        '^(?:https:\/\/datastudio.google.com\/c\/\w+\/)([a-zA-Z0-9-_]+)(?:\/.*)?$',
-        url_or_name)
-    if m:
-      return m.group(1)
+    elif url_or_name.startswith('https://datastudio.google.com/'):
+        m = re.search(
+            '^(?:https:\/\/datastudio.google.com\/c\/\w+\/)([a-zA-Z0-9-_]+)(?:\/.*)?$',
+            url_or_name)
+        if m:
+            return m.group(1)
 
-  # check if name given convert to ID "Some Document"
-  else:
-    document = file_find(auth, url_or_name)
-    if document:
-      return document['id']
-
-      # check if just ID given, "1uN9tnb-DZ9zZflZsoW4_34sf34tw3ff"
+    # check if name given convert to ID "Some Document"
     else:
-      m = re.search('^([a-zA-Z0-9-_]+)$', url_or_name)
-      if m:
-        return m.group(1)
+        document = file_find(auth, url_or_name)
+        if document:
+            return document['id']
 
-  # probably a mangled id or name does not exist
-  if project.verbose:
-    print('DOCUMENT DOES NOT EXIST', url_or_name)
-  return None
+            # check if just ID given, "1uN9tnb-DZ9zZflZsoW4_34sf34tw3ff"
+        else:
+            m = re.search('^([a-zA-Z0-9-_]+)$', url_or_name)
+            if m:
+                return m.group(1)
 
-
-def file_get(auth, drive_id):
-  return API_Drive(auth).files().get(fileId=drive_id).execute()
-
-
-def file_exists(auth, name):
-  drive_id = file_id(auth, name)
-  if drive_id:
-    try:
-      API_Drive(auth).files().get(fileId=drive_id).execute()
-      return True
-    except HttpError:
-      return False
-  return False
-
-
-def file_find(auth, name, parent=None):
-  query = "trashed = false and name = '%s'" % name
-  if parent:
-    query = "%s and '%s' in parents" % (query, parent)
-
-  try:
-    return next(API_Drive(auth, iterate=True).files().list(q=query).execute())
-  except StopIteration:
+    # probably a mangled id or name does not exist
+    if project.verbose:
+        print('DOCUMENT DOES NOT EXIST', url_or_name)
     return None
 
 
-def file_delete(auth, name, parent=None):
-  drive_id = file_id(auth, name)
+def file_get(auth, drive_id):
+    return API_Drive(auth).files().get(fileId=drive_id).execute()
 
-  if drive_id:
-    API_Drive(auth).files().delete(fileId=drive_id).execute()
-    return True
-  else:
+
+def file_exists(auth, name):
+    drive_id = file_id(auth, name)
+    if drive_id:
+        try:
+            API_Drive(auth).files().get(fileId=drive_id).execute()
+            return True
+        except HttpError:
+            return False
     return False
 
 
+def file_find(auth, name, parent=None):
+    query = "trashed = false and name = '%s'" % name
+    if parent:
+        query = "%s and '%s' in parents" % (query, parent)
+
+    try:
+        return next(
+            API_Drive(auth, iterate=True).files().list(q=query).execute())
+    except StopIteration:
+        return None
+
+
+def file_delete(auth, name, parent=None):
+    drive_id = file_id(auth, name)
+
+    if drive_id:
+        API_Drive(auth).files().delete(fileId=drive_id).execute()
+        return True
+    else:
+        return False
+
+
 def file_create(auth, name, filename, data, parent=None):
-  """ Checks if file with name already exists ( outside of trash ) and
+    """ Checks if file with name already exists ( outside of trash ) and
 
     if not, uploads the file.  Determines filetype based on filename extension
     and attempts to map to Google native such as Docs, Sheets, Slides, etc...
@@ -154,69 +155,71 @@ def file_create(auth, name, filename, data, parent=None):
 
     """
 
-  # attempt to find the file by name ( not in trash )
-  drive_file = file_find(auth, name, parent)
+    # attempt to find the file by name ( not in trash )
+    drive_file = file_find(auth, name, parent)
 
-  # if file exists, return it, prevents obliterating user changes
-  if drive_file:
-    if project.verbose:
-      print('Drive: File exists.')
+    # if file exists, return it, prevents obliterating user changes
+    if drive_file:
+        if project.verbose:
+            print('Drive: File exists.')
 
-  # if file does not exist, create it
-  else:
-    if project.verbose:
-      print('Drive: Creating file.')
+    # if file does not exist, create it
+    else:
+        if project.verbose:
+            print('Drive: Creating file.')
 
-    # file mime is used for uplaod / fallback
-    # drive mime attempts to map to a native Google format
-    file_mime = mimetypes.guess_type(filename, strict=False)[0]
-    drive_mime = about('importFormats')['importFormats'].get(
-        file_mime, file_mime)[0]
+        # file mime is used for uplaod / fallback
+        # drive mime attempts to map to a native Google format
+        file_mime = mimetypes.guess_type(filename, strict=False)[0]
+        drive_mime = about('importFormats')['importFormats'].get(
+            file_mime, file_mime)[0]
 
-    if project.verbose:
-      print('Drive Mimes:', file_mime, drive_mime)
+        if project.verbose:
+            print('Drive Mimes:', file_mime, drive_mime)
 
-    # construct upload object, and stream upload in chunks
-    body = {
-        'name': name,
-        'parents': [parent] if parent else [],
-        'mimeType': drive_mime,
-    }
+        # construct upload object, and stream upload in chunks
+        body = {
+            'name': name,
+            'parents': [parent] if parent else [],
+            'mimeType': drive_mime,
+        }
 
-    media = MediaIoBaseUpload(
-        BytesIO(data or ' '),  # if data is empty BAD REQUEST error occurs
-        mimetype=file_mime,
-        chunksize=CHUNKSIZE,
-        resumable=True)
+        media = MediaIoBaseUpload(
+            BytesIO(data or ' '),  # if data is empty BAD REQUEST error occurs
+            mimetype=file_mime,
+            chunksize=CHUNKSIZE,
+            resumable=True)
 
-    drive_file = API_Drive(auth).files().create(
-        body=body, media_body=media, fields='id').execute()
+        drive_file = API_Drive(auth).files().create(body=body,
+                                                    media_body=media,
+                                                    fields='id').execute()
 
-  return drive_file
+    return drive_file
 
 
 def file_copy(auth, source_name, destination_name):
-  destination_id = file_id(auth, destination_name)
+    destination_id = file_id(auth, destination_name)
 
-  if destination_id:
-    if project.verbose:
-      print('Drive: File exists.')
-    return file_get(auth, destination_id)
+    if destination_id:
+        if project.verbose:
+            print('Drive: File exists.')
+        return file_get(auth, destination_id)
 
-  else:
-    source_id = file_id(auth, source_name)
-
-    if source_id:
-      body = {'visibility': 'PRIVATE', 'name': destination_name}
-      return API_Drive(auth).files().copy(fileId=source_id, body=body).execute()
     else:
-      return None
+        source_id = file_id(auth, source_name)
+
+        if source_id:
+            body = {'visibility': 'PRIVATE', 'name': destination_name}
+            return API_Drive(auth).files().copy(fileId=source_id,
+                                                body=body).execute()
+        else:
+            return None
 
 
 def folder_create(auth, name, parent=None):
-  body = {
-      'name': name,
-      'parents': [parent] if parent else [],
-      'mimeType': 'application/vnd.google-apps.folder'
-  }
-  return API_Drive(auth).files().create(body=body, fields='id').execute()
+    body = {
+        'name': name,
+        'parents': [parent] if parent else [],
+        'mimeType': 'application/vnd.google-apps.folder'
+    }
+    return API_Drive(auth).files().create(body=body, fields='id').execute()

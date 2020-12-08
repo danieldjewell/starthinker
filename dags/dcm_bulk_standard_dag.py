@@ -192,4 +192,4 @@ DAG_FACTORY.apply_credentails(USER_CONN_ID, GCP_CONN_ID)
 DAG = DAG_FACTORY.execute()
 
 if __name__ == '__main__':
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

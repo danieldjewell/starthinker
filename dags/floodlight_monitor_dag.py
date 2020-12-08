@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -82,60 +81,67 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
-  'dcm_account': '',  # Specify an account_id as a number.
-  'sheet': '',  # Full Name or URL to Google Sheet, Floodlight Monitor tab will be added.
+    'auth_read': 'user',  # Credentials used for reading data.
+    'dcm_account': '',  # Specify an account_id as a number.
+    'sheet':
+        '',  # Full Name or URL to Google Sheet, Floodlight Monitor tab will be added.
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'floodlight_monitor': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'account': {
-          'field': {
-            'name': 'dcm_account',
-            'kind': 'string',
-            'order': 1,
-            'default': '',
-            'description': 'Specify an account_id as a number.'
-          }
-        },
-        'template': {
-          'template': {
-            'sheet': 'https://docs.google.com/spreadsheets/d/1tjF5styxMvFJsNETEa5x2F5DSmqleGl71cmujB7Ier8/edit?usp=sharing',
-            'tab': 'Floodlight Monitor',
-            'range': 'A1'
-          }
-        },
-        'sheet': {
-          'sheet': {
-            'field': {
-              'name': 'sheet',
-              'kind': 'string',
-              'order': 2,
-              'default': '',
-              'description': 'Full Name or URL to Google Sheet, Floodlight Monitor tab will be added.'
+    'tasks': [{
+        'floodlight_monitor': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'account': {
+                'field': {
+                    'name': 'dcm_account',
+                    'kind': 'string',
+                    'order': 1,
+                    'default': '',
+                    'description': 'Specify an account_id as a number.'
+                }
+            },
+            'template': {
+                'template': {
+                    'sheet':
+                        'https://docs.google.com/spreadsheets/d/1tjF5styxMvFJsNETEa5x2F5DSmqleGl71cmujB7Ier8/edit?usp=sharing',
+                    'tab':
+                        'Floodlight Monitor',
+                    'range':
+                        'A1'
+                }
+            },
+            'sheet': {
+                'sheet': {
+                    'field': {
+                        'name':
+                            'sheet',
+                        'kind':
+                            'string',
+                        'order':
+                            2,
+                        'default':
+                            '',
+                        'description':
+                            'Full Name or URL to Google Sheet, Floodlight Monitor tab will be added.'
+                    }
+                },
+                'tab': 'Floodlight Monitor',
+                'range': 'A2:B'
             }
-          },
-          'tab': 'Floodlight Monitor',
-          'range': 'A2:B'
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('floodlight_monitor', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

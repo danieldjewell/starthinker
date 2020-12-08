@@ -34,35 +34,37 @@ RE_CREDENTIALS_JSON = re.compile(r'^\s*\{.*\}\s*$', re.DOTALL)
 
 def _credentials_storage_service():
 
-  if RE_CREDENTIALS_JSON.match(UI_SERVICE):
-    credentials = Credentials.from_service_account_info(json.loads(UI_SERVICE))
-  else:
-    credentials = Credentials.from_service_account_file(UI_SERVICE)
+    if RE_CREDENTIALS_JSON.match(UI_SERVICE):
+        credentials = Credentials.from_service_account_info(
+            json.loads(UI_SERVICE))
+    else:
+        credentials = Credentials.from_service_account_file(UI_SERVICE)
 
-  return discovery.build('storage', 'v1', credentials=credentials)
+    return discovery.build('storage', 'v1', credentials=credentials)
 
 
 def _credentials_retry(job, retries=3, wait=1):
-  try:
-    return job.execute()
-  except HttpError as e:
-    if e.resp.status == 429 and retries > 0:
-      sleep(wait)
-      return _credentials_retry(job, retries - 1, wait * 2)
-    else:
-      raise
+    try:
+        return job.execute()
+    except HttpError as e:
+        if e.resp.status == 429 and retries > 0:
+            sleep(wait)
+            return _credentials_retry(job, retries - 1, wait * 2)
+        else:
+            raise
 
 
 def credentials_storage_get(cloud_path):
-  bucket, filename = cloud_path.split(':', 1)
-  data = _credentials_retry(_credentials_storage_service().objects().get_media(
-      bucket=bucket, object=filename))
-  return json.loads(base64.b64decode(data.decode()).decode())
+    bucket, filename = cloud_path.split(':', 1)
+    data = _credentials_retry(
+        _credentials_storage_service().objects().get_media(bucket=bucket,
+                                                           object=filename))
+    return json.loads(base64.b64decode(data.decode()).decode())
 
 
 def credentials_storage_put(cloud_path, credentials):
-  bucket, filename = cloud_path.split(':', 1)
-  data = BytesIO(base64.b64encode(json.dumps(credentials).encode()))
-  media = MediaIoBaseUpload(data, mimetype='text/json')
-  _credentials_retry(_credentials_storage_service().objects().insert(
-      bucket=bucket, name=filename, media_body=media))
+    bucket, filename = cloud_path.split(':', 1)
+    data = BytesIO(base64.b64encode(json.dumps(credentials).encode()))
+    media = MediaIoBaseUpload(data, mimetype='text/json')
+    _credentials_retry(_credentials_storage_service().objects().insert(
+        bucket=bucket, name=filename, media_body=media))

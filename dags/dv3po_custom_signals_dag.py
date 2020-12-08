@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -87,115 +86,81 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'station_ids': '',  # NOAA Weather Station ID
-  'auth_read': 'user',  # Credentials used for reading data.
-  'sheet_url': '',  # Feed Sheet URL
+    'station_ids': '',  # NOAA Weather Station ID
+    'auth_read': 'user',  # Credentials used for reading data.
+    'sheet_url': '',  # Feed Sheet URL
 }
 
 RECIPE = {
-  'setup': {
-    'day': [
-      'Mon',
-      'Tue',
-      'Wed',
-      'Thu',
-      'Fri',
-      'Sat',
-      'Sun'
-    ],
-    'hour': [
-      0,
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18,
-      19,
-      20,
-      21,
-      22,
-      23
-    ]
-  },
-  'tasks': [
-    {
-      'weather_gov': {
-        'auth': 'user',
-        'stations': {
-          'field': {
-            'name': 'station_ids',
-            'kind': 'string_list',
-            'order': 1,
-            'description': 'NOAA Weather Station ID',
-            'default': ''
-          }
-        },
-        'out': {
-          'sheets': {
-            'sheet': {
-              'field': {
-                'name': 'sheet_url',
-                'kind': 'string',
-                'order': 2,
-                'description': 'Feed Sheet URL',
-                'default': ''
-              }
-            },
-            'tab': 'Weather',
-            'range': 'A2:K',
-            'delete': True
-          }
-        }
-      }
+    'setup': {
+        'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        'hour': [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+            19, 20, 21, 22, 23
+        ]
     },
-    {
-      'lineitem_beta': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'read': {
-          'sheet': {
-            'sheet': {
-              'field': {
-                'name': 'sheet_url',
-                'kind': 'string',
-                'order': 2,
-                'description': 'Feed Sheet URL',
-                'default': ''
-              }
+    'tasks': [{
+        'weather_gov': {
+            'auth': 'user',
+            'stations': {
+                'field': {
+                    'name': 'station_ids',
+                    'kind': 'string_list',
+                    'order': 1,
+                    'description': 'NOAA Weather Station ID',
+                    'default': ''
+                }
             },
-            'tab': 'Rules',
-            'range': 'A1:D'
-          }
-        },
-        'patch': {
+            'out': {
+                'sheets': {
+                    'sheet': {
+                        'field': {
+                            'name': 'sheet_url',
+                            'kind': 'string',
+                            'order': 2,
+                            'description': 'Feed Sheet URL',
+                            'default': ''
+                        }
+                    },
+                    'tab': 'Weather',
+                    'range': 'A2:K',
+                    'delete': True
+                }
+            }
         }
-      }
-    }
-  ]
+    }, {
+        'lineitem_beta': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'read': {
+                'sheet': {
+                    'sheet': {
+                        'field': {
+                            'name': 'sheet_url',
+                            'kind': 'string',
+                            'order': 2,
+                            'description': 'Feed Sheet URL',
+                            'default': ''
+                        }
+                    },
+                    'tab': 'Rules',
+                    'range': 'A1:D'
+                }
+            },
+            'patch': {}
+        }
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('dv3po_custom_signals', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

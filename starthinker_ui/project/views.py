@@ -28,33 +28,34 @@ from starthinker_ui.project.forms import ProjectForm
 
 
 def project_list(request):
-  projects = request.user.project_set.all(
-  ) if request.user.is_authenticated else None
-  return render(request, 'project/project_list.html', {'projects': projects})
+    projects = request.user.project_set.all(
+    ) if request.user.is_authenticated else None
+    return render(request, 'project/project_list.html', {'projects': projects})
 
 
 @permission_admin()
 def project_edit(request, pk=None):
-  project = request.user.project_set.get(pk=pk) if pk else None
+    project = request.user.project_set.get(pk=pk) if pk else None
 
-  if request.method == 'POST':
-    form_project = ProjectForm(request.user, request.POST, instance=project)
-    if form_project.is_valid():
-      form_project.save()
-      messages.success(request, 'Project updated.')
-      return HttpResponseRedirect(form_project.instance.link_edit())
+    if request.method == 'POST':
+        form_project = ProjectForm(request.user, request.POST, instance=project)
+        if form_project.is_valid():
+            form_project.save()
+            messages.success(request, 'Project updated.')
+            return HttpResponseRedirect(form_project.instance.link_edit())
+        else:
+            print('ERRORS', form_project.get_errors())
+            messages.error(request,
+                           'Project Errors: %s' % form_project.get_errors())
     else:
-      print('ERRORS', form_project.get_errors())
-      messages.error(request, 'Project Errors: %s' % form_project.get_errors())
-  else:
-    form_project = ProjectForm(request.user, instance=project)
+        form_project = ProjectForm(request.user, instance=project)
 
-  return render(request, 'project/project_edit.html',
-                {'form_project': form_project})
+    return render(request, 'project/project_edit.html',
+                  {'form_project': form_project})
 
 
 @permission_admin()
 def project_delete(request, pk=None):
-  request.user.project_set.filter(pk=pk).delete()
-  messages.success(request, 'Project deleted.')
-  return HttpResponseRedirect('/project/')
+    request.user.project_set.filter(pk=pk).delete()
+    messages.success(request, 'Project deleted.')
+    return HttpResponseRedirect('/project/')

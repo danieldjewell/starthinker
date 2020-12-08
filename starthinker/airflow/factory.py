@@ -27,7 +27,6 @@ alphanumeric characters set to '.', to mimic python dot notation.
 
 """
 
-
 from datetime import datetime, date
 from importlib import import_module
 from random import randint
@@ -44,7 +43,7 @@ CONNECTION_USER = "starthinker_user"
 
 
 class DAG_Factory():
-  """A class factory that generates AirFlow Dag definitions from StarThinker JSON recipes.
+    """A class factory that generates AirFlow Dag definitions from StarThinker JSON recipes.
 
   Called from an AirFlow Python Script, generates a single Dag mapped to each
   StarTHinker task handler.
@@ -63,162 +62,173 @@ class DAG_Factory():
 
   """
 
-  def __init__(self, _dag_name, _script, _script_parameters=None):
-    self.dag_name = _dag_name
-    self.recipe = _script
-    if _script_parameters:
-      json_set_fields(self.recipe, _script_parameters)
-    self.dag = None
+    def __init__(self, _dag_name, _script, _script_parameters=None):
+        self.dag_name = _dag_name
+        self.recipe = _script
+        if _script_parameters:
+            json_set_fields(self.recipe, _script_parameters)
+        self.dag = None
 
-    self.recipe.setdefault('setup', {}).setdefault('auth', {})
+        self.recipe.setdefault('setup', {}).setdefault('auth', {})
 
-    # If not given in recipe, try "user" auth information from connection
-    if not self.recipe['setup']['auth'].get('user'):
-      try:
-        user_connection_extra = BaseHook.get_connection(CONNECTION_USER).extra_dejson
-        if user_connection_extra['extra__google_cloud_platform__key_path']:
-          self.recipe['setup']['auth']['user'] = user_connection_extra[
-            'extra__google_cloud_platform__key_path']
-        elif user_connection_extra['extra__google_cloud_platform__keyfile_dict']:
-          self.recipe['setup']['auth']['user'] = user_connection_extra[
-            'extra__google_cloud_platform__keyfile_dict']
+        # If not given in recipe, try "user" auth information from connection
+        if not self.recipe['setup']['auth'].get('user'):
+            try:
+                user_connection_extra = BaseHook.get_connection(
+                    CONNECTION_USER).extra_dejson
+                if user_connection_extra[
+                        'extra__google_cloud_platform__key_path']:
+                    self.recipe['setup']['auth'][
+                        'user'] = user_connection_extra[
+                            'extra__google_cloud_platform__key_path']
+                elif user_connection_extra[
+                        'extra__google_cloud_platform__keyfile_dict']:
+                    self.recipe['setup']['auth'][
+                        'user'] = user_connection_extra[
+                            'extra__google_cloud_platform__keyfile_dict']
 
-        if user_connection_extra['extra__google_cloud_platform__project']:
-          self.recipe['setup']['id'] = user_connection_extra[
-            'extra__google_cloud_platform__project']
-      except Exception as e:
-        pass
+                if user_connection_extra[
+                        'extra__google_cloud_platform__project']:
+                    self.recipe['setup']['id'] = user_connection_extra[
+                        'extra__google_cloud_platform__project']
+            except Exception as e:
+                pass
 
-    # If not given in recipe, try "service" auth information from connection
-    if not self.recipe['setup']['auth'].get('service'):
-      try:
-        service_connection_extra = BaseHook.get_connection(
-          CONNECTION_SERVICE).extra_dejson
-        if service_connection_extra['extra__google_cloud_platform__key_path']:
-          self.recipe['setup']['auth']['service'] = service_connection_extra[
-            'extra__google_cloud_platform__key_path']
-        elif service_connection_extra[
-          'extra__google_cloud_platform__keyfile_dict']:
-          self.recipe['setup']['auth']['service'] = service_connection_extra[
-            'extra__google_cloud_platform__keyfile_dict']
-          keyfile_dict_json = json.loads(service_connection_extra[
-            'extra__google_cloud_platform__keyfile_dict']
-          )
-          if keyfile_dict_json and keyfile_dict_json.get('project_id'):
-            self.recipe['setup']['id'] = keyfile_dict_json['project_id']
+        # If not given in recipe, try "service" auth information from connection
+        if not self.recipe['setup']['auth'].get('service'):
+            try:
+                service_connection_extra = BaseHook.get_connection(
+                    CONNECTION_SERVICE).extra_dejson
+                if service_connection_extra[
+                        'extra__google_cloud_platform__key_path']:
+                    self.recipe['setup']['auth'][
+                        'service'] = service_connection_extra[
+                            'extra__google_cloud_platform__key_path']
+                elif service_connection_extra[
+                        'extra__google_cloud_platform__keyfile_dict']:
+                    self.recipe['setup']['auth'][
+                        'service'] = service_connection_extra[
+                            'extra__google_cloud_platform__keyfile_dict']
+                    keyfile_dict_json = json.loads(service_connection_extra[
+                        'extra__google_cloud_platform__keyfile_dict'])
+                    if keyfile_dict_json and keyfile_dict_json.get(
+                            'project_id'):
+                        self.recipe['setup']['id'] = keyfile_dict_json[
+                            'project_id']
 
-        if service_connection_extra['extra__google_cloud_platform__project']:
-          self.recipe['setup']['id'] = service_connection_extra[
-            'extra__google_cloud_platform__project']
-      except Exception as e:
-        pass
+                if service_connection_extra[
+                        'extra__google_cloud_platform__project']:
+                    self.recipe['setup']['id'] = service_connection_extra[
+                        'extra__google_cloud_platform__project']
+            except Exception as e:
+                pass
 
+    def python_task(self, function, instance):
+        print('STARTHINKER TASK:', function, instance)
 
-  def python_task(self, function, instance):
-    print('STARTHINKER TASK:', function, instance)
+        PythonOperator(task_id='%s_%d' % (function, instance),
+                       python_callable=getattr(
+                           import_module('starthinker.task.%s.run' % function),
+                           function),
+                       op_kwargs={
+                           'recipe': self.recipe,
+                           'instance': instance
+                       },
+                       dag=self.dag)
 
-    PythonOperator(
-        task_id='%s_%d' % (function, instance),
-        python_callable=getattr(
-            import_module('starthinker.task.%s.run' % function), function),
-        op_kwargs={
-            'recipe': self.recipe,
-            'instance': instance
-        },
-        dag=self.dag)
+        return self
 
-    return self
+    def airflow_task(self, task, instance, parameters):
+        print('STARTHINKER AIRFLOW TASK:', task, instance)
 
+        def airflow_import_unroll(definition):
+            return next(
+                iter([i for i in definition.items() if i[0] != '__comment__']))
 
-  def airflow_task(self, task, instance, parameters):
-    print('STARTHINKER AIRFLOW TASK:', task, instance)
+        af_path, af_module = airflow_import_unroll(parameters)
+        af_module, af_operator = airflow_import_unroll(af_module)
+        af_operator, af_parameters = airflow_import_unroll(af_operator)
 
-    def airflow_import_unroll(definition):
-      return next(iter([i for i in definition.items() if i[0] != '__comment__']))
+        operator = getattr(
+            import_module('%s.%s.%s' % (task, af_path, af_module)), af_operator)
 
-    af_path, af_module = airflow_import_unroll(parameters)
-    af_module, af_operator = airflow_import_unroll(af_module)
-    af_operator, af_parameters = airflow_import_unroll(af_operator)
+        af_parameters['dag'] = self.dag
+        af_parameters['task_id'] = '%s_%d' % (task, instance)
 
-    operator = getattr(import_module('%s.%s.%s' % (task, af_path, af_module)), af_operator)
+        operator(**af_parameters)
 
-    af_parameters['dag'] = self.dag
-    af_parameters['task_id'] = '%s_%d' % (task, instance)
+        return self
 
-    operator(**af_parameters)
+    def airflow_start(self):
+        return datetime.now(self.recipe.get('setup', {}).get('timezone'))
 
-    return self
+    def airflow_schedule(self):
+        recipe_day = self.recipe.get('setup', {}).get('day', [])
+        recipe_hour = [
+            str(h) for h in self.recipe.get('setup', {}).get('hour', [])
+        ]
 
+        airflow_schedule = None
+        if recipe_day or recipe_hour:
+            airflow_schedule = '{minutes} {hours} {day_of_month} {month} {day_of_week}'.format(
+                **{
+                    'minutes': randint(0, 15),
+                    'hours': ','.join(recipe_hour) or '*',
+                    'day_of_month': '*',
+                    'month': '*',
+                    'day_of_week': ','.join(recipe_day) or '*'
+                })
 
-  def airflow_start(self):
-    return datetime.now(self.recipe.get('setup', {}).get('timezone'))
+        return airflow_schedule
 
+    def generate(self):
+        print('STARTHINKER DAG:', self.dag_name)
 
-  def airflow_schedule(self):
-    recipe_day = self.recipe.get('setup', {}).get('day', [])
-    recipe_hour = [str(h) for h in self.recipe.get('setup', {}).get('hour', [])]
+        self.dag = DAG(dag_id=self.dag_name,
+                       default_args={
+                           'owner': 'airflow',
+                           'start_date': self.airflow_start()
+                       },
+                       schedule_interval=self.airflow_schedule(),
+                       catchup=False)
 
-    airflow_schedule = None
-    if recipe_day or recipe_hour:
-      airflow_schedule = '{minutes} {hours} {day_of_month} {month} {day_of_week}'.format(**{
-        'minutes':randint(0, 15),
-        'hours':','.join(recipe_hour) or '*',
-        'day_of_month':'*',
-        'month':'*',
-        'day_of_week':','.join(recipe_day) or '*'
-      })
+        instances = {}
+        for task in self.recipe['tasks']:
+            function = next(iter(task.keys()))
 
-    return airflow_schedule
+            # count instance per task
+            instances.setdefault(function, 0)
+            instances[function] += 1
 
-  def generate(self):
-    print('STARTHINKER DAG:', self.dag_name)
+            # if airflow function ( product )
+            if function == 'airflow':
+                self.airflow_task(function, instances[function], task[function])
 
-    self.dag = DAG(
-        dag_id=self.dag_name,
-        default_args={
-            'owner': 'airflow',
-            'start_date': self.airflow_start()
-        },
-        schedule_interval=self.airflow_schedule(),
-        catchup=False)
+            # if airflow function ( local )
+            elif function == 'starthinker.airflow':
+                self.airflow_task(function, instances[function], task[function])
 
-    instances = {}
-    for task in self.recipe['tasks']:
-      function = next(iter(task.keys()))
+            # if native python operator
+            else:
+                self.python_task(function, instances[function])
 
-      # count instance per task
-      instances.setdefault(function, 0)
-      instances[function] += 1
+        return self.dag
 
-      # if airflow function ( product )
-      if function == 'airflow':
-        self.airflow_task(function, instances[function], task[function])
+    def print_commandline(self):
 
-      # if airflow function ( local )
-      elif function == 'starthinker.airflow':
-        self.airflow_task(function, instances[function], task[function])
+        print('')
+        print('STARTHINKER COMMANDLINE: %s' % self.dag_name)
+        print('')
 
-      # if native python operator
-      else:
-        self.python_task(function, instances[function])
+        instances = {}
+        for task in self.recipe['tasks']:
+            function = next(iter(task.keys()))
 
-    return self.dag
+            # count instance per task
+            instances.setdefault(function, 0)
+            instances[function] += 1
 
-
-  def print_commandline(self):
-
-    print('')
-    print('STARTHINKER COMMANDLINE: %s' % self.dag_name)
-    print('')
-
-    instances = {}
-    for task in self.recipe['tasks']:
-      function = next(iter(task.keys()))
-
-      # count instance per task
-      instances.setdefault(function, 0)
-      instances[function] += 1
-
-      print('airflow test "%s" %s_%d %s' %
-            (self.dag_name, function, instances[function], str(date.today())))
-    print('')
+            print('airflow test "%s" %s_%d %s' %
+                  (self.dag_name, function, instances[function],
+                   str(date.today())))
+        print('')

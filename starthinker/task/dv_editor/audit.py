@@ -35,32 +35,34 @@ from starthinker.task.dv_editor.segment import segment_audit
 
 
 def audit_clear():
-  sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Audit', 'A2:Z')
+    sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Audit',
+                 'A2:Z')
 
 
 def audit_load():
 
-  bid_strategy_audit()
-  integration_detail_audit()
-  insertion_order_audit()
-  frequency_cap_audit()
-  line_item_audit()
-  line_item_map_audit()
-  pacing_audit()
-  partner_cost_audit()
-  segment_audit()
+    bid_strategy_audit()
+    integration_detail_audit()
+    insertion_order_audit()
+    frequency_cap_audit()
+    line_item_audit()
+    line_item_map_audit()
+    pacing_audit()
+    partner_cost_audit()
+    segment_audit()
 
-  # write audit to sheet
-  sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Audit', 'A2')
+    # write audit to sheet
+    sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Audit',
+                 'A2')
 
-  # write audits to sheet
-  rows = get_rows(
-      project.task['auth_bigquery'], {
-          'bigquery': {
-              'dataset':
-                  project.task['dataset'],
-              'query':
-                  """SELECT Operation, Severity, Id, Error
+    # write audits to sheet
+    rows = get_rows(
+        project.task['auth_bigquery'], {
+            'bigquery': {
+                'dataset':
+                    project.task['dataset'],
+                'query':
+                    """SELECT Operation, Severity, Id, Error
         FROM `{dataset}.AUDIT_InsertionOrders`
       UNION ALL
         SELECT Operation, Severity, Id, Error
@@ -87,15 +89,15 @@ def audit_load():
         SELECT Operation, Severity, Id, Error
         FROM `{dataset}.AUDIT_IntegrationDetails`
       """.format(**project.task),
-              'legacy':
-                  False
-          }
-      })
+                'legacy':
+                    False
+            }
+        })
 
-  put_rows(project.task['auth_sheets'], {
-      'sheets': {
-          'sheet': project.task['sheet'],
-          'tab': 'Audit',
-          'range': 'A2'
-      }
-  }, rows)
+    put_rows(project.task['auth_sheets'], {
+        'sheets': {
+            'sheet': project.task['sheet'],
+            'tab': 'Audit',
+            'range': 'A2'
+        }
+    }, rows)

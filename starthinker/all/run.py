@@ -28,12 +28,13 @@ from starthinker.util.project import get_project
 EXIT_ERROR = 1
 EXIT_SUCCESS = 0
 
+
 def main():
 
-  # this is a helper function, these inputs mirror util.project.Project singleton used by tasks because they are pass through to each task
-  parser = argparse.ArgumentParser(
-      formatter_class=argparse.RawDescriptionHelpFormatter,
-      description=textwrap.dedent("""\
+    # this is a helper function, these inputs mirror util.project.Project singleton used by tasks because they are pass through to each task
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent("""\
       Command line to execute all tasks in a recipe once. ( Common Entry Point )
 
       This script dispatches all the tasks in a JSON recipe to handlers in sequence.
@@ -58,102 +59,97 @@ def main():
 
   """))
 
-  parser.add_argument('json', help='path to tasks json file')
+    parser.add_argument('json', help='path to tasks json file')
 
-  parser.add_argument(
-      '--project',
-      '-p',
-      help='cloud id of project, defaults to None',
-      default=None)
-  parser.add_argument(
-      '--user',
-      '-u',
-      help='path to user credentials json file, defaults to GOOGLE_APPLICATION_CREDENTIALS',
-      default=None)
-  parser.add_argument(
-      '--service',
-      '-s',
-      help='path to service credentials json file, defaults None',
-      default=None)
-  parser.add_argument(
-      '--client',
-      '-c',
-      help='path to client credentials json file, defaults None',
-      default=None)
-  parser.add_argument(
-      '--key',
-      '-k',
-      help='Google Cloud API key, also known as developer_key, defaults None',
-      default=None)
+    parser.add_argument('--project',
+                        '-p',
+                        help='cloud id of project, defaults to None',
+                        default=None)
+    parser.add_argument(
+        '--user',
+        '-u',
+        help=
+        'path to user credentials json file, defaults to GOOGLE_APPLICATION_CREDENTIALS',
+        default=None)
+    parser.add_argument(
+        '--service',
+        '-s',
+        help='path to service credentials json file, defaults None',
+        default=None)
+    parser.add_argument(
+        '--client',
+        '-c',
+        help='path to client credentials json file, defaults None',
+        default=None)
+    parser.add_argument(
+        '--key',
+        '-k',
+        help='Google Cloud API key, also known as developer_key, defaults None',
+        default=None)
 
-  parser.add_argument(
-      '--verbose',
-      '-v',
-      help='print all the steps as they happen.',
-      action='store_true')
-  parser.add_argument(
-      '--date',
-      '-d',
-      help='YYYY-MM-DD format date for which these reports are to be run, default will be today.',
-      default='TODAY')
-  parser.add_argument(
-      '--force',
-      '-force',
-      help='execute all scripts once then exit.',
-      action='store_true')
+    parser.add_argument('--verbose',
+                        '-v',
+                        help='print all the steps as they happen.',
+                        action='store_true')
+    parser.add_argument(
+        '--date',
+        '-d',
+        help=
+        'YYYY-MM-DD format date for which these reports are to be run, default will be today.',
+        default='TODAY')
+    parser.add_argument('--force',
+                        '-force',
+                        help='execute all scripts once then exit.',
+                        action='store_true')
 
-  parser.add_argument(
-      '--trace_print',
-      '-tp',
-      help='Simplified execution trace of the program written to stdout.',
-      action='store_true')
-  parser.add_argument(
-      '--trace_file',
-      '-tf',
-      help='Simplified execution trace of the program written to file.',
-      action='store_true')
+    parser.add_argument(
+        '--trace_print',
+        '-tp',
+        help='Simplified execution trace of the program written to stdout.',
+        action='store_true')
+    parser.add_argument(
+        '--trace_file',
+        '-tf',
+        help='Simplified execution trace of the program written to file.',
+        action='store_true')
 
-  args = parser.parse_args()
+    args = parser.parse_args()
 
-  # load json to get each task
-  recipe = get_project(args.json)
+    # load json to get each task
+    recipe = get_project(args.json)
 
-  # track per task instance count
-  instances = {}
+    # track per task instance count
+    instances = {}
 
-  returncode = EXIT_SUCCESS
-  for task in recipe['tasks']:
-    script, task = next(iter(task.items()))
+    returncode = EXIT_SUCCESS
+    for task in recipe['tasks']:
+        script, task = next(iter(task.items()))
 
-    # count instance per task
-    instances.setdefault(script, 0)
-    instances[script] += 1
+        # count instance per task
+        instances.setdefault(script, 0)
+        instances[script] += 1
 
-    # assemble command ( replace command, use all arguments passed, and add instance )
-    command = 'python -W ignore %s/starthinker/task/%s/run.py %s -i %d' % (
-      UI_ROOT,
-      script,
-      ' '.join(sys.argv[1:]),
-      instances[script]
-    )
+        # assemble command ( replace command, use all arguments passed, and add instance )
+        command = 'python -W ignore %s/starthinker/task/%s/run.py %s -i %d' % (
+            UI_ROOT, script, ' '.join(sys.argv[1:]), instances[script])
 
-    # show command so user can run each task
-    print(command)
+        # show command so user can run each task
+        print(command)
 
-    # execute command if schedule, return code
-    if args.force or is_scheduled(recipe, task):
-      if subprocess.Popen(command, shell=True).wait() != EXIT_SUCCESS:
-        returncode = EXIT_ERROR
+        # execute command if schedule, return code
+        if args.force or is_scheduled(recipe, task):
+            if subprocess.Popen(command, shell=True).wait() != EXIT_SUCCESS:
+                returncode = EXIT_ERROR
 
-    # skip command if not schedule
-    else:
-      raise SystemExit(
-        'Schedule Skipping: run command manually or add --force to run all'
-      )
+        # skip command if not schedule
+        else:
+            raise SystemExit(
+                'Schedule Skipping: run command manually or add --force to run all'
+            )
 
-  # Set lowest return code from all tasks
-  exit(returncode)
+    # Set lowest return code from all tasks
+    exit(returncode)
 
 
 if __name__ == '__main__':
-  main()
+    main()

@@ -81,96 +81,95 @@ PUBLIC_FILES = ('SupportedExchange', 'DataPartner', 'UniversalSite',
 
 
 def get_entity(path):
-  delimiter = ',\r\r'
-  first = True
-  view = ''
+    delimiter = ',\r\r'
+    first = True
+    view = ''
 
-  for chunk in object_get_chunks(project.task['auth'], path, CHUNK_SIZE):
-    # read the next chunk, remove all newlines, leaving only '\r\r' between records ( clever use of non display characters for parsing )
-    view += chunk.decode().replace('\n', '')
+    for chunk in object_get_chunks(project.task['auth'], path, CHUNK_SIZE):
+        # read the next chunk, remove all newlines, leaving only '\r\r' between records ( clever use of non display characters for parsing )
+        view += chunk.decode().replace('\n', '')
 
-    # first time through, scrap the leading bracket
-    if first:
-      view = view.strip('[\r\r')
-      first = False
+        # first time through, scrap the leading bracket
+        if first:
+            view = view.strip('[\r\r')
+            first = False
 
-    # after replacing all newlines, only '\r\r' are left, clever Googlers
-    end = view.rfind(delimiter)
-    if end > -1:
-      yield view[:end].replace(delimiter, '\n')
-      view = view[end + 1:]
+        # after replacing all newlines, only '\r\r' are left, clever Googlers
+        end = view.rfind(delimiter)
+        if end > -1:
+            yield view[:end].replace(delimiter, '\n')
+            view = view[end + 1:]
 
-  # last one never delimits, so opportunity to trim extra bracket
-  yield view.strip('\r\r]')
+    # last one never delimits, so opportunity to trim extra bracket
+    yield view.strip('\r\r]')
 
 
 def move_entity(project, path, table, schema, disposition):
-  if 'prefix' in project.task:
-    table = '%s_%s' % (project.task['prefix'], table)
+    if 'prefix' in project.task:
+        table = '%s_%s' % (project.task['prefix'], table)
 
-  if 'out' in project.task:
-    auth = project.task['out']['bigquery'].get('auth', project.task['auth'])
-    dataset = project.task['out']['bigquery']['dataset']
-  # deprecated, need out to allow auth mix on in and out
-  else:
-    auth = project.task['auth']
-    dataset = project.task['dataset']
+    if 'out' in project.task:
+        auth = project.task['out']['bigquery'].get('auth', project.task['auth'])
+        dataset = project.task['out']['bigquery']['dataset']
+    # deprecated, need out to allow auth mix on in and out
+    else:
+        auth = project.task['auth']
+        dataset = project.task['dataset']
 
-  # read the entity file in parts
-  records = get_entity(path)
+    # read the entity file in parts
+    records = get_entity(path)
 
-  # write each part
-  json_to_table(
-      auth,
-      project.id,
-      dataset,
-      table,
-      records,
-      schema=schema,
-      disposition=disposition)
-  # after first write switch to append
-  #disposition = 'WRITE_APPEND'
+    # write each part
+    json_to_table(auth,
+                  project.id,
+                  dataset,
+                  table,
+                  records,
+                  schema=schema,
+                  disposition=disposition)
+    # after first write switch to append
+    #disposition = 'WRITE_APPEND'
 
 
 @project.from_parameters
 def entity():
-  if project.verbose:
-    print('ENTITY')
-
-  # legacy translations ( changed partners, advertisers to accounts with "partner_id:advertiser_id" )
-  if 'partner_id' in project.task:
-    project.task['accounts'] = [project.task['partner_id']]
-
-  # create entities
-  for entity in project.task['entities']:
     if project.verbose:
-      print('ENTITY:', entity)
+        print('ENTITY')
 
-    # write public files only once
-    if entity in PUBLIC_FILES:
-      path = 'gdbm-public:entity/%s.0.%s.json' % (
-          project.date.strftime('%Y%m%d'), entity)
-      schema = Entity_Schema_Lookup[entity]
-      move_entity(project, path, entity, schema, 'WRITE_TRUNCATE')
+    # legacy translations ( changed partners, advertisers to accounts with "partner_id:advertiser_id" )
+    if 'partner_id' in project.task:
+        project.task['accounts'] = [project.task['partner_id']]
 
-    # supports multiple partners, first one resets table, others append
-    else:
-      disposition = 'WRITE_TRUNCATE'
-      for account in get_rows('user', project.task['partners']):
-
-        #for account in project.task['accounts']:
-        # if advertiser given do not run it ( SAFETY )
-        if ':' in str(account):
-          print('WARNING: Skipping advertiser: ', account)
-          continue
+    # create entities
+    for entity in project.task['entities']:
         if project.verbose:
-          print('PARTNER:', account)
-        path = 'gdbm-%s:entity/%s.0.%s.json' % (
-            account, project.date.strftime('%Y%m%d'), entity)
-        schema = Entity_Schema_Lookup[entity]
-        move_entity(project, path, entity, schema, disposition)
-        disposition = 'WRITE_APPEND'
+            print('ENTITY:', entity)
+
+        # write public files only once
+        if entity in PUBLIC_FILES:
+            path = 'gdbm-public:entity/%s.0.%s.json' % (
+                project.date.strftime('%Y%m%d'), entity)
+            schema = Entity_Schema_Lookup[entity]
+            move_entity(project, path, entity, schema, 'WRITE_TRUNCATE')
+
+        # supports multiple partners, first one resets table, others append
+        else:
+            disposition = 'WRITE_TRUNCATE'
+            for account in get_rows('user', project.task['partners']):
+
+                #for account in project.task['accounts']:
+                # if advertiser given do not run it ( SAFETY )
+                if ':' in str(account):
+                    print('WARNING: Skipping advertiser: ', account)
+                    continue
+                if project.verbose:
+                    print('PARTNER:', account)
+                path = 'gdbm-%s:entity/%s.0.%s.json' % (
+                    account, project.date.strftime('%Y%m%d'), entity)
+                schema = Entity_Schema_Lookup[entity]
+                move_entity(project, path, entity, schema, disposition)
+                disposition = 'WRITE_APPEND'
 
 
 if __name__ == '__main__':
-  entity()
+    entity()

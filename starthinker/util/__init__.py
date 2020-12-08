@@ -23,7 +23,7 @@ not add classes here.
 
 
 def flag_last(o):
-  """Flags the last loop of an iterator.
+    """Flags the last loop of an iterator.
 
   Consumes an iterator, buffers one instance so it can look ahead.
   Returns True on last iteration.
@@ -36,18 +36,18 @@ def flag_last(o):
 
   """
 
-  it = o.__iter__()
+    it = o.__iter__()
 
-  try:
-    e = next(it)
-  except StopIteration:
-    return
-
-  while True:
     try:
-      nxt = next(it)
-      yield (False, e)
-      e = nxt
+        e = next(it)
     except StopIteration:
-      yield (True, e)
-      break
+        return
+
+    while True:
+        try:
+            nxt = next(it)
+            yield (False, e)
+            e = nxt
+        except StopIteration:
+            yield (True, e)
+            break

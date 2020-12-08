@@ -24,43 +24,45 @@ RE_TEXT_FIELD = re.compile(r'\{(.*?:.*?)\}')
 
 
 def fields_to_string(fields, values={}):
-  items = [
-      repr(field['name']) + ': ' +
-      repr(values.get(field['name'], field.get('default', ''))) + ',' +
-      ('  # %s' % field['description'] if 'description' in field else '')
-      for field in fields
-  ]
-  return '{\n  %s\n}' % ('\n  '.join(items))
+    items = [
+        repr(field['name']) + ': ' +
+        repr(values.get(field['name'], field.get('default', ''))) + ',' +
+        ('  # %s' % field['description'] if 'description' in field else '')
+        for field in fields
+    ]
+    return '{\n  %s\n}' % ('\n  '.join(items))
 
 
 def dict_to_string(value, char_indent='  ', char_line='\n', skip=[], indent=0):
-  nlch = char_line + char_indent * (indent + 1)
-  if type(value) is dict:
-    is_skip = any(k in value for k in skip)
-    items = [('' if is_skip else nlch) + repr(key) + ': ' +
-             dict_to_string(value[key], '' if is_skip else char_indent,
-                            '' if is_skip else char_line, skip, indent + 1)
-             for key in value]
-    return '{%s}' % (','.join(items) +
-                     ('' if is_skip else char_line + char_indent * indent))
-  elif type(value) is list:
-    items = [
-        nlch + dict_to_string(item, char_indent, char_line, skip, indent + 1)
-        for item in value
-    ]
-    return '[%s]' % (','.join(items) + char_line + char_indent * indent)
-  elif type(value) is tuple:
-    items = [
-        nlch + dict_to_string(item, char_indent, char_line, skip, indent + 1)
-        for item in value
-    ]
-    return '(%s)' % (','.join(items) + char_line + char_indent * indent)
-  else:
-    return repr(value)
+    nlch = char_line + char_indent * (indent + 1)
+    if type(value) is dict:
+        is_skip = any(k in value for k in skip)
+        items = [('' if is_skip else nlch) + repr(key) + ': ' +
+                 dict_to_string(value[key], '' if is_skip else char_indent,
+                                '' if is_skip else char_line, skip, indent + 1)
+                 for key in value]
+        return '{%s}' % (','.join(items) +
+                         ('' if is_skip else char_line + char_indent * indent))
+    elif type(value) is list:
+        items = [
+            nlch +
+            dict_to_string(item, char_indent, char_line, skip, indent + 1)
+            for item in value
+        ]
+        return '[%s]' % (','.join(items) + char_line + char_indent * indent)
+    elif type(value) is tuple:
+        items = [
+            nlch +
+            dict_to_string(item, char_indent, char_line, skip, indent + 1)
+            for item in value
+        ]
+        return '(%s)' % (','.join(items) + char_line + char_indent * indent)
+    else:
+        return repr(value)
 
 
 def json_set_auths(struct, auth):
-  """Recusrsively finds auth in script JSON and sets them.
+    """Recusrsively finds auth in script JSON and sets them.
 
     Args:
       struct: (dict) A dictionary representation fo the JSON script.
@@ -71,20 +73,20 @@ def json_set_auths(struct, auth):
 
   """
 
-  if isinstance(struct, dict):
-    if 'auth' in struct:
-      struct['auth'] = auth
-    for key, value in struct.items():
-      json_set_auths(value, auth)
-  elif isinstance(struct, list) or isinstance(struct, tuple):
-    for index, value in enumerate(struct):
-      json_set_auths(value, auth)
+    if isinstance(struct, dict):
+        if 'auth' in struct:
+            struct['auth'] = auth
+        for key, value in struct.items():
+            json_set_auths(value, auth)
+    elif isinstance(struct, list) or isinstance(struct, tuple):
+        for index, value in enumerate(struct):
+            json_set_auths(value, auth)
 
-  return struct
+    return struct
 
 
 def json_get_fields(struct, path=[]):
-  """Recusrsively finds fields in script JSON and returns them as a list.
+    """Recusrsively finds fields in script JSON and returns them as a list.
 
      Field has format: { "field":{ "name":"???", "kind":"???", "default":???,
      "description":"???" }}
@@ -100,40 +102,39 @@ def json_get_fields(struct, path=[]):
 
   """
 
-  fields = {}
-  path = path[:]
-  if isinstance(struct, dict):
-    if 'field' in struct:
-      fields[struct['field']['name']] = struct['field']
-    else:
-      for key, value in struct.items():
-        fields.update(json_get_fields(value, path + [key]))
-  elif isinstance(struct, list) or isinstance(struct, tuple):
-    for index, value in enumerate(struct):
-      fields.update(json_get_fields(value, path + [index]))
+    fields = {}
+    path = path[:]
+    if isinstance(struct, dict):
+        if 'field' in struct:
+            fields[struct['field']['name']] = struct['field']
+        else:
+            for key, value in struct.items():
+                fields.update(json_get_fields(value, path + [key]))
+    elif isinstance(struct, list) or isinstance(struct, tuple):
+        for index, value in enumerate(struct):
+            fields.update(json_get_fields(value, path + [index]))
 
-  if path == []:
-    return sorted(
-        fields.values(),
-        key=lambda f: f.get('order', 0))  # sort only on last step of recursion
-  else:
-    return fields  # do not sort if deep in recursion
+    if path == []:
+        return sorted(fields.values(), key=lambda f: f.get('order', 0)
+                     )  # sort only on last step of recursion
+    else:
+        return fields  # do not sort if deep in recursion
 
 
 def get_field_value(field, variables):
-  value = None
-  try:
-    value = variables.get(field['name'], field.get('default'))
-    if value is not None and 'prefix' in field:
-      value = '%s%s' % (field['prefix'], value)
-  except KeyError:
-    pass
+    value = None
+    try:
+        value = variables.get(field['name'], field.get('default'))
+        if value is not None and 'prefix' in field:
+            value = '%s%s' % (field['prefix'], value)
+    except KeyError:
+        pass
 
-  return value
+    return value
 
 
 def json_set_fields(struct, variables):
-  """Recusrsively replaces fields in script JSON with values provided.
+    """Recusrsively replaces fields in script JSON with values provided.
 
      Field has format: { "field":{ "name":"???", "kind":"???", "default":???,
      "description":"???" }}
@@ -153,26 +154,26 @@ def json_set_fields(struct, variables):
 
   """
 
-  if isinstance(struct, dict):
-    for key, value in list(struct.items()):
-      if isinstance(value, dict) and 'field' in value:
-        variable_value = get_field_value(value['field'], variables)
-        if variable_value is None and value.get('default') is None:
-          del struct[key]
-        else:
-          struct[key] = get_field_value(value['field'], variables)
-      else:
-        json_set_fields(value, variables)
-  elif isinstance(struct, list) or isinstance(struct, tuple):
-    for index, value in enumerate(struct):
-      if isinstance(value, dict) and 'field' in value:
-        struct[index] = get_field_value(value['field'], variables)
-      else:
-        json_set_fields(value, variables)
+    if isinstance(struct, dict):
+        for key, value in list(struct.items()):
+            if isinstance(value, dict) and 'field' in value:
+                variable_value = get_field_value(value['field'], variables)
+                if variable_value is None and value.get('default') is None:
+                    del struct[key]
+                else:
+                    struct[key] = get_field_value(value['field'], variables)
+            else:
+                json_set_fields(value, variables)
+    elif isinstance(struct, list) or isinstance(struct, tuple):
+        for index, value in enumerate(struct):
+            if isinstance(value, dict) and 'field' in value:
+                struct[index] = get_field_value(value['field'], variables)
+            else:
+                json_set_fields(value, variables)
 
 
 def text_set_fields(text, variables):
-  """Replaces fields in text with values from recipe.
+    """Replaces fields in text with values from recipe.
 
      Fields are {field:[string]} or {field:[string], prefix:[string]} where
      field is a key in variables
@@ -191,16 +192,16 @@ def text_set_fields(text, variables):
 
   """
 
-  for field in RE_TEXT_FIELD.findall(text):
-    parts = dict([p.strip().split(':') for p in field.split(',', 1)])
-    value = (parts.get('prefix', '') + variables[parts['field']]
-            ) if parts.get('field') in variables else 'UNDEFINED'
-    text = text.replace('{' + field + '}', value)
-  return text
+    for field in RE_TEXT_FIELD.findall(text):
+        parts = dict([p.strip().split(':') for p in field.split(',', 1)])
+        value = (parts.get('prefix', '') + variables[parts['field']]
+                ) if parts.get('field') in variables else 'UNDEFINED'
+        text = text.replace('{' + field + '}', value)
+    return text
 
 
 def json_set_instructions(struct, variables):
-  """Replaces all fields in instructions with values provided.
+    """Replaces all fields in instructions with values provided.
 
      Checks if struct['script']['instructions'] exist.  The replaces all %(???)s
      variables
@@ -217,19 +218,19 @@ def json_set_instructions(struct, variables):
 
   """
 
-  if 'script' in struct:
-    if 'instructions' in struct['script']:
-      try:
-        struct['script']['instructions'] = [
-            text_set_fields(instruction, variables)
-            for instruction in struct['script']['instructions']
-        ]
-      except KeyError:
-        pass
+    if 'script' in struct:
+        if 'instructions' in struct['script']:
+            try:
+                struct['script']['instructions'] = [
+                    text_set_fields(instruction, variables)
+                    for instruction in struct['script']['instructions']
+                ]
+            except KeyError:
+                pass
 
 
 def json_set_description(struct, variables):
-  """Replaces all fields in description with values provided.
+    """Replaces all fields in description with values provided.
 
      Checks if struct['script']['description'] exist.  The replaces all %(???)s
      variables
@@ -246,10 +247,10 @@ def json_set_description(struct, variables):
 
   """
 
-  if 'script' in struct:
-    if 'description' in struct['script']:
-      try:
-        struct['script']['description'] = text_set_fields(
-            struct['script']['description'], variables)
-      except KeyError:
-        pass
+    if 'script' in struct:
+        if 'description' in struct['script']:
+            try:
+                struct['script']['description'] = text_set_fields(
+                    struct['script']['description'], variables)
+            except KeyError:
+                pass

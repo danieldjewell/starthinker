@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -81,49 +80,47 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_write': 'service',  # Credentials used for writing data.
-  'role': '',  # projects/[project name]/roles/[role name]
-  'email': '',  # Email address to grant role to.
+    'auth_write': 'service',  # Credentials used for writing data.
+    'role': '',  # projects/[project name]/roles/[role name]
+    'email': '',  # Email address to grant role to.
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'iam': {
-        'auth': {
-          'field': {
-            'name': 'auth_write',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Credentials used for writing data.'
-          }
-        },
-        'role': {
-          'field': {
-            'name': 'role',
-            'kind': 'string',
-            'order': 1,
-            'default': '',
-            'description': 'projects/[project name]/roles/[role name]'
-          }
-        },
-        'email': {
-          'field': {
-            'name': 'email',
-            'kind': 'string',
-            'order': 2,
-            'default': '',
-            'description': 'Email address to grant role to.'
-          }
+    'tasks': [{
+        'iam': {
+            'auth': {
+                'field': {
+                    'name': 'auth_write',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Credentials used for writing data.'
+                }
+            },
+            'role': {
+                'field': {
+                    'name': 'role',
+                    'kind': 'string',
+                    'order': 1,
+                    'default': '',
+                    'description': 'projects/[project name]/roles/[role name]'
+                }
+            },
+            'email': {
+                'field': {
+                    'name': 'email',
+                    'kind': 'string',
+                    'order': 2,
+                    'default': '',
+                    'description': 'Email address to grant role to.'
+                }
+            }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('iam', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

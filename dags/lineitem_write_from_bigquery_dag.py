@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -80,61 +79,59 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
-  'dataset': '',
-  'query': 'SELECT * FROM `Dataset.Table`;',
-  'legacy': False,
+    'auth_read': 'user',  # Credentials used for reading data.
+    'dataset': '',
+    'query': 'SELECT * FROM `Dataset.Table`;',
+    'legacy': False,
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'lineitem': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'write': {
-          'dry_run': False,
-          'bigquery': {
-            'dataset': {
-              'field': {
-                'name': 'dataset',
-                'kind': 'string',
-                'order': 1,
-                'default': ''
-              }
+    'tasks': [{
+        'lineitem': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
             },
-            'query': {
-              'field': {
-                'name': 'query',
-                'kind': 'string',
-                'order': 2,
-                'default': 'SELECT * FROM `Dataset.Table`;'
-              }
-            },
-            'legacy': {
-              'field': {
-                'name': 'legacy',
-                'kind': 'boolean',
-                'order': 3,
-                'default': False
-              }
+            'write': {
+                'dry_run': False,
+                'bigquery': {
+                    'dataset': {
+                        'field': {
+                            'name': 'dataset',
+                            'kind': 'string',
+                            'order': 1,
+                            'default': ''
+                        }
+                    },
+                    'query': {
+                        'field': {
+                            'name': 'query',
+                            'kind': 'string',
+                            'order': 2,
+                            'default': 'SELECT * FROM `Dataset.Table`;'
+                        }
+                    },
+                    'legacy': {
+                        'field': {
+                            'name': 'legacy',
+                            'kind': 'boolean',
+                            'order': 3,
+                            'default': False
+                        }
+                    }
+                }
             }
-          }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('lineitem_write_from_bigquery', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

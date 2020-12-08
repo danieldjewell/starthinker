@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -80,156 +79,123 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
+    'auth_read': 'user',  # Credentials used for reading data.
 }
 
 RECIPE = {
-  'setup': {
-    'day': [
-      'Mon',
-      'Tue',
-      'Wed',
-      'Thu',
-      'Fri',
-      'Sat',
-      'Sun'
-    ],
-    'hour': [
-      1,
-      3,
-      23
-    ]
-  },
-  'tasks': [
-    {
-      'hello': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'hour': [
-          1
-        ],
-        'say': 'Hello At 1',
-        'sleep': 0
-      }
+    'setup': {
+        'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        'hour': [1, 3, 23]
     },
-    {
-      'hello': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'hour': [
-          3
-        ],
-        'say': 'Hello At 3',
-        'sleep': 0
-      }
-    },
-    {
-      'hello': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'hour': [
-        ],
-        'say': 'Hello Manual',
-        'sleep': 0
-      }
-    },
-    {
-      'hello': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'hour': [
-          23
-        ],
-        'say': 'Hello At 23 Sleep',
-        'sleep': 30
-      }
-    },
-    {
-      'hello': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'say': 'Hello At Anytime',
-        'sleep': 0
-      }
-    },
-    {
-      'hello': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'hour': [
-          1,
-          3,
-          23
-        ],
-        'say': 'Hello At 1, 3, 23',
-        'sleep': 0
-      }
-    },
-    {
-      'hello': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'hour': [
-          3
-        ],
-        'say': 'Hello At 3 Reordered',
-        'sleep': 0
-      }
-    }
-  ]
+    'tasks': [{
+        'hello': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'hour': [1],
+            'say': 'Hello At 1',
+            'sleep': 0
+        }
+    }, {
+        'hello': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'hour': [3],
+            'say': 'Hello At 3',
+            'sleep': 0
+        }
+    }, {
+        'hello': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'hour': [],
+            'say': 'Hello Manual',
+            'sleep': 0
+        }
+    }, {
+        'hello': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'hour': [23],
+            'say': 'Hello At 23 Sleep',
+            'sleep': 30
+        }
+    }, {
+        'hello': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'say': 'Hello At Anytime',
+            'sleep': 0
+        }
+    }, {
+        'hello': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'hour': [1, 3, 23],
+            'say': 'Hello At 1, 3, 23',
+            'sleep': 0
+        }
+    }, {
+        'hello': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'hour': [3],
+            'say': 'Hello At 3 Reordered',
+            'sleep': 0
+        }
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('test', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

@@ -32,61 +32,62 @@ from starthinker.task.dv_editor.patch import patch_preview
 
 
 def campaign_clear():
-  table_create(
-      project.task['auth_bigquery'],
-      project.id,
-      project.task['dataset'],
-      'DV_Campaigns',
-      Discovery_To_BigQuery('displayvideo',
-                            'v1').method_schema('advertisers.campaigns.list'),
-  )
+    table_create(
+        project.task['auth_bigquery'],
+        project.id,
+        project.task['dataset'],
+        'DV_Campaigns',
+        Discovery_To_BigQuery('displayvideo',
+                              'v1').method_schema('advertisers.campaigns.list'),
+    )
 
-  sheets_clear(project.task['auth_sheets'], project.task['sheet'], 'Campaigns', 'B2:Z')
+    sheets_clear(project.task['auth_sheets'], project.task['sheet'],
+                 'Campaigns', 'B2:Z')
 
 
 def campaign_load():
 
-  # load multiple partners from user defined sheet
-  def campaign_load_multiple():
-    rows = get_rows(
-        project.task['auth_sheets'], {
-            'sheets': {
-                'sheet': project.task['sheet'],
-                'tab': 'Advertisers',
-                'range': 'A2:A'
+    # load multiple partners from user defined sheet
+    def campaign_load_multiple():
+        rows = get_rows(
+            project.task['auth_sheets'], {
+                'sheets': {
+                    'sheet': project.task['sheet'],
+                    'tab': 'Advertisers',
+                    'range': 'A2:A'
+                }
+            })
+
+        for row in rows:
+            yield from API_DV360(project.task['auth_dv'],
+                                 iterate=True).advertisers().campaigns().list(
+                                     advertiserId=lookup_id(row[0])).execute()
+
+    # write campaigns to database and sheet
+    put_rows(
+        project.task['auth_bigquery'], {
+            'bigquery': {
+                'dataset':
+                    project.task['dataset'],
+                'table':
+                    'DV_Campaigns',
+                'schema':
+                    Discovery_To_BigQuery(
+                        'displayvideo',
+                        'v1').method_schema('advertisers.campaigns.list'),
+                'format':
+                    'JSON'
             }
-        })
+        }, campaign_load_multiple())
 
-    for row in rows:
-      yield from API_DV360(
-          project.task['auth_dv'], iterate=True).advertisers().campaigns().list(
-              advertiserId=lookup_id(row[0])).execute()
-
-  # write campaigns to database and sheet
-  put_rows(
-      project.task['auth_bigquery'], {
-          'bigquery': {
-              'dataset':
-                  project.task['dataset'],
-              'table':
-                  'DV_Campaigns',
-              'schema':
-                  Discovery_To_BigQuery(
-                      'displayvideo',
-                      'v1').method_schema('advertisers.campaigns.list'),
-              'format':
-                  'JSON'
-          }
-      }, campaign_load_multiple())
-
-  # write campaigns to sheet
-  rows = get_rows(
-      project.task['auth_bigquery'], {
-          'bigquery': {
-              'dataset':
-                  project.task['dataset'],
-              'query':
-                  """SELECT
+    # write campaigns to sheet
+    rows = get_rows(
+        project.task['auth_bigquery'], {
+            'bigquery': {
+                'dataset':
+                    project.task['dataset'],
+                'query':
+                    """SELECT
          CONCAT(P.displayName, ' - ', P.partnerId),
          CONCAT(A.displayName, ' - ', A.advertiserId),
          CONCAT(C.displayName, ' - ', C.campaignId),
@@ -97,37 +98,40 @@ def campaign_load():
          LEFT JOIN `{dataset}.DV_Partners` AS P
          ON A.partnerId=P.partnerId
        """.format(**project.task),
-              'legacy':
-                  False
-          }
-      })
+                'legacy':
+                    False
+            }
+        })
 
-  put_rows(project.task['auth_sheets'], {
-      'sheets': {
-          'sheet': project.task['sheet'],
-          'tab': 'Campaigns',
-          'range': 'B2'
-      }
-  }, rows)
+    put_rows(
+        project.task['auth_sheets'], {
+            'sheets': {
+                'sheet': project.task['sheet'],
+                'tab': 'Campaigns',
+                'range': 'B2'
+            }
+        }, rows)
 
 
 def campaign_commit(patches):
-  for patch in patches:
-    if not patch.get('campaign'):
-      continue
-    print('API CALL', patch['action'], patch['advertiser'], patch['campaign'])
-    try:
-      if patch['action'] == 'DELETE':
-        response = API_DV360(
-            project.task['auth_dv']).advertisers().campaigns().delete(
-                **patch['parameters']).execute()
-        patch['success'] = response
-      elif patch['action'] == 'PATCH':
-        response = API_DV360(project.task['auth_dv']).advertisers().campaigns().patch(
-            **patch['parameters']).execute()
-        patch['success'] = response['campaignId']
-    except Exception as e:
-      patch['error'] = str(e)
-    finally:
-      patch_log(patch)
-  patch_log()
+    for patch in patches:
+        if not patch.get('campaign'):
+            continue
+        print('API CALL', patch['action'], patch['advertiser'],
+              patch['campaign'])
+        try:
+            if patch['action'] == 'DELETE':
+                response = API_DV360(
+                    project.task['auth_dv']).advertisers().campaigns().delete(
+                        **patch['parameters']).execute()
+                patch['success'] = response
+            elif patch['action'] == 'PATCH':
+                response = API_DV360(
+                    project.task['auth_dv']).advertisers().campaigns().patch(
+                        **patch['parameters']).execute()
+                patch['success'] = response['campaignId']
+        except Exception as e:
+            patch['error'] = str(e)
+        finally:
+            patch_log(patch)
+    patch_log()

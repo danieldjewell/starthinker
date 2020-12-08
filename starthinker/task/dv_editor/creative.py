@@ -27,60 +27,62 @@ from starthinker.util.sheets import sheets_clear
 
 
 def creative_clear():
-  table_create(
-    project.task["auth_bigquery"],
-    project.id,
-    project.task["dataset"],
-    "DV_Creatives",
-    Discovery_To_BigQuery(
-      "displayvideo",
-      "v1"
-    ).method_schema("advertisers.creatives.list"),
-  )
+    table_create(
+        project.task["auth_bigquery"],
+        project.id,
+        project.task["dataset"],
+        "DV_Creatives",
+        Discovery_To_BigQuery("displayvideo",
+                              "v1").method_schema("advertisers.creatives.list"),
+    )
 
-  sheets_clear(project.task["auth_sheets"], project.task["sheet"], "Creatives", "B2:Z")
+    sheets_clear(project.task["auth_sheets"], project.task["sheet"],
+                 "Creatives", "B2:Z")
 
 
 def creative_load():
 
-  # load multiple partners from user defined sheet
-  def creative_load_multiple():
+    # load multiple partners from user defined sheet
+    def creative_load_multiple():
+        rows = get_rows(
+            project.task["auth_sheets"], {
+                "sheets": {
+                    "sheet": project.task["sheet"],
+                    "tab": "Advertisers",
+                    "range": "A2:A"
+                }
+            })
+
+        for row in rows:
+            yield from API_DV360(project.task["auth_dv"],
+                                 iterate=True).advertisers().creatives().list(
+                                     advertiserId=lookup_id(row[0])).execute()
+
+    # write creatives to database and sheet
+    put_rows(
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset":
+                    project.task["dataset"],
+                "table":
+                    "DV_Creatives",
+                "schema":
+                    Discovery_To_BigQuery(
+                        "displayvideo",
+                        "v1").method_schema("advertisers.creatives.list"),
+                "format":
+                    "JSON"
+            }
+        }, creative_load_multiple())
+
+    # write creatives to sheet
     rows = get_rows(
-      project.task["auth_sheets"], {
-        "sheets": {
-          "sheet": project.task["sheet"],
-          "tab": "Advertisers",
-          "range": "A2:A"
-        }
-    })
-
-    for row in rows:
-      yield from API_DV360(
-        project.task["auth_dv"], iterate=True).advertisers().creatives().list(
-          advertiserId=lookup_id(row[0])
-        ).execute()
-
-  # write creatives to database and sheet
-  put_rows(
-    project.task["auth_bigquery"], {
-      "bigquery": {
-        "dataset":project.task["dataset"],
-        "table":"DV_Creatives",
-        "schema":Discovery_To_BigQuery(
-          "displayvideo",
-          "v1"
-        ).method_schema("advertisers.creatives.list"),
-        "format": "JSON"
-      }
-    }, creative_load_multiple()
-  )
-
-  # write creatives to sheet
-  rows = get_rows(
-    project.task["auth_bigquery"], {
-      "bigquery": {
-        "dataset":project.task["dataset"],
-        "query":"""SELECT
+        project.task["auth_bigquery"], {
+            "bigquery": {
+                "dataset":
+                    project.task["dataset"],
+                "query":
+                    """SELECT
           CONCAT(P.displayName, ' - ', P.partnerId),
           CONCAT(A.displayName, ' - ', A.advertiserId),
           CONCAT(C.displayName, ' - ', C.creativeId),
@@ -105,19 +107,16 @@ def creative_load():
           LEFT JOIN `{dataset}.DV_Partners` AS P
           ON A.partnerId=P.partnerId
         """.format(**project.task),
-        "legacy":False
-      }
-    }
-  )
+                "legacy":
+                    False
+            }
+        })
 
-  put_rows(
-    project.task["auth_sheets"],
-    {
-      "sheets": {
-        "sheet": project.task["sheet"],
-        "tab": "Creatives",
-        "range": "B2"
-      }
-    },
-    rows
-  )
+    put_rows(
+        project.task["auth_sheets"], {
+            "sheets": {
+                "sheet": project.task["sheet"],
+                "tab": "Creatives",
+                "range": "B2"
+            }
+        }, rows)

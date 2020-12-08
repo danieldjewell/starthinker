@@ -40,7 +40,7 @@ from starthinker.util.csv import rows_to_csv
 
 
 def get_rows(auth, source, as_object=False, unnest=False):
-  """Processes standard read JSON block for dynamic loading of data.
+    """Processes standard read JSON block for dynamic loading of data.
 
   Allows us to quickly pull a column or columns of data from and use it as an
   input
@@ -107,74 +107,77 @@ def get_rows(auth, source, as_object=False, unnest=False):
     If single_cell is True: Returns a list of values [v1, v2, ...]
 """
 
-  # if handler points to list, concatenate all the values from various sources into one list
-  if isinstance(source, list):
-    for s in source:
-      for r in get_rows(auth, s):
-        yield r
+    # if handler points to list, concatenate all the values from various sources into one list
+    if isinstance(source, list):
+        for s in source:
+            for r in get_rows(auth, s):
+                yield r
 
-  # if handler is an endpoint, fetch data
-  else:
-    if 'values' in source:
-      if isinstance(source['values'], list):
-        for value in source['values']:
-          yield value
-      else:
-        yield source['values']
+    # if handler is an endpoint, fetch data
+    else:
+        if 'values' in source:
+            if isinstance(source['values'], list):
+                for value in source['values']:
+                    yield value
+            else:
+                yield source['values']
 
-    # should be sheets, deprecate sheet over next few releases
-    if 'sheet' in source:
-      rows = sheets_read(
-          auth,
-          source['sheet']['sheet'],
-          source['sheet']['tab'],
-          source['sheet']['range'],
-      )
+        # should be sheets, deprecate sheet over next few releases
+        if 'sheet' in source:
+            rows = sheets_read(
+                auth,
+                source['sheet']['sheet'],
+                source['sheet']['tab'],
+                source['sheet']['range'],
+            )
 
-      for row in rows:
-        yield row[0] if unnest or source.get('single_cell', False) else row
+            for row in rows:
+                yield row[0] if unnest or source.get('single_cell',
+                                                     False) else row
 
-    if 'sheets' in source:
-      rows = sheets_read(
-          auth,
-          source['sheets']['sheet'],
-          source['sheets']['tab'],
-          source['sheets']['range'],
-      )
+        if 'sheets' in source:
+            rows = sheets_read(
+                auth,
+                source['sheets']['sheet'],
+                source['sheets']['tab'],
+                source['sheets']['range'],
+            )
 
-      for row in rows:
-        yield row[0] if unnest or source.get('single_cell', False) else row
+            for row in rows:
+                yield row[0] if unnest or source.get('single_cell',
+                                                     False) else row
 
-    if 'bigquery' in source:
+        if 'bigquery' in source:
 
-      rows = []
-      as_object = as_object or source['bigquery'].get('as_object', False)
-      unnest = unnest or source.get('single_cell', False)
+            rows = []
+            as_object = as_object or source['bigquery'].get('as_object', False)
+            unnest = unnest or source.get('single_cell', False)
 
-      if 'table' in source['bigquery']:
-        rows = table_to_rows(
-            source['bigquery'].get('auth', auth),
-            project.id,
-            source['bigquery']['dataset'],
-            source['bigquery']['table'],
-            as_object=as_object or source['bigquery'].get('as_object', False))
+            if 'table' in source['bigquery']:
+                rows = table_to_rows(source['bigquery'].get('auth', auth),
+                                     project.id,
+                                     source['bigquery']['dataset'],
+                                     source['bigquery']['table'],
+                                     as_object=as_object or
+                                     source['bigquery'].get('as_object', False))
 
-      else:
-        rows = query_to_rows(
-            source['bigquery'].get('auth', auth),
-            project.id,
-            source['bigquery']['dataset'],
-            query_parameters(source['bigquery']['query'],
-                             source['bigquery'].get('parameters', {})),
-            legacy=source['bigquery'].get('legacy', False),
-            as_object=as_object or source['bigquery'].get('as_object', False))
+            else:
+                rows = query_to_rows(
+                    source['bigquery'].get('auth', auth),
+                    project.id,
+                    source['bigquery']['dataset'],
+                    query_parameters(source['bigquery']['query'],
+                                     source['bigquery'].get('parameters', {})),
+                    legacy=source['bigquery'].get('legacy', False),
+                    as_object=as_object or
+                    source['bigquery'].get('as_object', False))
 
-      for row in rows:
-        yield row[0] if not as_object and unnest else row
+            for row in rows:
+                yield row[0] if not as_object and unnest else row
 
 
 def put_rows(auth, destination, rows, variant=''):
-  """Processes standard write JSON block for dynamic export of data.
+    """Processes standard write JSON block for dynamic export of data.
 
   Allows us to quickly write the results of a script to a destination.  For
   example
@@ -239,105 +242,105 @@ def put_rows(auth, destination, rows, variant=''):
     If single_cell is True: Returns a list of values [v1, v2, ...]
 """
 
-  if 'bigquery' in destination:
-    skip_rows = 1 if destination['bigquery'].get('header') and destination['bigquery'].get('schema') else 0
+    if 'bigquery' in destination:
+        skip_rows = 1 if destination['bigquery'].get(
+            'header') and destination['bigquery'].get('schema') else 0
 
-    if destination['bigquery'].get('format', 'CSV') == 'JSON':
-      json_to_table(
-          destination['bigquery'].get('auth', auth),
-          destination['bigquery'].get('project_id', project.id),
-          destination['bigquery']['dataset'],
-          destination['bigquery']['table'] + variant,
-          rows,
-          destination['bigquery'].get('schema', []),
-          destination['bigquery'].get('disposition', 'WRITE_TRUNCATE'),
-      )
+        if destination['bigquery'].get('format', 'CSV') == 'JSON':
+            json_to_table(
+                destination['bigquery'].get('auth', auth),
+                destination['bigquery'].get('project_id', project.id),
+                destination['bigquery']['dataset'],
+                destination['bigquery']['table'] + variant,
+                rows,
+                destination['bigquery'].get('schema', []),
+                destination['bigquery'].get('disposition', 'WRITE_TRUNCATE'),
+            )
 
-    elif destination['bigquery'].get('is_incremental_load', False) == True:
-      incremental_rows_to_table(
-          destination['bigquery'].get('auth', auth),
-          destination['bigquery'].get('project_id', project.id),
-          destination['bigquery']['dataset'],
-          destination['bigquery']['table'] + variant,
-          rows,
-          destination['bigquery'].get('schema', []),
-          destination['bigquery'].get('skip_rows', skip_rows),
-          destination['bigquery'].get('disposition', 'WRITE_APPEND'),
-          billing_project_id=project.id)
+        elif destination['bigquery'].get('is_incremental_load', False) == True:
+            incremental_rows_to_table(
+                destination['bigquery'].get('auth', auth),
+                destination['bigquery'].get('project_id', project.id),
+                destination['bigquery']['dataset'],
+                destination['bigquery']['table'] + variant,
+                rows,
+                destination['bigquery'].get('schema', []),
+                destination['bigquery'].get('skip_rows', skip_rows),
+                destination['bigquery'].get('disposition', 'WRITE_APPEND'),
+                billing_project_id=project.id)
 
-    else:
+        else:
 
-      rows_to_table(
-          destination['bigquery'].get('auth', auth),
-          destination['bigquery'].get('project_id', project.id),
-          destination['bigquery']['dataset'],
-          destination['bigquery']['table'] + variant,
-          rows,
-          destination['bigquery'].get('schema', []),
-          destination['bigquery'].get('skip_rows', skip_rows),
-          destination['bigquery'].get('disposition', 'WRITE_TRUNCATE'),
-      )
+            rows_to_table(
+                destination['bigquery'].get('auth', auth),
+                destination['bigquery'].get('project_id', project.id),
+                destination['bigquery']['dataset'],
+                destination['bigquery']['table'] + variant,
+                rows,
+                destination['bigquery'].get('schema', []),
+                destination['bigquery'].get('skip_rows', skip_rows),
+                destination['bigquery'].get('disposition', 'WRITE_TRUNCATE'),
+            )
 
-  if 'sheets' in destination:
-    if destination['sheets'].get('delete', False):
-      sheets_clear(
-          auth,
-          destination['sheets']['sheet'],
-          destination['sheets']['tab'] + variant,
-          destination['sheets']['range'],
-      )
+    if 'sheets' in destination:
+        if destination['sheets'].get('delete', False):
+            sheets_clear(
+                auth,
+                destination['sheets']['sheet'],
+                destination['sheets']['tab'] + variant,
+                destination['sheets']['range'],
+            )
 
-    sheets_write(
-        auth,
-        destination['sheets']['sheet'],
-        destination['sheets']['tab'] + variant,
-        destination['sheets']['range'],
-        rows,
-        destination['sheets'].get('append', False),
-    )
+        sheets_write(
+            auth,
+            destination['sheets']['sheet'],
+            destination['sheets']['tab'] + variant,
+            destination['sheets']['range'],
+            rows,
+            destination['sheets'].get('append', False),
+        )
 
-  if 'file' in destination:
-    path_out, file_ext = destination['file'].rsplit('.', 1)
-    file_out = path_out + variant + '.' + file_ext
-    if project.verbose:
-      print('SAVING', file_out)
-    makedirs_safe(parse_path(file_out))
-    with open(file_out, 'w') as save_file:
-      save_file.write(rows_to_csv(rows).read())
+    if 'file' in destination:
+        path_out, file_ext = destination['file'].rsplit('.', 1)
+        file_out = path_out + variant + '.' + file_ext
+        if project.verbose:
+            print('SAVING', file_out)
+        makedirs_safe(parse_path(file_out))
+        with open(file_out, 'w') as save_file:
+            save_file.write(rows_to_csv(rows).read())
 
-  if 'storage' in destination and destination['storage'].get(
-      'bucket') and destination['storage'].get('path'):
-    # create the bucket
-    bucket_create(auth, project.id, destination['storage']['bucket'])
+    if 'storage' in destination and destination['storage'].get(
+            'bucket') and destination['storage'].get('path'):
+        # create the bucket
+        bucket_create(auth, project.id, destination['storage']['bucket'])
 
-    # put the file
-    file_out = destination['storage']['bucket'] + ':' + destination['storage'][
-        'path'] + variant
-    if project.verbose:
-      print('SAVING', file_out)
-    object_put(auth, file_out, rows_to_csv(rows))
+        # put the file
+        file_out = destination['storage']['bucket'] + ':' + destination[
+            'storage']['path'] + variant
+        if project.verbose:
+            print('SAVING', file_out)
+        object_put(auth, file_out, rows_to_csv(rows))
 
-  if 'sftp' in destination:
-    try:
-      cnopts = pysftp.CnOpts()
-      cnopts.hostkeys = None
+    if 'sftp' in destination:
+        try:
+            cnopts = pysftp.CnOpts()
+            cnopts.hostkeys = None
 
-      path_out, file_out = destination['sftp']['file'].rsplit('.', 1)
-      file_out = path_out + variant + file_out
+            path_out, file_out = destination['sftp']['file'].rsplit('.', 1)
+            file_out = path_out + variant + file_out
 
-      sftp = pysftp.Connection(
-          host=destination['sftp']['host'],
-          username=destination['sftp']['username'],
-          password=destination['sftp']['password'],
-          port=destination['sftp']['port'],
-          cnopts=cnopts)
+            sftp = pysftp.Connection(host=destination['sftp']['host'],
+                                     username=destination['sftp']['username'],
+                                     password=destination['sftp']['password'],
+                                     port=destination['sftp']['port'],
+                                     cnopts=cnopts)
 
-      if '/' in file_out:
-        dir_out, file_out = file_out.rsplit('/', 1)
-        sftp.cwd(dir_out)
+            if '/' in file_out:
+                dir_out, file_out = file_out.rsplit('/', 1)
+                sftp.cwd(dir_out)
 
-      sftp.putfo(rows_to_csv(rows), file_out)
+            sftp.putfo(rows_to_csv(rows), file_out)
 
-    except e:
-      print(str(e))
-      traceback.print_exc()
+        except e:
+            print(str(e))
+            traceback.print_exc()

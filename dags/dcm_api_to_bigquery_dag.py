@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -46,127 +45,97 @@ Add CM account ids for the accounts to pull data from.
 from starthinker_airflow.factory import DAG_Factory
 
 # Add the following credentials to your Airflow configuration.
-USER_CONN_ID = "starthinker_user" # The connection to use for user authentication.
-GCP_CONN_ID = "starthinker_service" # The connection to use for service authentication.
+USER_CONN_ID = "starthinker_user"  # The connection to use for user authentication.
+GCP_CONN_ID = "starthinker_service"  # The connection to use for service authentication.
 
 INPUTS = {
-  'endpoint': '',
-  'auth_read': 'user',  # Credentials used for reading data.
-  'auth_write': 'service',  # Credentials used for writing data.
-  'dataset': '',  # Google BigQuery dataset to create tables in.
-  'accounts': '',  # Comma separated CM account ids.
+    'endpoint': '',
+    'auth_read': 'user',  # Credentials used for reading data.
+    'auth_write': 'service',  # Credentials used for writing data.
+    'dataset': '',  # Google BigQuery dataset to create tables in.
+    'accounts': '',  # Comma separated CM account ids.
 }
 
-TASKS = [
-  {
+TASKS = [{
     'dcm_api': {
-      'auth': {
-        'field': {
-          'name': 'auth_read',
-          'kind': 'authentication',
-          'order': 1,
-          'default': 'user',
-          'description': 'Credentials used for reading data.'
-        }
-      },
-      'endpoints': {
-        'field': {
-          'name': 'endpoint',
-          'kind': 'choice',
-          'choices': [
-            'accountPermissionGroups',
-            'accountPermissions',
-            'accountUserProfiles',
-            'accounts',
-            'ads',
-            'advertiserGroups',
-            'advertiserLandingPages',
-            'advertisers',
-            'browsers',
-            'campaigns',
-            'changeLogs',
-            'cities',
-            'connectionTypes',
-            'contentCategories',
-            'countries',
-            'creativeFields',
-            'creativeGroups',
-            'creatives',
-            'directorySites',
-            'dynamicTargetingKeys',
-            'eventTags',
-            'files',
-            'floodlightActivities',
-            'floodlightActivityGroups',
-            'floodlightConfigurations',
-            'languages',
-            'metros',
-            'mobileApps',
-            'mobileCarriers',
-            'operatingSystemVersions',
-            'operatingSystems',
-            'placementGroups',
-            'placementStrategies',
-            'placements',
-            'platformTypes',
-            'postalCodes',
-            'projects',
-            'regions',
-            'remarketingLists',
-            'reports',
-            'sites',
-            'sizes',
-            'subaccounts',
-            'targetableRemarketingLists',
-            'targetingTemplates',
-            'userprofiles',
-            'userRolePermissionGroups',
-            'userRolePermissions',
-            'userRoles',
-            'videoFormats'
-          ],
-          'default': ''
-        }
-      },
-      'accounts': {
-        'single_cell': True,
-        'values': {
-          'field': {
-            'name': 'accounts',
-            'kind': 'integer_list',
-            'order': 2,
-            'default': '',
-            'description': 'Comma separated CM account ids.'
-          }
-        }
-      },
-      'out': {
         'auth': {
-          'field': {
-            'name': 'auth_write',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'service',
-            'description': 'Credentials used for writing data.'
-          }
+            'field': {
+                'name': 'auth_read',
+                'kind': 'authentication',
+                'order': 1,
+                'default': 'user',
+                'description': 'Credentials used for reading data.'
+            }
         },
-        'dataset': {
-          'field': {
-            'name': 'dataset',
-            'kind': 'string',
-            'order': 1,
-            'default': '',
-            'description': 'Google BigQuery dataset to create tables in.'
-          }
+        'endpoints': {
+            'field': {
+                'name': 'endpoint',
+                'kind': 'choice',
+                'choices': [
+                    'accountPermissionGroups', 'accountPermissions',
+                    'accountUserProfiles', 'accounts', 'ads',
+                    'advertiserGroups', 'advertiserLandingPages', 'advertisers',
+                    'browsers', 'campaigns', 'changeLogs', 'cities',
+                    'connectionTypes', 'contentCategories', 'countries',
+                    'creativeFields', 'creativeGroups', 'creatives',
+                    'directorySites', 'dynamicTargetingKeys', 'eventTags',
+                    'files', 'floodlightActivities', 'floodlightActivityGroups',
+                    'floodlightConfigurations', 'languages', 'metros',
+                    'mobileApps', 'mobileCarriers', 'operatingSystemVersions',
+                    'operatingSystems', 'placementGroups',
+                    'placementStrategies', 'placements', 'platformTypes',
+                    'postalCodes', 'projects', 'regions', 'remarketingLists',
+                    'reports', 'sites', 'sizes', 'subaccounts',
+                    'targetableRemarketingLists', 'targetingTemplates',
+                    'userprofiles', 'userRolePermissionGroups',
+                    'userRolePermissions', 'userRoles', 'videoFormats'
+                ],
+                'default': ''
+            }
+        },
+        'accounts': {
+            'single_cell': True,
+            'values': {
+                'field': {
+                    'name': 'accounts',
+                    'kind': 'integer_list',
+                    'order': 2,
+                    'default': '',
+                    'description': 'Comma separated CM account ids.'
+                }
+            }
+        },
+        'out': {
+            'auth': {
+                'field': {
+                    'name': 'auth_write',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'service',
+                    'description': 'Credentials used for writing data.'
+                }
+            },
+            'dataset': {
+                'field': {
+                    'name':
+                        'dataset',
+                    'kind':
+                        'string',
+                    'order':
+                        1,
+                    'default':
+                        '',
+                    'description':
+                        'Google BigQuery dataset to create tables in.'
+                }
+            }
         }
-      }
     }
-  }
-]
+}]
 
-DAG_FACTORY = DAG_Factory('dcm_api_to_bigquery', { 'tasks':TASKS }, INPUTS)
+DAG_FACTORY = DAG_Factory('dcm_api_to_bigquery', {'tasks': TASKS}, INPUTS)
 DAG_FACTORY.apply_credentails(USER_CONN_ID, GCP_CONN_ID)
 DAG = DAG_FACTORY.execute()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()

@@ -28,9 +28,9 @@ from starthinker.util.project import project
 
 def main():
 
-  parser = argparse.ArgumentParser(
-      formatter_class=argparse.RawDescriptionHelpFormatter,
-      description=textwrap.dedent("""\
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent("""\
       Command line interface for running Google API calls.  Any API works.  Allows developers to quickly test
       and debug API calls before building them into scripts.  Useful for debugging permission or call errors.
 
@@ -49,69 +49,74 @@ def main():
 
   """))
 
-  # get parameters
-  parser.add_argument('-api', help='api to run, name of product api')
-  parser.add_argument('-version', help='version of api')
-  parser.add_argument('-function', help='function to call in api')
-  parser.add_argument('-uri', help='uri to use in api', default=None)
-  parser.add_argument(
-      '-developer-token',
-      help='developer token to pass in header',
-      default=None)
-  parser.add_argument(
-      '-login-customer-id',
-      help='customer to log in with when manipulating an MCC',
-      default=None)
-  parser.add_argument(
-      '-kwargs',
-      help='kwargs to pass to function, json string of name:value pairs')
-  parser.add_argument('--iterate', help='force iteration', action='store_true')
-  parser.add_argument(
-      '--schema',
-      help='return schema instead, function = [endpoint.method]',
-      action='store_true')
+    # get parameters
+    parser.add_argument('-api', help='api to run, name of product api')
+    parser.add_argument('-version', help='version of api')
+    parser.add_argument('-function', help='function to call in api')
+    parser.add_argument('-uri', help='uri to use in api', default=None)
+    parser.add_argument('-developer-token',
+                        help='developer token to pass in header',
+                        default=None)
+    parser.add_argument('-login-customer-id',
+                        help='customer to log in with when manipulating an MCC',
+                        default=None)
+    parser.add_argument(
+        '-kwargs',
+        help='kwargs to pass to function, json string of name:value pairs')
+    parser.add_argument('--iterate',
+                        help='force iteration',
+                        action='store_true')
+    parser.add_argument(
+        '--schema',
+        help='return schema instead, function = [endpoint.method]',
+        action='store_true')
 
+    # initialize project ( used to load standard credentials parameters )
+    project.from_commandline(parser=parser,
+                             arguments=('-u', '-c', '-s', '-k', '-v'))
 
-  # initialize project ( used to load standard credentials parameters )
-  project.from_commandline(parser=parser, arguments=('-u', '-c', '-s', '-k', '-v'))
+    # show schema
+    if project.args.schema:
+        endpoint, method = project.args.function.rsplit('.', 1)
+        print(
+            json.dumps(Discovery_To_BigQuery(
+                project.args.api,
+                project.args.version).method_schema(endpoint, method),
+                       indent=2,
+                       default=str))
 
-  # show schema
-  if project.args.schema:
-    endpoint, method = project.args.function.rsplit('.', 1)
-    print(json.dumps(Discovery_To_BigQuery(project.args.api, project.args.version).method_schema(endpoint, method), indent=2, default=str))
-
-  # or fetch results
-  else:
-
-    # the api wrapper takes parameters as JSON
-    job = {
-      'auth': 'service' if project.args.service else 'user',
-      'api': project.args.api,
-      'version': project.args.version,
-      'function': project.args.function,
-      'key': project.args.key,
-      'uri': project.args.uri,
-      'kwargs': json.loads(project.args.kwargs),
-      'headers': {},
-      'iterate': project.args.iterate,
-    }
-
-    if project.args.developer_token:
-      job['headers']['developer-token'] = project.args.developer_token
-
-    if project.args.login_customer_id:
-      job['headers']['login-customer-id'] = project.args.login_customer_id
-
-    # run the API call
-    results = API(job).execute()
-
-    # display results
-    if project.args.iterate:
-      for result in results:
-        pprint.PrettyPrinter().pprint(result)
+    # or fetch results
     else:
-      pprint.PrettyPrinter().pprint(results)
+
+        # the api wrapper takes parameters as JSON
+        job = {
+            'auth': 'service' if project.args.service else 'user',
+            'api': project.args.api,
+            'version': project.args.version,
+            'function': project.args.function,
+            'key': project.args.key,
+            'uri': project.args.uri,
+            'kwargs': json.loads(project.args.kwargs),
+            'headers': {},
+            'iterate': project.args.iterate,
+        }
+
+        if project.args.developer_token:
+            job['headers']['developer-token'] = project.args.developer_token
+
+        if project.args.login_customer_id:
+            job['headers']['login-customer-id'] = project.args.login_customer_id
+
+        # run the API call
+        results = API(job).execute()
+
+        # display results
+        if project.args.iterate:
+            for result in results:
+                pprint.PrettyPrinter().pprint(result)
+        else:
+            pprint.PrettyPrinter().pprint(results)
 
 
 if __name__ == '__main__':
-  main()
+    main()

@@ -15,7 +15,6 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 '''
 --------------------------------------------------------------
 
@@ -80,93 +79,101 @@ This StarThinker DAG can be extended with any additional tasks from the followin
 from starthinker.airflow.factory import DAG_Factory
 
 INPUTS = {
-  'auth_read': 'user',  # Credentials used for reading data.
-  'bucket': '',  # Google cloud bucket.
-  'auth_write': 'service',  # Credentials used for writing data.
-  'path': '',  # Path prefix to read from, no * required.
-  'dataset': '',  # Existing BigQuery dataset.
-  'table': '',  # Table to create from this query.
-  'schema': '[]',  # Schema provided in JSON list format or empty list.
+    'auth_read': 'user',  # Credentials used for reading data.
+    'bucket': '',  # Google cloud bucket.
+    'auth_write': 'service',  # Credentials used for writing data.
+    'path': '',  # Path prefix to read from, no * required.
+    'dataset': '',  # Existing BigQuery dataset.
+    'table': '',  # Table to create from this query.
+    'schema': '[]',  # Schema provided in JSON list format or empty list.
 }
 
 RECIPE = {
-  'tasks': [
-    {
-      'bigquery': {
-        'auth': {
-          'field': {
-            'name': 'auth_read',
-            'kind': 'authentication',
-            'order': 1,
-            'default': 'user',
-            'description': 'Credentials used for reading data.'
-          }
-        },
-        'from': {
-          'bucket': {
-            'field': {
-              'name': 'bucket',
-              'kind': 'string',
-              'order': 1,
-              'default': '',
-              'description': 'Google cloud bucket.'
+    'tasks': [{
+        'bigquery': {
+            'auth': {
+                'field': {
+                    'name': 'auth_read',
+                    'kind': 'authentication',
+                    'order': 1,
+                    'default': 'user',
+                    'description': 'Credentials used for reading data.'
+                }
+            },
+            'from': {
+                'bucket': {
+                    'field': {
+                        'name': 'bucket',
+                        'kind': 'string',
+                        'order': 1,
+                        'default': '',
+                        'description': 'Google cloud bucket.'
+                    }
+                },
+                'path': {
+                    'field': {
+                        'name':
+                            'path',
+                        'kind':
+                            'string',
+                        'order':
+                            2,
+                        'default':
+                            '',
+                        'description':
+                            'Path prefix to read from, no * required.'
+                    }
+                }
+            },
+            'to': {
+                'auth': {
+                    'field': {
+                        'name': 'auth_write',
+                        'kind': 'authentication',
+                        'order': 1,
+                        'default': 'service',
+                        'description': 'Credentials used for writing data.'
+                    }
+                },
+                'dataset': {
+                    'field': {
+                        'name': 'dataset',
+                        'kind': 'string',
+                        'order': 3,
+                        'default': '',
+                        'description': 'Existing BigQuery dataset.'
+                    }
+                },
+                'table': {
+                    'field': {
+                        'name': 'table',
+                        'kind': 'string',
+                        'order': 4,
+                        'default': '',
+                        'description': 'Table to create from this query.'
+                    }
+                }
+            },
+            'schema': {
+                'field': {
+                    'name':
+                        'schema',
+                    'kind':
+                        'json',
+                    'order':
+                        5,
+                    'default':
+                        '[]',
+                    'description':
+                        'Schema provided in JSON list format or empty list.'
+                }
             }
-          },
-          'path': {
-            'field': {
-              'name': 'path',
-              'kind': 'string',
-              'order': 2,
-              'default': '',
-              'description': 'Path prefix to read from, no * required.'
-            }
-          }
-        },
-        'to': {
-          'auth': {
-            'field': {
-              'name': 'auth_write',
-              'kind': 'authentication',
-              'order': 1,
-              'default': 'service',
-              'description': 'Credentials used for writing data.'
-            }
-          },
-          'dataset': {
-            'field': {
-              'name': 'dataset',
-              'kind': 'string',
-              'order': 3,
-              'default': '',
-              'description': 'Existing BigQuery dataset.'
-            }
-          },
-          'table': {
-            'field': {
-              'name': 'table',
-              'kind': 'string',
-              'order': 4,
-              'default': '',
-              'description': 'Table to create from this query.'
-            }
-          }
-        },
-        'schema': {
-          'field': {
-            'name': 'schema',
-            'kind': 'json',
-            'order': 5,
-            'default': '[]',
-            'description': 'Schema provided in JSON list format or empty list.'
-          }
         }
-      }
-    }
-  ]
+    }]
 }
 
 DAG_FACTORY = DAG_Factory('bigquery_storage', RECIPE, INPUTS)
 DAG = DAG_FACTORY.generate()
 
 if __name__ == "__main__":
-  DAG_FACTORY.print_commandline()
+    DAG_FACTORY.print_commandline()
